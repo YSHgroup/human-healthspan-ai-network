@@ -1,24 +1,22 @@
-# MVP Architecture
+# Technical Architecture
 
-Web -> FastAPI modular monolith -> PostgreSQL/pgvector, Redis, OpenSearch, object storage.
-AI is isolated behind an AI Gateway and must inherit user/resource authorization.
+## Logical layers
 
-## Core product loop
-QUESTION -> DISCUSSION -> EVIDENCE -> KNOWLEDGE -> HYPOTHESIS -> COLLABORATION -> RESEARCH
+1. Web experience — Next.js/React/TypeScript
+2. API/application — FastAPI/Python
+3. Domain services — social, research, evidence, search, AI, governance
+4. System of record — PostgreSQL + pgvector
+5. Supporting infrastructure — Redis, OpenSearch, object storage
+6. Scientific projection — graph database later
+7. External providers — identity, model APIs, literature/data sources
+8. Observability — logs, metrics, traces, audit
 
-## MVP modules
-- Identity/auth
-- Profiles
-- Social posts/comments
-- Communities
-- Questions/discussions
-- Scientific content/evidence
-- Researcher profiles
-- Research workspaces
-- Literature/document search
-- Evidence-grounded AI
-- Basic discovery/matching
-- Admin/moderation
+## Scaling strategy
 
-## Deliberately deferred
-Knowledge graph, autonomous AI scientists, advanced bioinformatics, clinical decision support, institutional platform, funding marketplace, foundation-model training, Kubernetes/microservices.
+Start as a modular monolith with clear domain boundaries. Split only high-load or high-isolation domains later. The design avoids premature microservices while preserving service contracts.
+
+## Future graph
+
+Relational scientific entities become canonical source records. A graph projection can later materialize relationships such as:
+
+Researcher → ResearchQuestion → Hypothesis → Evidence → Paper → Gene → Protein → Pathway → Disease → Experiment → Result

@@ -1,30 +1,34 @@
-# Human Healthspan AI Network — MVP Starter
+# Human Healthspan, Scientific Research & AI Network — Round 2
 
-A basic, extensible starter project based on the MVP architecture:
-- Next.js/React/TypeScript web app
-- FastAPI/Python API
-- PostgreSQL + pgvector-ready data layer
-- Redis-ready infrastructure
-- OpenSearch-ready search layer
-- S3-compatible object storage
-- AI gateway boundary for RAG/model providers
-- Modular-monolith structure for the first release
+A scalable foundation for the Human Healthspan / Scientific Research / AI Network.
 
-## Run
-### API
+## Round 2 focus
+
+- Social network foundation: profiles, follows, posts, comments, communities
+- Research foundation: projects, research questions, hypotheses, evidence, literature metadata
+- Permission-aware AI/RAG boundary
+- Unified search boundary
+- Audit and governance foundations
+- Dockerized local development
+- PostgreSQL as system of record
+- Redis for cache/queues
+- OpenSearch for search
+- pgvector-ready PostgreSQL for embeddings
+- Next.js + TypeScript web application
+- FastAPI + Python backend
+- Clean module boundaries so later rounds can add knowledge graph, collaboration engine, agents and institutional controls
+
+## Quick start
+
 ```bash
-cd api
-python -m venv .venv
-# activate the venv
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+cp .env.example .env
+docker compose up --build
 ```
 
-### Web
-```bash
-cd web
-npm install
-npm run dev
-```
+Web: http://localhost:3000
+API: http://localhost:8000/docs
+OpenSearch: http://localhost:9200
 
-The implementation is intentionally minimal. It provides the foundation to extend in the next development round.
+## Important
+
+This repository is an architectural/product foundation, not a clinical system and not a finished production platform. Health and scientific claims require governance, provenance and review before production use.
