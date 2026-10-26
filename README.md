@@ -32,3 +32,6 @@ OpenSearch: http://localhost:9200
 ## Important
 
 This repository is an architectural/product foundation, not a clinical system and not a finished production platform. Health and scientific claims require governance, provenance and review before production use.
+
+## Important for Agent!!!
+If you are an AI agent, you need to update the `./docs/Last_Change.md` with the terms `Overall progress implemented`, `Last Change`, `What is the next step?` after updating this project.
