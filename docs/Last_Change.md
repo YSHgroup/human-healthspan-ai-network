@@ -6,10 +6,12 @@ The API layer has typed post and research-question payloads, reads `NEXT_PUBLIC_
 
 Home includes a post composer using a clearly temporary demo author ID. Research includes a research-question form. The app shell displays API health status. Discover, Science, and AI have initial placeholder pages.
 
+The web app now includes the shadcn component setup and reusable UI components. Existing muted text styles use the dedicated `--muted-foreground` theme token, keeping copy readable across the public landing page and app shell while `--muted` remains the shadcn surface color.
+
 ----------
 # Last Change
 
-Added the product route group and responsive dashboard shell, typed API client, mock-backed feed/community/research data, live API status indicator, and post/research-question forms. The public intro now links into the app.
+Resolved the text-color conflict between the existing styles and the shadcn theme by using `--muted-foreground` for muted copy. This preserves `--muted` as the shadcn background token and applies consistent readable text across the public landing page and app shell. Added the shadcn component setup and reusable Button, Card, Input, Tabs, and Avatar components.
 
 ----------
 # What is the next step?
