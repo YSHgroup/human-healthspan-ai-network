@@ -387,10 +387,10 @@ events rather than uncontrolled direct database coupling.
 healthspan-platform/
 │
 ├── apps/
-│   ├── web/
-│   ├── api/
-│   ├── worker/
-│   └── admin/
+│   ├── web/       # Member-facing platform application
+│   ├── admin/     # Dedicated administrative application (MVP requirement)
+│   ├── api/       # Shared modular-monolith backend and domain APIs
+│   └── worker/    # Asynchronous jobs and event processing
 │
 ├── packages/
 │   ├── ui/
@@ -1416,120 +1416,104 @@ The architecture should support them later without requiring them now.
 
 # 30. Evolution Roadmap
 
-## Phase 1 --- Social Foundation
+The Admin App is a **required first-class application from the MVP**, not a later add-on. The administrative interface is separately built and deployed from the member-facing web app, while both use the shared modular-monolith API and domain services. Administrative features are phased by operational necessity; minimum security, moderation, governance and audit capabilities must be ready before public launch.
+
+## Phase 0 --- Validation and Architecture
 
 ``` text
-Social Network
+Product validation + shared platform foundation + Admin App design
 ```
 
-Profiles, content, questions, communities, follow, basic messaging and
-discovery.
+Validate core user needs and define the admin application boundary, role/permission matrix, audit events, moderation policies, scientific-review workflows and operational metrics. Establish the repository boundary at `apps/admin/`, shared authentication patterns, and server-side authorization requirements.
 
-## Phase 2 --- Research
+## Phase 1 --- MVP: Social, Research Foundation and Essential Admin App
 
 ``` text
-Social
+Member Platform App
  +
-Research Workspaces
+Research Workspaces (foundational)
+ +
+Dedicated Admin App
+ +
+Shared API / Identity / Authorization / Audit
 ```
 
-Research questions, projects, literature, evidence, hypotheses, datasets
-and experiments.
+**Member platform:** profiles, content, questions, communities, follows, basic messaging and discovery; foundational research questions/projects and document/evidence workflows; evidence-grounded AI Q&A where feasible within MVP scope.
 
-## Phase 3 --- AI
+**Admin App must include before public launch:**
+
+- secure administrator sign-in, session controls and MFA-ready support;
+- role-based access control with least privilege and server-side enforcement;
+- overview dashboard for service status, key platform metrics, queues and alerts;
+- user/account lookup, status changes, suspensions and role management with safeguards;
+- reported-content queue, review decisions, removal/restriction actions and reason codes;
+- community/content administration and basic appeal/reversal workflow;
+- scientific content/evidence review, correction flags and provenance visibility;
+- audit log for privileged actions and access to sensitive administrative functions;
+- basic background-job and document-processing failure visibility;
+- incident/reporting entry points and operational health indicators.
+
+## Phase 2 --- Research and Governance Maturity
 
 ``` text
-Social
- +
-Research
- +
-Evidence-Grounded RAG AI
+Social + Research Workspaces + Admin Governance Workflows
 ```
 
-AI Q&A, document analysis, literature synthesis, citations and project
-assistance.
+Expand research project governance, membership/access reviews, evidence-review queues, source provenance, reviewer notes, conflicts-of-interest declarations, correction/retraction handling, privacy requests and moderation analytics. Add more granular access policies for team and sensitive research data.
 
-## Phase 4 --- Knowledge
+## Phase 3 --- AI Operations and Evidence-Grounded Assistance
 
 ``` text
-Social
- +
-Research
- +
-AI
- +
-Scientific Knowledge Graph
+Social + Research + AI/RAG + Admin AI Oversight
 ```
 
-Entities, relationships, claims, evidence, knowledge discovery and graph
-reasoning.
+Expand AI Q&A, document analysis, literature synthesis, citations and project assistance. Admin capabilities include AI incident review, model/provider configuration under controlled permissions, usage/cost metrics, citation/groundedness evaluation results, failure inspection and audited configuration changes. Administrators must not gain implicit access to private user or research content merely because they operate the platform.
+
+## Phase 4 --- Knowledge Infrastructure
+
+``` text
+Social + Research + AI + Scientific Knowledge Graph
+```
+
+Add scientific entities, relationships, claims, evidence, knowledge discovery and graph reasoning. Admin tooling supports controlled taxonomy management, ingestion monitoring, provenance checks and quality review.
 
 ## Phase 5 --- Collaboration
 
 ``` text
-Everything
- +
-Research Matching
- +
-Experts
- +
-Datasets
- +
-Challenges
+Everything + Research Matching + Experts + Datasets + Challenges
 ```
 
-Researcher matching, collaboration discovery and research opportunity
-workflows.
+Add researcher matching, collaboration discovery, research opportunities, events and challenges. Admin tooling expands event/challenge management, abuse prevention and operational reporting.
 
 ## Phase 6 --- Scientific AI
 
 ``` text
-Everything
- +
-Agents
- +
-Data Analysis
- +
-Bioinformatics
- +
-Research Discovery
+Everything + Agents + Data Analysis + Bioinformatics + Research Discovery
 ```
 
-Advanced research automation with strict permissions, evaluation and
-governance.
+Introduce advanced research automation only with strict permissions, human review, evaluations, provenance and governance. Admin tooling gains agent/tool policy management, evaluation dashboards and incident workflows; no unrestricted access to sensitive research data.
 
 ## Phase 7 --- Institutions
 
 ``` text
-Everything
- +
-Private Institutional Environments
- +
-Enterprise Governance
- +
-Institutional AI
- +
-Research APIs
+Everything + Private Institutional Environments + Enterprise Governance
+ + Institutional AI + Research APIs
 ```
 
-Universities, laboratories, biotech companies and other organizations.
+Support universities, laboratories, biotech companies and other organizations with scoped organization administration, tenant isolation, delegated admin roles, identity federation where required, policy controls and institution-level audit reporting.
 
 ## Phase 8 --- Global Ecosystem
 
 ``` text
-People
-Researchers
-Universities
-Labs
-Biotech
-Healthcare
-AI
-Data
-Funding
-Research Marketplace
+People + Researchers + Universities + Labs + Biotech + Healthcare
+ + AI + Data + Funding + Research Marketplace
 ```
 
-The platform becomes a global human-health innovation ecosystem.
+The platform evolves into a global human-health innovation ecosystem with scalable governance and operational controls.
+
+### Roadmap dependency rule
+
+Do not defer the Admin App until the institution phase. The **separate admin frontend and essential administration workflows belong in Phase 1**. Advanced institutional administration, AI governance automation and large-scale operational analytics can be delivered in later phases.
 
 ------------------------------------------------------------------------
 
@@ -1712,14 +1696,36 @@ Authenticated
  ├── Evidence
  └── Discovery
 
-Admin
- ├── Moderation
- ├── Scientific Review
- ├── Governance
- ├── Users
- ├── Content
- └── System Health
+Admin App (`apps/admin/`) — a dedicated application with its own route space, navigation, layout, release pipeline and production access policy:
+
+``` text
+Admin App
+ ├── Overview Dashboard
+ ├── User & Role Management
+ ├── Content / Community Management
+ ├── Moderation Queue & Appeals
+ ├── Scientific Evidence Review
+ ├── Research Governance & Access Reviews
+ ├── AI Oversight & Evaluation Results
+ ├── Background Jobs / Ingestion / Search Health
+ ├── Security Incidents & Audit Logs
+ ├── Privacy / Consent Requests
+ └── Platform Configuration (restricted, audited)
 ```
+
+The Admin App is a separate frontend, **not a separate backend by default**. It uses the shared versioned API and the same domain services as the member app, but exposes only admin-specific screens and endpoints. Do not rely on hidden navigation or frontend checks as security controls.
+
+### Admin authorization and operational requirements
+
+- Use dedicated admin routes and a separate production deployment/access policy for `apps/admin/`.
+- Require strong authentication; support MFA and short-lived privileged sessions.
+- Apply server-side RBAC and resource-level authorization on every admin operation. Use finer-grained policy checks for sensitive research and health-related data.
+- Define roles such as `platform_admin`, `moderator`, `scientific_reviewer`, `research_governance_admin`, `support_operator` and `read_only_auditor`; grant only the permissions needed for each role.
+- Require reason codes for consequential actions, such as account suspension, content removal, evidence-status changes and privileged configuration changes.
+- Record actor, action, target, timestamp, reason, outcome and relevant request/correlation ID in tamper-resistant audit storage. Protect audit logs from ordinary administrators editing or deleting them.
+- Prefer metadata and workflow status over direct access to private content. Break-glass access to sensitive content must be explicitly authorized, justified, time-limited and audited.
+- Separate operational telemetry from user content. Never expose secrets, credentials, private message bodies or sensitive health/genomic data in general dashboards or logs.
+- Add tests for privilege escalation, cross-user/project leakage, unauthorized admin actions, audit completeness and access revocation.
 
 UX should make evidence status and confidence understandable without
 overwhelming ordinary users.
