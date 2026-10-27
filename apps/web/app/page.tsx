@@ -1,4 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const audiences = [
   { name: "People", verbs: "Connect · Share · Learn" },
@@ -108,13 +113,13 @@ export default function Home() {
                 researchers and AI move from better questions to better science.
               </p>
               <div className="cta-row">
-                <a className="btn btn-primary" href="/home">
+                <Link className={cn(buttonVariants({ size: "lg" }), "rounded-full bg-gradient-to-r from-sky-500 to-emerald-500 px-6 text-white shadow-lg shadow-sky-500/25 hover:brightness-105")} href="/home">
                   Open the app
-                </a>
-                <a className="btn btn-ghost" href="#network">
+                </Link>
+                <a className={cn(buttonVariants({ variant: "outline", size: "lg" }), "rounded-full border-white/40 bg-white/5 px-6 text-white hover:bg-white/10 hover:text-white")} href="#network">
                   Explore the network
                 </a>
-                <a className="btn btn-ghost" href="#overview">
+                <a className={cn(buttonVariants({ variant: "outline", size: "lg" }), "rounded-full border-white/40 bg-white/5 px-6 text-white hover:bg-white/10 hover:text-white")} href="#overview">
                   See the one-pager
                 </a>
               </div>
@@ -138,17 +143,17 @@ export default function Home() {
             </div>
             <div className="grid cols-4">
               {audiences.map((a) => (
-                <article className="card" key={a.name}>
+                <Card className="network-card" key={a.name}>
                   <h3>{a.name}</h3>
                   <p className="verbs">{a.verbs}</p>
-                </article>
+                </Card>
               ))}
             </div>
             <div className="chips" aria-label="Focus areas">
               {focusAreas.map((f) => (
-                <span className="chip" key={f}>
+                <Badge className="chip" key={f} variant="outline">
                   {f}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
@@ -180,7 +185,7 @@ export default function Home() {
             </div>
             <div className="grid cols-3">
               {pillars.map((p) => (
-                <article className={`card pillar ${p.key}`} key={p.key}>
+                <Card className={`network-card pillar ${p.key}`} key={p.key}>
                   <h3>{p.title}</h3>
                   <p className="tagline">{p.tagline}</p>
                   <ul>
@@ -188,7 +193,7 @@ export default function Home() {
                       <li key={i}>{i}</li>
                     ))}
                   </ul>
-                </article>
+                </Card>
               ))}
             </div>
             <div className="section-head" style={{ marginTop: 56, marginBottom: 24 }}>
@@ -224,7 +229,7 @@ export default function Home() {
                 validated result, and the technology underneath. Better questions, better
                 science, a healthier future.
               </p>
-              <a className="btn btn-outline" href="/brand/one-pager.png" target="_blank" rel="noopener noreferrer">
+              <a className={cn(buttonVariants({ variant: "outline", size: "lg" }), "rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground")} href="/brand/one-pager.png" target="_blank" rel="noopener noreferrer">
                 Open full size
               </a>
             </div>

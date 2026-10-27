@@ -1,30 +1,40 @@
 import PostComposer from "../../components/PostComposer";
+import PageHeader from "../../components/PageHeader";
 import { getFeed } from "../../../lib/data";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function HomePage() {
   const posts = await getFeed();
 
   return (
     <>
-      <header className="page-heading">
-        <p className="page-eyebrow">Your network</p>
-        <h1>Home</h1>
-        <p>Questions, ideas, and conversations from across the healthspan community.</p>
-      </header>
+      <PageHeader
+        eyebrow="Your network"
+        title="Home"
+        description="Questions, ideas, and conversations from across the healthspan community."
+      />
       <PostComposer />
-      <section className="feed-list" aria-label="Community feed">
+      <section className="grid gap-4" aria-label="Community feed">
         {posts.map((post) => (
-          <article className="feed-card" key={post.id}>
-            <div className="feed-author">
-              <span className="avatar" aria-hidden="true">{post.author_name.slice(0, 1)}</span>
-              <div>
-                <strong>{post.author_name}</strong>
-                <span>{post.role} · {post.posted_at}</span>
+          <Card className="gap-0 rounded-2xl border-border py-0 shadow-sm" key={post.id}>
+            <CardContent className="space-y-4 p-5 sm:p-6">
+              <div className="flex items-center gap-3">
+                <Avatar className="size-10 rounded-full">
+                  <AvatarFallback className="rounded-full bg-secondary font-semibold text-primary">
+                    {post.author_name.slice(0, 1)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{post.author_name}</p>
+                  <p className="text-xs text-muted-foreground">{post.role} · {post.posted_at}</p>
+                </div>
               </div>
-            </div>
-            <p>{post.body}</p>
-            <span className="mock-label">Sample feed post</span>
-          </article>
+              <p className="whitespace-pre-wrap text-sm leading-6 text-foreground/90">{post.body}</p>
+              <Badge className="text-[10px] uppercase tracking-wide" variant="secondary">Sample feed post</Badge>
+            </CardContent>
+          </Card>
         ))}
       </section>
     </>

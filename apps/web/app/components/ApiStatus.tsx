@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getHealth } from "../../lib/api";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Status = "checking" | "online" | "offline";
 
@@ -32,9 +34,21 @@ export default function ApiStatus() {
   const label = status === "checking" ? "Checking API" : status === "online" ? "API online" : "API offline";
 
   return (
-    <div className={`api-status api-status-${status}`} role="status" aria-live="polite">
-      <span className="api-status-dot" aria-hidden="true" />
+    <Badge
+      className="gap-2 border-border px-2.5 py-1 text-xs font-medium"
+      variant="outline"
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-2 rounded-full bg-muted-foreground",
+          status === "online" && "bg-green-600",
+          status === "offline" && "bg-destructive"
+        )}
+      />
       {label}
-    </div>
+    </Badge>
   );
 }

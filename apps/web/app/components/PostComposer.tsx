@@ -2,6 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { createPost } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 const TEMPORARY_AUTHOR_ID = "demo-user";
 
@@ -29,28 +32,35 @@ export default function PostComposer() {
   }
 
   return (
-    <form className="composer-card" onSubmit={handleSubmit}>
-      <label htmlFor="post-body">Share a question or reflection</label>
-      <textarea
-        id="post-body"
-        maxLength={10000}
-        minLength={1}
-        onChange={(event) => setBody(event.target.value)}
-        placeholder="What are you thinking about?"
-        required
-        rows={3}
-        value={body}
-      />
-      <div className="composer-footer">
-        <small>
-          Temporary demo author ID: {TEMPORARY_AUTHOR_ID} · authentication is not available and posts are not saved yet.
-        </small>
-        <button className="app-button" disabled={isSubmitting || !body.trim()} type="submit">
-          {isSubmitting ? "Posting…" : "Post"}
-        </button>
-      </div>
-      {message && <p className="form-feedback" role="status">{message}</p>}
-      {error && <p className="form-error" role="alert">{error}</p>}
-    </form>
+    <Card className="mb-6 gap-0 rounded-2xl border-border py-0 shadow-sm">
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4 p-5 sm:p-6">
+          <label className="block text-sm font-medium text-foreground" htmlFor="post-body">
+            Share a question or reflection
+          </label>
+          <Textarea
+            id="post-body"
+            className="min-h-28 resize-y"
+            maxLength={10000}
+            minLength={1}
+            onChange={(event) => setBody(event.target.value)}
+            placeholder="What are you thinking about?"
+            required
+            rows={3}
+            value={body}
+          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <small className="text-xs text-muted-foreground">
+              Temporary demo author ID: {TEMPORARY_AUTHOR_ID} · authentication is not available and posts are not saved yet.
+            </small>
+            <Button className="shrink-0" disabled={isSubmitting || !body.trim()} type="submit">
+              {isSubmitting ? "Posting…" : "Post"}
+            </Button>
+          </div>
+          {message && <p className="text-sm text-green-700" role="status">{message}</p>}
+          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+        </CardContent>
+      </form>
+    </Card>
   );
 }

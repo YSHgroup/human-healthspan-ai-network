@@ -6,12 +6,12 @@ The API layer has typed post and research-question payloads, reads `NEXT_PUBLIC_
 
 Home includes a post composer using a clearly temporary demo author ID. Research includes a research-question form. The app shell displays API health status. Discover, Science, and AI have initial placeholder pages.
 
-The web app now includes the shadcn component setup and reusable UI components. Existing muted text styles use the dedicated `--muted-foreground` theme token, keeping copy readable across the public landing page and app shell while `--muted` remains the shadcn surface color.
+The web app uses shadcn theme tokens and shared UI components across the public landing page and product routes. The theme is branded with the existing navy palette, has separate readable foreground/surface tokens, and uses Geist through a correctly mapped font variable.
 
 ----------
 # Last Change
 
-Resolved the text-color conflict between the existing styles and the shadcn theme by using `--muted-foreground` for muted copy. This preserves `--muted` as the shadcn background token and applies consistent readable text across the public landing page and app shell. Added the shadcn component setup and reusable Button, Card, Input, Tabs, and Avatar components.
+Migrated the landing page and product screens to shared shadcn Button, Card, Badge, Avatar, Input, Select, and Textarea components with Tailwind utilities. Rebuilt product navigation and API status styling on the shared theme. Fixed the muted text/surface token conflict and aligned shadcn colors and Geist typography with the Healthspan Network brand.
 
 ----------
 # What is the next step?
