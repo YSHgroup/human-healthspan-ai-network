@@ -71,6 +71,8 @@ Search currently uses PostgreSQL text matching. Redis and OpenSearch are not yet
 - `GET /admin/audit-logs` — administrator or read-only auditor
 - `GET /admin/ai-monitoring` — currently reports provider status
 
+The separate Admin App runs at `http://localhost:3001` in Docker Compose. Its same-origin server proxy stores backend tokens in HttpOnly cookies and only forwards admin/moderation API routes.
+
 Administrative account changes and moderation actions are audited. Admin creation is an operator action:
 
 ```text

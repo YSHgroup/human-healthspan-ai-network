@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -54,6 +55,11 @@ class PublicUserOut(BaseModel):
     id: UUID
     role: str
     profile: ProfileOut
+
+
+class AdminUserOut(UserOut):
+    is_active: bool
+    created_at: datetime
 
 
 class RefreshRequest(BaseModel):

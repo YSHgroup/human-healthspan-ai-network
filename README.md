@@ -26,6 +26,7 @@ docker compose up --build
 ```
 
 Web: http://localhost:3000
+Admin: http://localhost:3001
 API: http://localhost:8000/docs
 OpenSearch: http://localhost:9200
 

@@ -62,6 +62,17 @@ services:
     depends_on:
       - api
 
+  admin:
+    build:
+      context: ./apps/admin
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
   redis_data:

@@ -28,7 +28,7 @@ from app.models.domain import (
     ResearchQuestion,
     User,
 )
-from app.schemas.auth import ProfileOut, PublicUserOut, UserOut, UserProfileUpdate
+from app.schemas.auth import AdminUserOut, ProfileOut, PublicUserOut, UserOut, UserProfileUpdate
 from app.schemas.content import CommentCreate, CommentOut, PostCreate, PostOut, ReactionCreate
 from app.schemas.governance import (
     AdminUserUpdate,
@@ -852,7 +852,7 @@ def create_report(
 
 @router.get("/moderation/queue", response_model=list[ReportOut])
 def moderation_queue(
-    _: User = Depends(require_roles("admin", "moderator", "scientific_reviewer")),
+    _: User = Depends(require_roles("admin", "moderator", "scientific_reviewer", "support_operator")),
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     db: Session = Depends(get_db),
 ) -> list[Report]:
@@ -877,6 +877,8 @@ def decide_report(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Report has already been reviewed.")
     if user.role == "scientific_reviewer" and report.target_type != "evidence":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Scientific reviewers can only review evidence reports.")
+    if user.role == "support_operator" and report.target_type == "evidence":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Support operators cannot decide scientific evidence reports.")
     report.status = "resolved" if payload.action != "dismiss" else "dismissed"
     report.reviewed_by = user.id
     report.resolution = payload.reason
@@ -901,14 +903,19 @@ def decide_report(
     return report
 
 
-@router.get("/admin/users", response_model=list[UserOut])
+@router.get("/admin/users", response_model=list[AdminUserOut])
 def admin_users(
-    user: User = Depends(require_roles("admin")),
+    user: User = Depends(require_roles("admin", "support_operator")),
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    q: Annotated[str | None, Query(min_length=2, max_length=200)] = None,
     db: Session = Depends(get_db),
-) -> list[UserOut]:
-    users = list(db.scalars(select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)))
+) -> list[AdminUserOut]:
+    query = select(User)
+    if q is not None:
+        pattern = f"%{q.strip()}%"
+        query = query.where(User.email.ilike(pattern))
+    users = list(db.scalars(query.order_by(User.created_at.desc()).limit(limit).offset(offset)))
     record_audit_event(db, user.id, "admin.users.read", "user_collection", details={"count": len(users)})
     db.commit()
     profiles = {
@@ -916,27 +923,33 @@ def admin_users(
         for profile in db.scalars(select(Profile).where(Profile.user_id.in_([item.id for item in users])))
     }
     return [
-        UserOut(
+        AdminUserOut(
             id=item.id,
             email=item.email,
             role=item.role,
             is_verified=item.is_verified,
+            is_active=item.is_active,
+            created_at=item.created_at,
             profile=ProfileOut.model_validate(profiles[item.id]) if item.id in profiles else None,
         )
         for item in users
     ]
 
 
-@router.patch("/admin/users/{user_id}", response_model=UserOut)
+@router.patch("/admin/users/{user_id}", response_model=AdminUserOut)
 def update_admin_user(
     user_id: UUID,
     payload: AdminUserUpdate,
-    admin: User = Depends(require_roles("admin")),
+    admin: User = Depends(require_roles("admin", "support_operator")),
     db: Session = Depends(get_db),
-) -> UserOut:
+) -> AdminUserOut:
     target = db.get(User, user_id)
     if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    if admin.role == "support_operator" and payload.role is not None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Support operators cannot change account roles.")
+    if admin.role == "support_operator" and target.role == "admin" and payload.is_active is False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Support operators cannot suspend administrator accounts.")
     if target.id == admin.id and (
         payload.is_active is False or (payload.role is not None and payload.role != "admin")
     ):
@@ -965,18 +978,20 @@ def update_admin_user(
     db.commit()
     db.refresh(target)
     profile = db.scalar(select(Profile).where(Profile.user_id == target.id))
-    return UserOut(
+    return AdminUserOut(
         id=target.id,
         email=target.email,
         role=target.role,
         is_verified=target.is_verified,
+        is_active=target.is_active,
+        created_at=target.created_at,
         profile=ProfileOut.model_validate(profile) if profile else None,
     )
 
 
 @router.get("/admin/reports", response_model=list[ReportOut])
 def admin_reports(
-    _: User = Depends(require_roles("admin", "moderator", "scientific_reviewer")),
+    _: User = Depends(require_roles("admin", "moderator", "scientific_reviewer", "support_operator")),
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     db: Session = Depends(get_db),
 ) -> list[Report]:

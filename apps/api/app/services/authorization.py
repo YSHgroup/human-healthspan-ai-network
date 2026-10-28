@@ -15,8 +15,6 @@ class AuthorizationService:
 
     def readable_project_ids(self, principal: User) -> Select[tuple[UUID]]:
         project_ids = select(ResearchProject.id)
-        if principal.role == "admin":
-            return project_ids
         member_project_ids = select(ResearchMember.project_id).where(
             ResearchMember.user_id == principal.id
         )
@@ -32,7 +30,7 @@ class AuthorizationService:
         )
 
     def can_read_project(self, principal: User, project: ResearchProject) -> bool:
-        if principal.role == "admin" or project.owner_id == principal.id:
+        if project.owner_id == principal.id:
             return True
         if project.visibility == "public":
             return True
@@ -46,7 +44,7 @@ class AuthorizationService:
         ) is not None
 
     def can_write_project(self, principal: User, project: ResearchProject) -> bool:
-        if principal.role == "admin" or project.owner_id == principal.id:
+        if project.owner_id == principal.id:
             return True
         if project.visibility != "team":
             return False

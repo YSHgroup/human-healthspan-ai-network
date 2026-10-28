@@ -157,6 +157,27 @@ def test_research_project_visibility_and_team_permissions(client: TestClient) ->
     assert members.json()[0]["user_id"] == member["user"]["id"]
 
 
+def test_admin_does_not_bypass_private_research_project_permissions(client: TestClient) -> None:
+    owner = register(client, "private-owner@example.org")
+    admin = register(client, "research-admin@example.org")
+    project = client.post(
+        "/api/v1/research/projects",
+        headers=auth_header(owner["tokens"]["access_token"]),
+        json={"title": "Restricted project", "description": "Private research", "visibility": "private"},
+    ).json()
+    with SessionLocal.begin() as db:
+        db.get(User, UUID(admin["user"]["id"])).role = "admin"
+
+    headers = auth_header(admin["tokens"]["access_token"])
+    assert client.get(f"/api/v1/research/projects/{project['id']}", headers=headers).status_code == 404
+    with SessionLocal() as db:
+        results = RetrievalService(db).retrieve(
+            "restricted",
+            {"principal_id": admin["user"]["id"], "limit": 10},
+        )
+    assert results == []
+
+
 def test_invalid_credentials_and_refresh_token(client: TestClient) -> None:
     registration = register(client, "login@example.org")
     invalid = client.post(
@@ -366,3 +387,37 @@ def test_admin_account_changes_require_reason_and_prevent_self_lockout(client: T
     assert update.json()["role"] == "moderator"
     assert client.get("/api/v1/admin/users", headers=admin_headers).status_code == 200
     assert client.get("/api/v1/admin/audit-logs", headers=admin_headers).status_code == 200
+
+
+def test_support_operator_can_manage_account_status_but_not_roles(client: TestClient) -> None:
+    operator = register(client, "support@example.org")
+    member = register(client, "support-target@example.org")
+    admin = register(client, "support-protected-admin@example.org")
+    with SessionLocal.begin() as db:
+        db.get(User, UUID(operator["user"]["id"])).role = "support_operator"
+        db.get(User, UUID(admin["user"]["id"])).role = "admin"
+    headers = auth_header(operator["tokens"]["access_token"])
+
+    users = client.get("/api/v1/admin/users", headers=headers)
+    assert users.status_code == 200
+    target = next(item for item in users.json() if item["id"] == member["user"]["id"])
+
+    denied = client.patch(
+        f"/api/v1/admin/users/{target['id']}",
+        headers=headers,
+        json={"role": "admin", "reason": "Not permitted"},
+    )
+    assert denied.status_code == 403
+    suspended = client.patch(
+        f"/api/v1/admin/users/{target['id']}",
+        headers=headers,
+        json={"is_active": False, "reason": "Abuse report review"},
+    )
+    assert suspended.status_code == 200
+    assert suspended.json()["is_active"] is False
+    protected_admin = client.patch(
+        f"/api/v1/admin/users/{admin['user']['id']}",
+        headers=headers,
+        json={"is_active": False, "reason": "Not permitted"},
+    )
+    assert protected_admin.status_code == 403
