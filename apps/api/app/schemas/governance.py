@@ -1,0 +1,39 @@
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class CommunityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    slug: str
+    name: str
+    description: str
+    topic: str
+
+
+class ReportCreate(BaseModel):
+    target_type: str = Field(pattern="^(post|comment|user|evidence)$")
+    target_id: UUID
+    reason: str = Field(min_length=3, max_length=80)
+    details: str | None = Field(default=None, max_length=2000)
+
+
+class ReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    reporter_id: UUID
+    target_type: str
+    target_id: str
+    reason: str
+    details: str | None
+    status: str
+    created_at: datetime
+
+
+class ModerationDecision(BaseModel):
+    action: str = Field(pattern="^(dismiss|remove|restrict)$")
+    reason: str = Field(min_length=3, max_length=2000)
