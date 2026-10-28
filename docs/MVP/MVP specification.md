@@ -1,8 +1,10 @@
-Absolutely. We’ll treat the blueprint and master engineering prompt as the source of truth and turn them into a **buildable MVP specification**, rather than trying to implement the entire long-term platform.
+This product specification is aligned with the [final architecture](../Human_Healthspan_AI_Scientific_Network_Final_Architecture.md), the [roadmap](../ROADMAP.md), and the detailed [MVP v2 engineering specification](Human_Healthspan_AI_Scientific_Network_MVP_v2_Engineering_Specification.md). The architecture and roadmap define system boundaries and phased scope; this document defines the Phase 1 product.
 
-The blueprint’s MVP recommendation is essentially: social network + researcher/expert profiles + research workspaces + literature/document search + evidence-grounded AI + basic researcher/project matching + a small set of communities + an initial event/challenge. 
+Phase 1 includes the member platform, foundational research workflows, evidence-grounded AI where it meets quality and privacy requirements, and a separate first-class Admin App. Researcher matching, events, and challenges are later roadmap capabilities, not MVP launch dependencies.
 
-# MVP Specification — Stage 1
+# MVP Specification — Phase 1
+
+Phase 0 validation and architecture work precedes implementation. Phase 1 is the first product release and includes both member-facing and administrative applications.
 
 ## 1. MVP objective
 
@@ -12,7 +14,7 @@ The MVP should answer one fundamental question:
 
 We should **not** attempt to build the complete knowledge graph, advanced scientific agents, institutional platform, genomic-data infrastructure, funding marketplace, etc. yet.
 
-The MVP should establish the foundation for those later phases.
+The MVP should establish the foundation for later phases without making their capabilities launch dependencies.
 
 ---
 
@@ -22,7 +24,7 @@ I would define the first version as:
 
 ### **Healthspan Network MVP**
 
-A web application where users can:
+A member-facing web application, accompanied by a separate Admin App, where users can:
 
 **Discover → Discuss → Learn → Ask AI → Explore Research → Collaborate**
 
@@ -33,10 +35,9 @@ with two connected experiences:
 * Healthspan
 * Fitness & strength
 * Nutrition
-* Sleep/routines
-* Skincare
-* Brain/cognition
-* Healthy aging
+* Skin & Appearance
+* Brain & Cognition
+* Healthy Aging
 
 ### Research side
 
@@ -54,22 +55,22 @@ This follows the blueprint's principle that the consumer layer provides broad en
 
 # 3. MVP users
 
-We only need four primary personas initially.
+The initial personas are:
 
-| User            | Primary need                                 |
-| --------------- | -------------------------------------------- |
-| General user    | Learn, discuss and improve health/capability |
-| Expert          | Share knowledge and build reputation         |
-| Researcher      | Discover knowledge and collaborate           |
-| Admin/moderator | Maintain quality and scientific integrity    |
+| User | Primary need |
+| --- | --- |
+| General user / health and fitness enthusiast | Learn, participate, ask questions, and improve health/capability |
+| Researcher / scientific expert | Share expertise, explore evidence, and create or join research projects |
+| Scientific reviewer / moderator | Review evidence quality, reports, and community content |
+| Administrator / support operator | Safely manage platform operations with least-privilege access and auditability |
 
-We can add institutions, laboratories, biotech companies and other organizational accounts later.
+Institutional workspaces and organization accounts belong to a later roadmap phase.
 
 ---
 
 # 4. MVP modules
 
-The first implementation should contain **10 core modules**.
+The Phase 1 member platform and Admin App provide the following capabilities.
 
 ### 1. Identity
 
@@ -100,13 +101,13 @@ The first implementation should contain **10 core modules**.
 
 ### 4. Communities
 
-Start with approximately six:
+Start with these six:
 
 * Healthy Aging
 * Fitness & Strength
 * Nutrition
-* Skincare
-* Brain Health
+* Skin & Appearance
+* Brain & Cognition
 * Biomedical Research
 
 The blueprint specifically recommends starting with a small set of these communities. 
@@ -184,19 +185,24 @@ Semantic search should be available for scientific material.
 
 ### 10. Administration
 
-* User management
-* Content moderation
-* Reports
-* Community management
-* Research-project oversight
-* AI monitoring
-* Audit logs
+Administration is delivered through a **separately built and deployed Admin App** with its own route, navigation, and production access policy. It shares the backend API and domain services with the member platform and is required for MVP launch, not a later add-on.
+
+* Secure administrator sign-in and session controls; MFA-ready design
+* Server-enforced least-privilege roles and resource-level authorization
+* Platform/service overview and operational health
+* User/account lookup, status changes, and safeguarded role management
+* Report and moderation queues with reason codes and appeal/reversal handling
+* Community and scientific-content review
+* Audited privileged actions and access to sensitive administrative functions
+* AI/job monitoring and incident/reporting entry points
+
+Administrative access does not imply access to private user or research content. Exceptional access must be narrowly scoped and audited.
 
 ---
 
 # 5. MVP navigation
 
-The initial application can have:
+The member application can have:
 
 ```text
 Home
@@ -205,10 +211,11 @@ Communities
 Science
 Research
 AI
-Messages
 Notifications
 Profile
 ```
+
+The Admin App has a distinct application boundary and privileged sign-in; it is not part of the member navigation.
 
 Research workspace:
 
@@ -266,17 +273,15 @@ Create research project
 Create research question
         ↓
 Upload/search literature
-        ↓
+↓
 AI analyzes evidence
-        ↓
-Discover related researchers
-        ↓
-Invite collaborator
+↓
+Add authorized team members
 ```
 
 ### Journey C — "I have an idea"
 
-This should become one of the MVP's most important flows:
+The MVP supports creating a research project from an evidence-informed question. Matching people to opportunities is a later-phase capability:
 
 ```text
 Research Question
@@ -289,14 +294,10 @@ Existing evidence
        ↓
 Related projects
        ↓
-Relevant researchers
-       ↓
-Potential collaborators
-       ↓
 Create Research Project
 ```
 
-This directly implements the blueprint's **Collaboration Engine** concept, initially in simplified form. 
+The MVP does not require an automated collaboration engine or researcher-matching system.
 
 ---
 
@@ -327,7 +328,7 @@ Citation / Evidence validation
 Response
 ```
 
-The master architecture specifically calls for an AI abstraction layer independent of a single model provider, with RAG, tools, embeddings and authorized context. 
+The master architecture specifically calls for an AI abstraction layer independent of a single model provider, with RAG, tools, embeddings and authorized context. AI features ship in Phase 1 only when they satisfy quality, privacy, citation, and permission requirements; they must never bypass authorization.
 
 ---
 
@@ -425,6 +426,8 @@ This is extremely important.
 * Institutional workspaces
 * Funding marketplace
 * Research marketplace
+* Automated researcher matching or collaboration recommendations
+* Events, challenges, and research-opportunity listings
 * Full recommendation ML
 * Complex microservice architecture
 * Kubernetes
@@ -508,6 +511,7 @@ healthspan-network/
 │
 ├── apps/
 │   ├── web/
+│   ├── admin/
 │   └── api/
 │
 ├── packages/
@@ -546,22 +550,17 @@ This is also where I would correct the weakness from the earlier MVP you mention
 
 ---
 
-# 12. MVP milestones
+# 12. Phase 1 delivery sequence
 
-I'd divide implementation into **8 milestones**.
+The roadmap phases define product scope; these workstreams are an implementation sequence within Phase 1, not additional roadmap phases:
 
-| Milestone | Result                                            |
-| --------- | ------------------------------------------------- |
-| M1        | Project infrastructure + Docker + database        |
-| M2        | Authentication + profiles                         |
-| M3        | Posts + comments + follows                        |
-| M4        | Communities + discovery                           |
-| M5        | Research profiles + projects                      |
-| M6        | Literature/document ingestion + search            |
-| M7        | Evidence-grounded AI                              |
-| M8        | Collaboration + moderation + production hardening |
+1. **Foundation:** repository, local/deployment workflow, data model, migrations, CI, identity, authorization, and audit events.
+2. **Member platform:** profiles, starter communities, posts, questions, discussion, reporting, and discovery.
+3. **Research foundation:** projects, research questions, team membership and permissions, literature/evidence records, citations, and provenance.
+4. **Essential Admin App:** separate application boundary, privileged authentication and roles, user/community management, moderation and scientific-review queues, operational visibility, and audited actions. It must be ready before public MVP launch.
+5. **Evidence-grounded AI and launch readiness:** permission-aware retrieval and citations where quality gates pass; security/privacy acceptance checks, observability, backup/recovery, and operational readiness.
 
-After M8 we have a genuine MVP rather than a prototype.
+Workstreams can overlap where dependencies allow. The Admin App and member platform launch together.
 
 ---
 
@@ -575,17 +574,19 @@ The MVP is successful when a test user can:
 
 **Researcher**
 
-> Register → create researcher profile → create project → create research question → upload papers → search literature → ask AI about the project → see sources → identify related researchers → invite collaborator.
+> Register → create researcher profile → create project → create research question → add/search literature → review evidence → use project AI where enabled → inspect sources → add authorized team members.
 
 **Admin**
 
-> Review users → review reports → moderate content → manage communities → inspect AI activity → inspect audit records.
+> Sign in to the separate Admin App → review platform health and queues → manage accounts and communities within assigned role → review reports and scientific content → inspect permitted AI/job operational status → inspect audit records.
 
 And critically:
 
 > **The AI cannot retrieve information that the requesting user is not authorized to access.**
 
 That permission boundary should be a non-negotiable MVP requirement.
+
+The Admin App must enforce server-side authorization, least privilege, reason codes for sensitive actions, and audit events. It must not expose private health or research data by default. Access-boundary tests must cover user, team, project, and administrative roles.
 
 ---
 
@@ -603,10 +604,4 @@ That is small enough to build, but large enough to test the core network loop de
 
 **Question → Discussion → Evidence → Knowledge → Collaboration → Research.** 
 
-### Next stage
-
-Once you approve this MVP specification, I recommend we move directly to **Stage 2: the detailed MVP technical specification**, where I turn each module above into:
-
-**features → screens → user stories → database tables → API endpoints → permissions → AI flows → acceptance tests → implementation tasks.**
-
-That will become the actual engineering blueprint we can use to start generating the project files.
+Implementation details, API contracts, data model, security requirements, and test strategy are specified in the linked MVP v2 engineering specification. Keep both specifications aligned with Phase 1 of the roadmap; move deferred capabilities into their corresponding later phases rather than treating them as launch requirements.

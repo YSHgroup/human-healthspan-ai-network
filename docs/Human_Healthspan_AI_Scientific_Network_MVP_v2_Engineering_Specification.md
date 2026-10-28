@@ -2,9 +2,18 @@
 ## MVP v2 — Product & Engineering Specification
 **Implementation baseline — September 2026**
 
-> **Status:** Build-ready MVP specification  
-> **Architecture:** Modular monolith, progressively extractable into services  
-> **Primary goal:** Validate the product loop  
+> **Status:** Build-ready MVP specification
+>
+> **Architecture:** Modular monolith, progressively extractable into services
+>
+> **Roadmap scope:** Phase 1, following Phase 0 validation and architecture
+>
+> **Required launch decision:** A separate, first-class Admin App ships with the member platform
+>
+> **Alignment sources:** [Final Architecture](Human_Healthspan_AI_Scientific_Network_Final_Architecture.md) and [Roadmap](ROADMAP.md)
+>
+> **Primary goal:** Validate the product loop
+>
 > **People → Questions → Discussion → Evidence → AI → Research Ideas → Collaboration**
 
 ---
@@ -180,6 +189,8 @@ Community capabilities:
 - Confidence/uncertainty
 - Limitations
 
+Enable AI capabilities in Phase 1 only when they meet the required quality, privacy, citation, and permission checks. AI must not act as a security boundary or bypass authorization.
+
 ### Search
 Unified search over:
 - Users
@@ -214,13 +225,19 @@ Filters:
 - Audit trail
 
 ### Administration
-- User management
-- Community management
-- Content management
-- Reports
-- AI monitoring
-- Audit logs
-- Basic analytics
+
+Administration is provided through a separately built and deployed Admin App with its own route, navigation, and production access policy. It shares the backend API and domain services with the member-facing web application and is required before public MVP launch.
+
+- Secure administrator sign-in and session controls; MFA-ready design
+- Server-enforced role-based access control and least-privilege permissions
+- Platform/service overview, queues, alerts, and operational health
+- User/account lookup, status changes, suspensions, and safeguarded role management
+- Reported-content review, moderation actions, reason codes, and basic appeal/reversal handling
+- Community/content administration and scientific evidence review
+- Privileged-action audit log and provenance visibility
+- Background-job/document-processing status and incident/reporting entry points
+
+Admin access to private user or research data is not implicit. Exceptional access must be narrowly scoped and audited.
 
 ---
 
@@ -900,26 +917,28 @@ GET /admin/ai-monitoring
 ```text
 healthspan-platform/
 │
-├── web/
-│   ├── app/
-│   ├── components/
-│   ├── features/
-│   ├── hooks/
-│   ├── lib/
-│   └── tests/
-│
-├── api/
-│   ├── auth/
-│   ├── users/
-│   ├── social/
-│   ├── communities/
-│   ├── questions/
-│   ├── science/
-│   ├── research/
-│   ├── ai/
-│   ├── search/
-│   ├── moderation/
-│   └── admin/
+├── apps/
+│   ├── web/
+│   │   ├── app/
+│   │   ├── components/
+│   │   ├── features/
+│   │   └── tests/
+│   ├── admin/
+│   │   ├── app/
+│   │   ├── components/
+│   │   └── tests/
+│   └── api/
+│       ├── auth/
+│       ├── users/
+│       ├── social/
+│       ├── communities/
+│       ├── questions/
+│       ├── science/
+│       ├── research/
+│       ├── ai/
+│       ├── search/
+│       ├── moderation/
+│       └── admin/
 │
 ├── ai/
 │   ├── gateway/
@@ -1195,6 +1214,7 @@ Deliver:
 - Frontend shell
 - API foundation
 - RBAC/resource authorization
+- Admin App boundary, privileged roles, audit-event requirements, and frontend shell
 
 ## Milestone 2 — Social
 
@@ -1258,6 +1278,9 @@ Deliver:
 - Observability
 - Backup/recovery
 - Production deployment
+- Verify the separate Admin App and essential operational workflows are ready for public launch
+
+The Admin App is a Phase 1 deliverable and must be ready with the member platform. Its implementation can span milestones 1–5; it is not deferred until the final milestone to begin.
 - Analytics
 
 ---
@@ -1360,6 +1383,9 @@ The system must demonstrate:
 - Project members see only permitted resources.
 - Audit events are generated for sensitive actions.
 - Uploaded files are scanned before processing.
+- The separate Admin App enforces server-side role checks and least privilege.
+- Sensitive administrative actions require reason codes and produce audit events.
+- Admin access does not implicitly expose private health or research content.
 
 ---
 
@@ -1375,6 +1401,8 @@ Do **not** build these in the first release:
 - Clinical decision support
 - Institutional research platform
 - Funding marketplace
+- Automated researcher matching or collaboration recommendations
+- Events and challenges
 - Foundation-model training
 - Native mobile applications
 - Complex microservices
