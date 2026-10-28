@@ -3,8 +3,9 @@ from getpass import getpass
 
 from sqlalchemy import select
 
-from app.db.session import SessionLocal, initialize_database
-from app.models.domain import User
+from app.db.base import utc_now
+from app.db.session import SessionLocal, seed_communities
+from app.models.domain import AuditEvent, Profile, User
 from app.schemas.auth import RegisterRequest
 from app.services.security import hash_password
 
@@ -16,7 +17,7 @@ def create_admin(email: str) -> None:
     if password != confirmation:
         raise SystemExit("Passwords do not match.")
 
-    initialize_database()
+    seed_communities()
     with SessionLocal.begin() as db:
         user = db.scalar(select(User).where(User.email == str(payload.email).lower()))
         if user is None:
@@ -28,12 +29,23 @@ def create_admin(email: str) -> None:
             )
             db.add(user)
             db.flush()
-            from app.models.domain import Profile
-
             db.add(Profile(user_id=user.id, display_name=payload.display_name))
         else:
             user.role = "admin"
+            user.is_active = True
             user.is_verified = True
+            if db.scalar(select(Profile.id).where(Profile.user_id == user.id)) is None:
+                db.add(Profile(user_id=user.id, display_name=payload.display_name))
+        db.add(
+            AuditEvent(
+                actor_id=None,
+                action="admin.bootstrap",
+                resource_type="user",
+                resource_id=str(user.id),
+                details={"email": user.email, "operator_initiated": True},
+                created_at=utc_now(),
+            )
+        )
     print(f"Administrator role granted to {payload.email}.")
 
 

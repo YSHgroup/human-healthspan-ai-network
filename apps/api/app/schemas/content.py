@@ -2,12 +2,13 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class PostCreate(BaseModel):
     author_id: str | None = None
     community_id: UUID | None = None
     body: str = Field(min_length=1, max_length=10000)
+    content_type: Literal["post", "question"] = "post"
     classification: Literal[
         "personal_experience",
         "opinion",
@@ -18,6 +19,14 @@ class PostCreate(BaseModel):
         "speculation",
     ] = "personal_experience"
 
+    @field_validator("body")
+    @classmethod
+    def body_must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Post body cannot be blank.")
+        return value.strip()
+
+
 class PostOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,12 +34,20 @@ class PostOut(BaseModel):
     author_id: UUID
     community_id: UUID | None
     body: str
+    content_type: str
     classification: str
     created_at: datetime
 
 
 class CommentCreate(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
+
+    @field_validator("body")
+    @classmethod
+    def body_must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Comment body cannot be blank.")
+        return value.strip()
 
 
 class CommentOut(BaseModel):
@@ -41,3 +58,7 @@ class CommentOut(BaseModel):
     author_id: UUID
     body: str
     created_at: datetime
+
+
+class ReactionCreate(BaseModel):
+    kind: Literal["like", "insightful", "support"]

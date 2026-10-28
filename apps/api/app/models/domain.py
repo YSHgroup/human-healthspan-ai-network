@@ -12,7 +12,6 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -47,6 +46,18 @@ class AuthSession(UUIDPrimaryKey, Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AuthToken(UUIDPrimaryKey, Base):
+    __tablename__ = "auth_tokens"
+    __table_args__ = (Index("ix_auth_tokens_user_purpose", "user_id", "purpose"),)
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    purpose: Mapped[str] = mapped_column(String(32), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
@@ -105,6 +116,7 @@ class Post(UUIDPrimaryKey, Timestamped, Base):
     author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), index=True, nullable=False)
     community_id: Mapped[UUID | None] = mapped_column(ForeignKey("communities.id", ondelete="SET NULL"), index=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
+    content_type: Mapped[str] = mapped_column(String(24), default="post", nullable=False)
     classification: Mapped[str] = mapped_column(String(32), default="personal_experience", nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -118,6 +130,25 @@ class Comment(UUIDPrimaryKey, Timestamped, Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class Reaction(UUIDPrimaryKey, Base):
+    __tablename__ = "reactions"
+    __table_args__ = (UniqueConstraint("user_id", "post_id", name="uq_reaction_user_post"),)
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    post_id: Mapped[UUID] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class Bookmark(UUIDPrimaryKey, Base):
+    __tablename__ = "bookmarks"
+    __table_args__ = (UniqueConstraint("user_id", "post_id", name="uq_bookmark_user_post"),)
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    post_id: Mapped[UUID] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 class ResearchQuestion(UUIDPrimaryKey, Timestamped, Base):
     __tablename__ = "research_questions"
 
@@ -126,6 +157,20 @@ class ResearchQuestion(UUIDPrimaryKey, Timestamped, Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     evidence_status: Mapped[str] = mapped_column(String(40), default="unclassified", nullable=False)
+
+
+class Hypothesis(UUIDPrimaryKey, Timestamped, Base):
+    __tablename__ = "hypotheses"
+
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("research_projects.id", ondelete="CASCADE"), index=True)
+    research_question_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("research_questions.id", ondelete="SET NULL"), index=True
+    )
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    origin: Mapped[str] = mapped_column(String(24), default="human", nullable=False)
+    status: Mapped[str] = mapped_column(String(24), default="proposed", nullable=False)
 
 
 class Literature(UUIDPrimaryKey, Timestamped, Base):

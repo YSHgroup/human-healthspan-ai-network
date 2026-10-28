@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy import and_, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.auth import router as auth_router
@@ -11,14 +11,17 @@ from app.db.base import utc_now
 from app.db.session import get_db
 from app.models.domain import (
     AuditEvent,
+    Bookmark,
     Comment,
     Community,
     CommunityMember,
     Evidence,
     Follow,
+    Hypothesis,
     Literature,
     Post,
     Profile,
+    Reaction,
     Report,
     ResearchMember,
     ResearchProject,
@@ -26,14 +29,23 @@ from app.models.domain import (
     User,
 )
 from app.schemas.auth import ProfileOut, PublicUserOut, UserOut, UserProfileUpdate
-from app.schemas.content import CommentCreate, CommentOut, PostCreate, PostOut
-from app.schemas.governance import CommunityOut, ModerationDecision, ReportCreate, ReportOut
+from app.schemas.content import CommentCreate, CommentOut, PostCreate, PostOut, ReactionCreate
+from app.schemas.governance import (
+    AdminUserUpdate,
+    CommunityOut,
+    ModerationDecision,
+    ReportCreate,
+    ReportOut,
+)
 from app.schemas.research import (
     EvidenceCreate,
     EvidenceOut,
+    HypothesisCreate,
+    HypothesisOut,
     LiteratureCreate,
     LiteratureOut,
     ResearchMemberCreate,
+    ResearchMemberOut,
     ResearchProjectCreate,
     ResearchProjectOut,
     ResearchProjectUpdate,
@@ -42,6 +54,7 @@ from app.schemas.research import (
 )
 from app.services.audit import record_audit_event
 from app.services.authorization import AuthorizationService
+from app.services.search import SearchService
 
 router = APIRouter()
 router.include_router(auth_router)
@@ -128,7 +141,10 @@ def get_feed(
     community_id: UUID | None = None,
     db: Session = Depends(get_db),
 ) -> list[Post]:
-    query = select(Post).where(Post.deleted_at.is_(None))
+    query = select(Post).join(User, User.id == Post.author_id).where(
+        Post.deleted_at.is_(None),
+        User.is_active.is_(True),
+    )
     if community_id is not None:
         query = query.where(Post.community_id == community_id)
     return list(db.scalars(query.order_by(Post.created_at.desc(), Post.id).limit(limit).offset(offset)))
@@ -156,6 +172,7 @@ def create_post(
         author_id=user.id,
         community_id=payload.community_id,
         body=payload.body.strip(),
+        content_type=payload.content_type,
         classification=payload.classification,
     )
     db.add(post)
@@ -171,7 +188,50 @@ def get_post(post_id: UUID, db: Session = Depends(get_db)) -> Post:
     post = db.get(Post, post_id)
     if post is None or post.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    author = db.get(User, post.author_id)
+    if author is None or not author.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
     return post
+
+
+@router.get("/communities/{community_id}")
+def get_community(community_id: UUID, db: Session = Depends(get_db)) -> dict[str, object]:
+    community = db.get(Community, community_id)
+    if community is None or not community.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Community not found.")
+    member_count = db.scalar(
+        select(func.count()).select_from(CommunityMember).where(CommunityMember.community_id == community_id)
+    )
+    return {
+        "id": community.id,
+        "slug": community.slug,
+        "name": community.name,
+        "description": community.description,
+        "topic": community.topic,
+        "member_count": member_count or 0,
+    }
+
+
+@router.get("/communities/{community_id}/feed", response_model=list[PostOut])
+def community_feed(
+    community_id: UUID,
+    limit: Annotated[int, Query(ge=1, le=100)] = 25,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    db: Session = Depends(get_db),
+) -> list[Post]:
+    community = db.get(Community, community_id)
+    if community is None or not community.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Community not found.")
+    return list(
+        db.scalars(
+            select(Post)
+            .join(User, User.id == Post.author_id)
+            .where(Post.community_id == community_id, Post.deleted_at.is_(None), User.is_active.is_(True))
+            .order_by(Post.created_at.desc(), Post.id)
+            .limit(limit)
+            .offset(offset)
+        )
+    )
 
 
 @router.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -200,7 +260,11 @@ def list_comments(
     post = db.get(Post, post_id)
     if post is None or post.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
-    query = select(Comment).where(Comment.post_id == post_id, Comment.deleted_at.is_(None))
+    query = (
+        select(Comment)
+        .join(User, User.id == Comment.author_id)
+        .where(Comment.post_id == post_id, Comment.deleted_at.is_(None), User.is_active.is_(True))
+    )
     return list(db.scalars(query.order_by(Comment.created_at.asc()).limit(limit).offset(offset)))
 
 
@@ -221,6 +285,77 @@ def create_comment(
     db.commit()
     db.refresh(comment)
     return comment
+
+
+@router.post("/posts/{post_id}/reactions", status_code=status.HTTP_201_CREATED)
+def react_to_post(
+    post_id: UUID,
+    payload: ReactionCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    post = db.get(Post, post_id)
+    if post is None or post.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    reaction = db.scalar(
+        select(Reaction).where(Reaction.post_id == post_id, Reaction.user_id == user.id)
+    )
+    if reaction is None:
+        db.add(Reaction(post_id=post_id, user_id=user.id, kind=payload.kind))
+        record_audit_event(db, user.id, "post.reacted", "post", post_id, {"kind": payload.kind})
+    else:
+        reaction.kind = payload.kind
+        record_audit_event(db, user.id, "post.reaction_updated", "post", post_id, {"kind": payload.kind})
+    db.commit()
+    return {"status": "recorded", "kind": payload.kind}
+
+
+@router.delete("/posts/{post_id}/reactions", status_code=status.HTTP_204_NO_CONTENT)
+def remove_post_reaction(
+    post_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    reaction = db.scalar(
+        select(Reaction).where(Reaction.post_id == post_id, Reaction.user_id == user.id)
+    )
+    if reaction is not None:
+        db.delete(reaction)
+        record_audit_event(db, user.id, "post.reaction_removed", "post", post_id)
+        db.commit()
+
+
+@router.post("/posts/{post_id}/bookmark", status_code=status.HTTP_204_NO_CONTENT)
+def bookmark_post(
+    post_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    post = db.get(Post, post_id)
+    if post is None or post.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    existing = db.scalar(
+        select(Bookmark).where(Bookmark.post_id == post_id, Bookmark.user_id == user.id)
+    )
+    if existing is None:
+        db.add(Bookmark(post_id=post_id, user_id=user.id))
+        record_audit_event(db, user.id, "post.bookmarked", "post", post_id)
+        db.commit()
+
+
+@router.delete("/posts/{post_id}/bookmark", status_code=status.HTTP_204_NO_CONTENT)
+def unbookmark_post(
+    post_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    bookmark = db.scalar(
+        select(Bookmark).where(Bookmark.post_id == post_id, Bookmark.user_id == user.id)
+    )
+    if bookmark is not None:
+        db.delete(bookmark)
+        record_audit_event(db, user.id, "post.unbookmarked", "post", post_id)
+        db.commit()
 
 
 @router.post("/users/{user_id}/follow", status_code=status.HTTP_204_NO_CONTENT)
@@ -313,16 +448,8 @@ def list_research_projects(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[ResearchProject]:
-    member_project_ids = select(ResearchMember.project_id).where(ResearchMember.user_id == user.id)
-    query = select(ResearchProject).where(
-        or_(
-            ResearchProject.owner_id == user.id,
-            ResearchProject.visibility == "public",
-            and_(ResearchProject.visibility == "team", ResearchProject.id.in_(member_project_ids)),
-        )
-    )
-    if user.role == "admin":
-        query = select(ResearchProject)
+    readable_project_ids = AuthorizationService(db).readable_project_ids(user)
+    query = select(ResearchProject).where(ResearchProject.id.in_(readable_project_ids))
     return list(
         db.scalars(query.order_by(ResearchProject.created_at.desc()).limit(limit).offset(offset))
     )
@@ -414,6 +541,26 @@ def add_research_member(
     return {"status": "member_added"}
 
 
+@router.get(
+    "/research/projects/{project_id}/members",
+    response_model=list[ResearchMemberOut],
+)
+def list_research_members(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[ResearchMember]:
+    project = project_or_404(db, project_id)
+    require_project_read(db, user, project)
+    return list(
+        db.scalars(
+            select(ResearchMember)
+            .where(ResearchMember.project_id == project_id)
+            .order_by(ResearchMember.created_at.asc())
+        )
+    )
+
+
 @router.post(
     "/research/questions",
     response_model=ResearchQuestionOut,
@@ -454,6 +601,90 @@ def list_research_questions(
             select(ResearchQuestion)
             .where(ResearchQuestion.project_id == project_id)
             .order_by(ResearchQuestion.created_at.desc())
+        )
+    )
+
+
+@router.post(
+    "/research/projects/{project_id}/hypotheses",
+    response_model=HypothesisOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_hypothesis(
+    project_id: UUID,
+    payload: HypothesisCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Hypothesis:
+    project = project_or_404(db, project_id)
+    require_project_write(db, user, project)
+    if payload.research_question_id is not None:
+        question = db.get(ResearchQuestion, payload.research_question_id)
+        if question is None or question.project_id != project_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Research question not found.")
+        if payload.research_question_id not in {None, question.id}:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Question ID does not match the route.")
+    hypothesis = Hypothesis(
+        project_id=project_id,
+        research_question_id=payload.research_question_id,
+        author_id=user.id,
+        title=payload.title,
+        description=payload.description,
+        origin="human",
+    )
+    db.add(hypothesis)
+    db.flush()
+    record_audit_event(db, user.id, "hypothesis.created", "hypothesis", hypothesis.id)
+    db.commit()
+    db.refresh(hypothesis)
+    return hypothesis
+
+
+@router.post(
+    "/research/questions/{question_id}/hypotheses",
+    response_model=HypothesisOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_question_hypothesis(
+    question_id: UUID,
+    payload: HypothesisCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Hypothesis:
+    question = db.get(ResearchQuestion, question_id)
+    if question is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Research question not found.")
+    project = project_or_404(db, question.project_id)
+    require_project_write(db, user, project)
+    hypothesis = Hypothesis(
+        project_id=project.id,
+        research_question_id=question.id,
+        author_id=user.id,
+        title=payload.title,
+        description=payload.description,
+        origin="human",
+    )
+    db.add(hypothesis)
+    db.flush()
+    record_audit_event(db, user.id, "hypothesis.created", "hypothesis", hypothesis.id)
+    db.commit()
+    db.refresh(hypothesis)
+    return hypothesis
+
+
+@router.get("/research/projects/{project_id}/hypotheses", response_model=list[HypothesisOut])
+def list_hypotheses(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Hypothesis]:
+    project = project_or_404(db, project_id)
+    require_project_read(db, user, project)
+    return list(
+        db.scalars(
+            select(Hypothesis)
+            .where(Hypothesis.project_id == project_id)
+            .order_by(Hypothesis.created_at.desc())
         )
     )
 
@@ -548,27 +779,40 @@ def search(
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
     db: Session = Depends(get_db),
 ) -> dict[str, list[dict]]:
+    return SearchService(db).search(q, limit)
+
+
+@router.get("/science/search")
+def science_search(
+    q: Annotated[str, Query(min_length=2, max_length=200)],
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+    db: Session = Depends(get_db),
+) -> list[dict[str, object]]:
     pattern = f"%{q.strip()}%"
-    posts = db.scalars(
-        select(Post).where(Post.deleted_at.is_(None), Post.body.ilike(pattern)).limit(limit)
+    public_projects = select(ResearchProject.id).where(ResearchProject.visibility == "public")
+    entries = db.scalars(
+        select(Literature)
+        .where(
+            Literature.project_id.in_(public_projects),
+            or_(Literature.title.ilike(pattern), Literature.authors.ilike(pattern)),
+        )
+        .order_by(Literature.created_at.desc())
+        .limit(limit)
     )
-    projects = db.scalars(
-        select(ResearchProject).where(
-            ResearchProject.visibility == "public",
-            or_(ResearchProject.title.ilike(pattern), ResearchProject.description.ilike(pattern)),
-        ).limit(limit)
-    )
-    communities = db.scalars(
-        select(Community).where(
-            Community.is_active.is_(True),
-            or_(Community.name.ilike(pattern), Community.description.ilike(pattern)),
-        ).limit(limit)
-    )
-    return {
-        "posts": [{"id": str(item.id), "body": item.body, "classification": item.classification} for item in posts],
-        "projects": [{"id": str(item.id), "title": item.title, "description": item.description} for item in projects],
-        "communities": [{"id": str(item.id), "name": item.name, "topic": item.topic} for item in communities],
-    }
+    return [
+        {
+            "id": str(entry.id),
+            "project_id": str(entry.project_id),
+            "title": entry.title,
+            "authors": entry.authors,
+            "publication_year": entry.publication_year,
+            "source_url": entry.source_url,
+            "doi": entry.doi,
+            "source_type": entry.source_type,
+            "provenance": entry.provenance,
+        }
+        for entry in entries
+    ]
 
 
 @router.post("/reports", response_model=ReportOut, status_code=status.HTTP_201_CREATED)
@@ -631,6 +875,8 @@ def decide_report(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found.")
     if report.status != "open":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Report has already been reviewed.")
+    if user.role == "scientific_reviewer" and report.target_type != "evidence":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Scientific reviewers can only review evidence reports.")
     report.status = "resolved" if payload.action != "dismiss" else "dismissed"
     report.reviewed_by = user.id
     report.resolution = payload.reason
@@ -638,6 +884,10 @@ def decide_report(
         target = db.get(Post if report.target_type == "post" else Comment, UUID(report.target_id))
         if target is not None:
             target.deleted_at = utc_now()
+    if payload.action == "restrict" and report.target_type == "evidence":
+        evidence = db.get(Evidence, UUID(report.target_id))
+        if evidence is not None:
+            evidence.review_status = "needs_review"
     record_audit_event(
         db,
         user.id,
@@ -675,6 +925,53 @@ def admin_users(
         )
         for item in users
     ]
+
+
+@router.patch("/admin/users/{user_id}", response_model=UserOut)
+def update_admin_user(
+    user_id: UUID,
+    payload: AdminUserUpdate,
+    admin: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+) -> UserOut:
+    target = db.get(User, user_id)
+    if target is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    if target.id == admin.id and (
+        payload.is_active is False or (payload.role is not None and payload.role != "admin")
+    ):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You cannot remove your own administrator access.")
+    removes_admin = target.role == "admin" and (
+        payload.is_active is False or (payload.role is not None and payload.role != "admin")
+    )
+    if removes_admin:
+        active_admins = db.scalar(
+            select(func.count()).select_from(User).where(User.role == "admin", User.is_active.is_(True))
+        )
+        if active_admins is not None and active_admins <= 1:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="At least one active administrator is required.")
+    if payload.is_active is not None:
+        target.is_active = payload.is_active
+    if payload.role is not None:
+        target.role = payload.role
+    record_audit_event(
+        db,
+        admin.id,
+        "admin.user.updated",
+        "user",
+        target.id,
+        {"reason": payload.reason, "is_active": target.is_active, "role": target.role},
+    )
+    db.commit()
+    db.refresh(target)
+    profile = db.scalar(select(Profile).where(Profile.user_id == target.id))
+    return UserOut(
+        id=target.id,
+        email=target.email,
+        role=target.role,
+        is_verified=target.is_verified,
+        profile=ProfileOut.model_validate(profile) if profile else None,
+    )
 
 
 @router.get("/admin/reports", response_model=list[ReportOut])

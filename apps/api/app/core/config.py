@@ -23,12 +23,19 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     api_cors_origins: str = "http://localhost:3000"
     sql_echo: bool = False
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    email_from: str | None = None
 
     @model_validator(mode="after")
     def validate_security_settings(self) -> "Settings":
         if self.app_env.lower() in {"production", "prod"}:
             if self.jwt_secret == "development-only-change-me":
                 raise ValueError("JWT_SECRET must be set outside development.")
+            if len(self.jwt_secret) < 32:
+                raise ValueError("JWT_SECRET must contain at least 32 characters outside development.")
             if self.postgres_password == "healthspan_dev":
                 raise ValueError("POSTGRES_PASSWORD must be set outside development.")
         if self.access_token_minutes < 1 or self.refresh_token_days < 1:

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -21,6 +21,13 @@ class UserProfileUpdate(BaseModel):
     interests: list[str] | None = Field(default=None, max_length=30)
     expertise: list[str] | None = Field(default=None, max_length=30)
     is_public: bool | None = None
+
+    @field_validator("display_name", "bio", "timezone")
+    @classmethod
+    def optional_strings_must_not_be_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("This value cannot be blank.")
+        return value.strip() if value is not None else None
 
 
 class ProfileOut(BaseModel):
@@ -53,6 +60,19 @@ class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=1)
 
 
+class VerificationRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
@@ -62,5 +82,6 @@ class TokenPair(BaseModel):
 
 class RegistrationOut(BaseModel):
     user: UserOut
-    tokens: TokenPair
+    tokens: TokenPair | None = None
     verification_required: bool = True
+    verification_token: str | None = None

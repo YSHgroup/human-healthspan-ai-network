@@ -15,6 +15,8 @@ from app.db.session import get_db
 from app.models.domain import AuthSession, Profile, User
 from app.schemas.auth import (
     LoginRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     ProfileOut,
     RefreshRequest,
     RegistrationOut,
@@ -22,9 +24,12 @@ from app.schemas.auth import (
     TokenPair,
     UserOut,
     UserProfileUpdate,
+    VerificationRequest,
 )
+from app.services.audit import record_audit_event
+from app.services.auth_tokens import consume_one_time_token, create_one_time_token
+from app.services.email import EmailDeliveryError, email_delivery_configured, send_action_email
 from app.services.security import (
-    create_access_token,
     create_session_tokens,
     decode_token,
     hash_password,
@@ -46,36 +51,151 @@ def build_user_out(user: User, profile: Profile | None) -> UserOut:
 
 @router.post("/register", response_model=RegistrationOut, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> RegistrationOut:
+    if settings.app_env.lower() not in {"development", "dev", "test"} and not email_delivery_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email verification delivery is not configured.",
+        )
     email = str(payload.email).strip().lower()
     existing = db.scalar(select(User.id).where(User.email == email))
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An account with this email already exists.")
 
-    user = User(email=email, password_hash=hash_password(payload.password))
-    db.add(user)
-    db.flush()
-    profile = Profile(user_id=user.id, display_name=payload.display_name.strip())
-    db.add(profile)
     try:
-        tokens = create_session_tokens(user, db)
+        user = User(email=email, password_hash=hash_password(payload.password))
+        db.add(user)
+        db.flush()
+        profile = Profile(user_id=user.id, display_name=payload.display_name.strip())
+        db.add(profile)
+        verification_token = create_one_time_token(db, user, "verify_email", timedelta(hours=24))
         db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An account with this email already exists.") from None
     db.refresh(user)
     db.refresh(profile)
-    return RegistrationOut(user=build_user_out(user, profile), tokens=TokenPair(**tokens))
+    development_token = None
+    if email_delivery_configured():
+        try:
+            send_action_email(email, "verify-email", verification_token)
+        except EmailDeliveryError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="The account was created, but verification email delivery failed. Request a new email.",
+            ) from exc
+    elif settings.app_env.lower() in {"development", "dev", "test"}:
+        development_token = verification_token
+    return RegistrationOut(
+        user=build_user_out(user, profile),
+        verification_required=True,
+        verification_token=development_token,
+    )
 
 
 @router.post("/login", response_model=TokenPair)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:
     email = str(payload.email).strip().lower()
     user = db.scalar(select(User).where(User.email == email))
-    if user is None or not user.is_active or not verify_password(payload.password, user.password_hash):
+    if (
+        user is None
+        or not user.is_active
+        or not user.is_verified
+        or not verify_password(payload.password, user.password_hash)
+    ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
     tokens = create_session_tokens(user, db)
     db.commit()
     return TokenPair(**tokens)
+
+
+@router.post("/verify-email")
+def verify_email(payload: VerificationRequest, db: Session = Depends(get_db)) -> dict[str, str]:
+    token_record = consume_one_time_token(db, payload.token, "verify_email")
+    if token_record is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification token is invalid or expired.")
+    user = db.get(User, token_record.user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification token is invalid or expired.")
+    user.is_verified = True
+    record_audit_event(db, user.id, "auth.email_verified", "user", user.id)
+    db.commit()
+    return {"status": "verified"}
+
+
+@router.post("/resend-verification", status_code=status.HTTP_202_ACCEPTED)
+def resend_verification(payload: PasswordResetRequest, db: Session = Depends(get_db)) -> dict[str, str | None]:
+    if settings.app_env.lower() not in {"development", "dev", "test"} and not email_delivery_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email delivery is not configured.",
+        )
+    email = str(payload.email).strip().lower()
+    user = db.scalar(select(User).where(User.email == email, User.is_active.is_(True)))
+    development_token = None
+    if user is not None and not user.is_verified:
+        token = create_one_time_token(db, user, "verify_email", timedelta(hours=24))
+        db.commit()
+        if email_delivery_configured():
+            try:
+                send_action_email(email, "verify-email", token)
+            except EmailDeliveryError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Verification email delivery failed.",
+                ) from exc
+        else:
+            development_token = token
+    return {"status": "accepted", "verification_token": development_token}
+
+
+@router.post("/password-reset", status_code=status.HTTP_202_ACCEPTED)
+def request_password_reset(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+) -> dict[str, str | None]:
+    if settings.app_env.lower() not in {"development", "dev", "test"} and not email_delivery_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Email delivery is not configured.",
+        )
+    email = str(payload.email).strip().lower()
+    user = db.scalar(select(User).where(User.email == email, User.is_active.is_(True)))
+    development_token = None
+    if user is not None:
+        token = create_one_time_token(db, user, "password_reset", timedelta(hours=1))
+        db.commit()
+        if email_delivery_configured():
+            try:
+                send_action_email(email, "password-reset", token)
+            except EmailDeliveryError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Password reset email delivery failed.",
+                ) from exc
+        else:
+            development_token = token
+    return {"status": "accepted", "reset_token": development_token}
+
+
+@router.post("/password-reset/confirm")
+def confirm_password_reset(
+    payload: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    token_record = consume_one_time_token(db, payload.token, "password_reset")
+    if token_record is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token is invalid or expired.")
+    user = db.get(User, token_record.user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token is invalid or expired.")
+    user.password_hash = hash_password(payload.new_password)
+    for session in db.scalars(
+        select(AuthSession).where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None))
+    ):
+        session.revoked_at = utc_now()
+    record_audit_event(db, user.id, "auth.password_reset", "user", user.id)
+    db.commit()
+    return {"status": "password_updated"}
 
 
 @router.post("/refresh", response_model=TokenPair)
@@ -98,12 +218,11 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)) -> TokenPair
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token.")
 
-    access_expiry = utc_now() + timedelta(minutes=settings.access_token_minutes)
-    return TokenPair(
-        access_token=create_access_token(user, auth_session.id, access_expiry),
-        refresh_token=token,
-        expires_in=int((access_expiry - utc_now()).total_seconds()),
-    )
+    auth_session.revoked_at = utc_now()
+    tokens = create_session_tokens(user, db)
+    record_audit_event(db, user.id, "auth.session_refreshed", "auth_session", auth_session.id)
+    db.commit()
+    return TokenPair(**tokens)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

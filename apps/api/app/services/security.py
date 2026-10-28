@@ -1,4 +1,4 @@
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import jwt
@@ -51,7 +51,12 @@ def create_session_tokens(user: User, db: Session) -> dict[str, str | int]:
     }
 
 
-def create_access_token(user: User, session_id: UUID, expires_at=None, now=None) -> str:
+def create_access_token(
+    user: User,
+    session_id: UUID,
+    expires_at: datetime | None = None,
+    now: datetime | None = None,
+) -> str:
     issued_at = now or utc_now()
     access_expiry = expires_at or issued_at + timedelta(minutes=settings.access_token_minutes)
     shared = {
@@ -92,4 +97,3 @@ def get_active_session(db: Session, session_id: UUID) -> AuthSession | None:
     if expires_at <= utc_now():
         return None
     return auth_session
-

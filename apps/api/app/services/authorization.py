@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import Select
 
 from app.models.domain import ResearchMember, ResearchProject, User
 
@@ -11,6 +12,24 @@ class AuthorizationService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def readable_project_ids(self, principal: User) -> Select[tuple[UUID]]:
+        project_ids = select(ResearchProject.id)
+        if principal.role == "admin":
+            return project_ids
+        member_project_ids = select(ResearchMember.project_id).where(
+            ResearchMember.user_id == principal.id
+        )
+        return project_ids.where(
+            or_(
+                ResearchProject.owner_id == principal.id,
+                ResearchProject.visibility == "public",
+                and_(
+                    ResearchProject.visibility == "team",
+                    ResearchProject.id.in_(member_project_ids),
+                ),
+            )
+        )
 
     def can_read_project(self, principal: User, project: ResearchProject) -> bool:
         if principal.role == "admin" or project.owner_id == principal.id:

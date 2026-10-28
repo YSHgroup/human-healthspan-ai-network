@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CommunityOut(BaseModel):
@@ -37,3 +37,18 @@ class ReportOut(BaseModel):
 class ModerationDecision(BaseModel):
     action: str = Field(pattern="^(dismiss|remove|restrict)$")
     reason: str = Field(min_length=3, max_length=2000)
+
+
+class AdminUserUpdate(BaseModel):
+    is_active: bool | None = None
+    role: str | None = Field(
+        default=None,
+        pattern="^(user|moderator|scientific_reviewer|support_operator|read_only_auditor|admin)$",
+    )
+    reason: str = Field(min_length=3, max_length=500)
+
+    @model_validator(mode="after")
+    def require_change(self) -> "AdminUserUpdate":
+        if self.is_active is None and self.role is None:
+            raise ValueError("Provide at least one account change.")
+        return self

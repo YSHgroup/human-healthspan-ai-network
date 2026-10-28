@@ -5,13 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.health import router as health_router
 from app.api.v1 import router as v1_router
-from app.db.session import initialize_database
+from app.db.session import initialize_database, seed_communities
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if settings.app_env.lower() in {"development", "dev", "test"}:
         initialize_database()
+    else:
+        seed_communities()
     yield
 
 
