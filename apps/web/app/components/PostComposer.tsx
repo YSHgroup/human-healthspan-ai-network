@@ -5,10 +5,11 @@ import { createPost } from "../../lib/api";
 import { Button } from "@healthspan/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-
-const TEMPORARY_AUTHOR_ID = "demo-user";
+import Link from "next/link";
+import { useSession } from "@/lib/session";
 
 export default function PostComposer() {
+  const { user, status, error: sessionError } = useSession();
   const [body, setBody] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -21,14 +22,31 @@ export default function PostComposer() {
     setIsSubmitting(true);
 
     try {
-      const post = await createPost({ author_id: TEMPORARY_AUTHOR_ID, body });
+      const post = await createPost({ body });
       setBody("");
-      setMessage(`Demo API response received (ID: ${post.id}). Posts are not saved yet.`);
+      setMessage(`Your post was created (ID: ${post.id}).`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to submit your post.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (status === "loading") {
+    return <p className="mb-6 text-sm text-muted-foreground">Checking your account…</p>;
+  }
+  if (status === "unavailable") {
+    return <p className="mb-6 text-sm text-destructive" role="alert">{sessionError ?? "The account service is unavailable."}</p>;
+  }
+  if (!user) {
+    return (
+      <Card className="mb-6 rounded-2xl shadow-sm">
+        <CardContent className="space-y-2 p-5 sm:p-6">
+          <p className="font-medium">Sign in to join the conversation.</p>
+          <Link className="text-sm text-primary hover:underline" href="/login">Sign in</Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -50,9 +68,7 @@ export default function PostComposer() {
             value={body}
           />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <small className="text-xs text-muted-foreground">
-              Temporary demo author ID: {TEMPORARY_AUTHOR_ID} · authentication is not available and posts are not saved yet.
-            </small>
+            <small className="text-xs text-muted-foreground">Posting as {user.profile?.display_name ?? user.email}</small>
             <Button className="shrink-0" disabled={isSubmitting || !body.trim()} type="submit">
               {isSubmitting ? "Posting…" : "Post"}
             </Button>

@@ -1,10 +1,4 @@
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(
-  /\/+$/,
-  "",
-);
-
 export interface PostCreate {
-  author_id: string;
   body: string;
 }
 
@@ -41,12 +35,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`/api/backend${path}`, {
     ...init,
     headers: {
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },
+    credentials: "same-origin",
   });
   const responseText = await response.text();
   let result: unknown;

@@ -8,8 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@healthspan/ui/input";
 import { Select } from "@healthspan/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import { useSession } from "@/lib/session";
 
 export default function ResearchQuestionForm({ projects }: { projects: ResearchProject[] }) {
+  const { user, status, error: sessionError } = useSession();
   const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -35,6 +38,19 @@ export default function ResearchQuestionForm({ projects }: { projects: ResearchP
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (status === "loading") return <p className="mt-7 text-sm text-muted-foreground">Checking your account…</p>;
+  if (status === "unavailable") return <p className="mt-7 text-sm text-destructive" role="alert">{sessionError ?? "The account service is unavailable."}</p>;
+  if (!user) {
+    return (
+      <Card className="mt-7">
+        <CardContent className="space-y-2 p-5">
+          <p className="font-medium">Sign in to submit a research question.</p>
+          <Link className="text-sm text-primary hover:underline" href="/login">Sign in</Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

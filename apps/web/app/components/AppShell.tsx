@@ -11,6 +11,7 @@ import {
 import ApiStatus from "./ApiStatus";
 import { buttonVariants } from "@healthspan/ui/button";
 import { cn } from "@/lib/utils";
+import MemberSessionControls from "./MemberSessionControls";
 
 const navigation = [
   { href: "/home", label: "Home", icon: House },
@@ -58,7 +59,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <main className="ml-60 min-h-screen max-[820px]:ml-0">
         <div className="flex min-h-16 items-center justify-between gap-4 border-b bg-background/90 px-6 text-sm text-muted-foreground backdrop-blur sm:px-10">
           <span className="truncate">Human Healthspan AI Scientific Network</span>
-          <Link className="shrink-0 font-medium text-primary hover:underline" href="/">About the network</Link>
+          <div className="flex min-w-0 items-center gap-5">
+            <Link className="shrink-0 font-medium text-primary hover:underline" href="/">About the network</Link>
+            <MemberSessionControls />
+          </div>
         </div>
         <div className="mx-auto w-full max-w-5xl p-4 sm:p-8 lg:p-10">{children}</div>
       </main>

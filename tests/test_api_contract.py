@@ -17,6 +17,7 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models import domain  # noqa: F401
 from app.models.domain import User
+from app.services.email import send_action_email
 from app.services.retrieval import RetrievalService
 
 
@@ -57,6 +58,48 @@ def auth_header(token: str) -> dict[str, str]:
 def test_production_settings_reject_development_secrets() -> None:
     with pytest.raises(ValidationError):
         Settings(app_env="production", postgres_password="prod-db-password")
+    with pytest.raises(ValidationError):
+        Settings(
+            app_env="production",
+            jwt_secret="a-production-secret-with-at-least-32-characters",
+            postgres_password="a-strong-production-database-password",
+            public_app_url="http://healthspan.example.org",
+        )
+    with pytest.raises(ValidationError):
+        Settings(app_env="test", public_app_url="javascript:alert(1)")
+
+
+def test_email_action_uses_public_application_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent_messages = []
+
+    class SmtpStub:
+        def __init__(self, host: str, port: int, timeout: int) -> None:
+            assert host == "mail.example.org"
+            assert port == 587
+            assert timeout == 10
+
+        def __enter__(self) -> "SmtpStub":
+            return self
+
+        def __exit__(self, *_: object) -> None:
+            return None
+
+        def starttls(self) -> None:
+            return None
+
+        def send_message(self, message) -> None:
+            sent_messages.append(message)
+
+    from app.core.config import settings
+    import app.services.email as email_service
+
+    monkeypatch.setattr(email_service.smtplib, "SMTP", SmtpStub)
+    monkeypatch.setattr(settings, "smtp_host", "mail.example.org")
+    monkeypatch.setattr(settings, "email_from", "noreply@example.org")
+    monkeypatch.setattr(settings, "public_app_url", "https://members.example.org/")
+    send_action_email("member@example.org", "verify-email", "one-time-token")
+
+    assert "https://members.example.org/verify-email?token=one-time-token" in sent_messages[0].get_content()
 
 
 def test_registration_login_profile_and_logout(client: TestClient) -> None:
@@ -85,6 +128,69 @@ def test_registration_login_profile_and_logout(client: TestClient) -> None:
     logout = client.post("/api/v1/auth/logout", headers=auth_header(access_token))
     assert logout.status_code == 204
     assert client.get("/api/v1/me", headers=auth_header(access_token)).status_code == 401
+
+
+def test_member_profile_fields_are_validated_and_cannot_change_role(client: TestClient) -> None:
+    registration = register(client, "profile-member@example.org")
+    headers = auth_header(registration["tokens"]["access_token"])
+
+    updated = client.patch(
+        "/api/v1/me",
+        headers=headers,
+        json={
+            "location": "Cambridge",
+            "topics": ["Healthy aging", "healthy aging", "Biomarkers"],
+            "researcher_identifier": "0000-0002-1825-0097",
+            "organization_affiliation": "Healthspan Institute",
+        },
+    )
+    assert updated.status_code == 200
+    profile = updated.json()["profile"]
+    assert profile["location"] == "Cambridge"
+    assert profile["topics"] == ["Healthy aging", "Biomarkers"]
+    assert profile["researcher_identifier"] == "0000-0002-1825-0097"
+    assert profile["organization_affiliation"] == "Healthspan Institute"
+
+    role_change = client.patch("/api/v1/me", headers=headers, json={"role": "admin"})
+    assert role_change.status_code == 422
+    assert client.get("/api/v1/me", headers=headers).json()["role"] == registration["user"]["role"]
+
+
+def test_authenticated_password_change_revokes_existing_sessions(client: TestClient) -> None:
+    registration = register(client, "password-change@example.org")
+    headers = auth_header(registration["tokens"]["access_token"])
+
+    incorrect = client.post(
+        "/api/v1/auth/password-change",
+        headers=headers,
+        json={"current_password": "not-the-current-password", "new_password": "A-different-long-password"},
+    )
+    assert incorrect.status_code == 400
+    same_password = client.post(
+        "/api/v1/auth/password-change",
+        headers=headers,
+        json={
+            "current_password": "Strong-test-password-2026",
+            "new_password": "Strong-test-password-2026",
+        },
+    )
+    assert same_password.status_code == 422
+
+    changed = client.post(
+        "/api/v1/auth/password-change",
+        headers=headers,
+        json={"current_password": "Strong-test-password-2026", "new_password": "A-different-long-password"},
+    )
+    assert changed.status_code == 200
+    assert client.get("/api/v1/me", headers=headers).status_code == 401
+    assert client.post(
+        "/api/v1/auth/login",
+        json={"email": "password-change@example.org", "password": "Strong-test-password-2026"},
+    ).status_code == 401
+    assert client.post(
+        "/api/v1/auth/login",
+        json={"email": "password-change@example.org", "password": "A-different-long-password"},
+    ).status_code == 200
 
 
 def test_post_identity_comes_from_authenticated_user(client: TestClient) -> None:
@@ -191,6 +297,7 @@ def test_invalid_credentials_and_refresh_token(client: TestClient) -> None:
         json={"refresh_token": registration["tokens"]["refresh_token"]},
     )
     assert refresh.status_code == 200
+    assert refresh.json()["refresh_expires_in"] > 0
     replay = client.post(
         "/api/v1/auth/refresh",
         json={"refresh_token": registration["tokens"]["refresh_token"]},
