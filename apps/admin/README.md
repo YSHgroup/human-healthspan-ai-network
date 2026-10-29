@@ -34,3 +34,7 @@ The server-side proxy talks to the API over the Compose network (`API_INTERNAL_U
 - Audit log: recent privileged events for admins and read-only auditors.
 
 The UI uses server-checked role access; hidden navigation is not an authorization boundary. The backend remains authoritative for every operation.
+
+## UI components
+
+The Admin App uses the same shadcn `base-nova` setup as the member web app. Its button, card, badge, input, and select primitives live locally under `components/ui/`, with the shared color-token approach configured in `app/globals.css`.
