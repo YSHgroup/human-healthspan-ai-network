@@ -23,11 +23,14 @@ def send_action_email(recipient: str, action: str, token: str) -> None:
     message["Subject"] = subject
     message["From"] = settings.email_from
     message["To"] = recipient
-    endpoint = "verify-email" if action == "verify-email" else "password-reset/confirm"
+    endpoint = "verify-email" if action == "verify-email" else "password-reset"
+    action_url = f"{settings.public_app_url.rstrip('/')}/{endpoint}?token={token}"
     message.set_content(
-        "Use this one-time token in the Healthspan Network application:\n\n"
+        "Use this one-time link in the Healthspan Network application:\n\n"
+        f"{action_url}\n\n"
+        "If the link does not work, enter this one-time token in the application:\n\n"
         f"{token}\n\n"
-        f"The application submits it to POST /api/v1/auth/{endpoint}.\n"
+        "If you did not request this, you can ignore this message.\n"
     )
 
     try:

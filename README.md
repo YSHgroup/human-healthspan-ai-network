@@ -40,7 +40,7 @@ npm run dev:admin
 
 Build both portals with `npm run build`, or build one with `npm run build:web` / `npm run build:admin`. Shared shadcn primitives live in `packages/ui`; routes, layouts, and remaining UI stay with their respective apps.
 
-The API applies Alembic migrations when its container starts and seeds the six MVP communities. In development, account registration returns a one-time email-verification token in the response because no mail provider is configured. Set SMTP values in `.env` to deliver verification and password-reset tokens.
+The API applies Alembic migrations when its container starts and seeds the six MVP communities. Member registration, verification, login, password reset/change, logout, and profile editing are available in the web app. In development, account registration returns a one-time email-verification token in the response because no mail provider is configured. Set SMTP values and `PUBLIC_APP_URL` in `.env` to deliver verification and password-reset links.
 
 Create the first administrator from an operator shell:
 

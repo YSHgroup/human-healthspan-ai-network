@@ -48,6 +48,7 @@ def create_session_tokens(user: User, db: Session) -> dict[str, str | int]:
         "refresh_token": refresh_token,
         "token_type": "bearer",
         "expires_in": int((access_expiry - now).total_seconds()),
+        "refresh_expires_in": int((refresh_expiry - now).total_seconds()),
     }
 
 

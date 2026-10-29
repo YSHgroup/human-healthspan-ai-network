@@ -15,6 +15,7 @@ from app.db.session import get_db
 from app.models.domain import AuthSession, Profile, User
 from app.schemas.auth import (
     LoginRequest,
+    PasswordChangeRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     ProfileOut,
@@ -194,6 +195,24 @@ def confirm_password_reset(
     ):
         session.revoked_at = utc_now()
     record_audit_event(db, user.id, "auth.password_reset", "user", user.id)
+    db.commit()
+    return {"status": "password_updated"}
+
+
+@router.post("/password-change")
+def change_password(
+    payload: PasswordChangeRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    if not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect.")
+    user.password_hash = hash_password(payload.new_password)
+    for session in db.scalars(
+        select(AuthSession).where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None))
+    ):
+        session.revoked_at = utc_now()
+    record_audit_event(db, user.id, "auth.password_changed", "user", user.id)
     db.commit()
     return {"status": "password_updated"}
 

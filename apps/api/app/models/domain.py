@@ -34,9 +34,13 @@ class Profile(UUIDPrimaryKey, Timestamped, Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     bio: Mapped[str | None] = mapped_column(String(1000))
+    location: Mapped[str | None] = mapped_column(String(160))
     timezone: Mapped[str | None] = mapped_column(String(100))
     interests: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    topics: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     expertise: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    researcher_identifier: Mapped[str | None] = mapped_column(String(100))
+    organization_affiliation: Mapped[str | None] = mapped_column(String(200))
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 

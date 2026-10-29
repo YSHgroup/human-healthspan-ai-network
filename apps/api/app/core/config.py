@@ -1,6 +1,7 @@
 from functools import cached_property
+from urllib.parse import urlsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -28,6 +29,22 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: str | None = None
     email_from: str | None = None
+    public_app_url: str = "http://localhost:3000"
+
+    @field_validator("public_app_url")
+    @classmethod
+    def validate_public_app_url(cls, value: str) -> str:
+        parsed = urlsplit(value)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("PUBLIC_APP_URL must be an HTTP(S) base URL without credentials, query, or fragment.")
+        return value.rstrip("/")
 
     @model_validator(mode="after")
     def validate_security_settings(self) -> "Settings":
@@ -38,6 +55,8 @@ class Settings(BaseSettings):
                 raise ValueError("JWT_SECRET must contain at least 32 characters outside development.")
             if self.postgres_password == "healthspan_dev":
                 raise ValueError("POSTGRES_PASSWORD must be set outside development.")
+            if not self.public_app_url.startswith("https://"):
+                raise ValueError("PUBLIC_APP_URL must use HTTPS outside development.")
         if self.access_token_minutes < 1 or self.refresh_token_days < 1:
             raise ValueError("Token lifetimes must be positive.")
         return self
