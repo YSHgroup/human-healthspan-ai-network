@@ -6,11 +6,11 @@ The Phase 1 relational schema is managed by Alembic under `apps/api/app/db/migra
 
 ### Identity and access
 
-- `users`, `profiles`
+- `users`, `profiles` (display name, biography, location, time zone, interests, topics, expertise, researcher identifier, organization affiliation, and public/private visibility)
 - `auth_sessions` (revocable access/refresh session backing)
 - `auth_tokens` (hashed, expiring, single-use email-verification and password-reset tokens)
 
-New users cannot authenticate until their email is verified. Public profile reads do not disclose email addresses. Administrative roles cannot be assigned at registration; use the operator bootstrap command.
+New users cannot authenticate until their email is verified. Public profile reads do not disclose email addresses. Administrative roles cannot be assigned at registration or through profile updates; use the operator bootstrap command.
 
 ### Social and communities
 
@@ -44,4 +44,4 @@ Privileged account changes and moderation actions require reason text and emit a
 
 ## Not yet implemented
 
-Organizations/tenant membership, MFA enforcement, OIDC, messages, media/file uploads and scanning, paper-author normalization, claims/citations, datasets/experiments, notifications, AI conversations/runs/evaluations, embedding storage, and a graph projection remain future work. Redis/OpenSearch are provisioned in Compose but are not yet used by application services.
+Organizations/tenant membership, MFA enforcement, OIDC, messages, avatar/media uploads and scanning, paper-author normalization, claims/citations, datasets/experiments, notifications, AI conversations/runs/evaluations, embedding storage, and a graph projection remain future work. Organization affiliation is currently a user-entered profile field, not a verified organization membership. Redis/OpenSearch are provisioned in Compose but are not yet used by application services.

@@ -6,6 +6,12 @@ Base path: `/api/v1`. Interactive OpenAPI documentation is available at `/docs`.
 
 Registration creates an unverified account and issues a single-use verification token. In development/test mode the token is returned in the response; configure SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `EMAIL_FROM`) to deliver verification and password-reset tokens by email. Production registration is unavailable if delivery is not configured.
 
+The member web app exchanges credentials through same-origin Next.js routes and stores both tokens in HttpOnly, SameSite=Strict cookies scoped to `/api` (Secure in production). Tokens are not exposed to browser JavaScript or local storage. Protected writes are proxied server-side with the access token.
+
+The web session routes are `/api/auth/login`, `/api/auth/register`, `/api/auth/session`, `/api/auth/logout`, `/api/auth/verify-email`, `/api/auth/resend-verification`, `/api/auth/password-reset`, `/api/auth/password-reset-confirm`, and `/api/auth/password-change`.
+
+Set `PUBLIC_APP_URL` to the canonical web origin so verification and reset emails contain working one-time links. Production requires HTTPS. Password changes require the current password and revoke every active session; users must sign in again afterward.
+
 After verifying email, log in to receive short-lived access and refresh tokens. Send the access token as `Authorization: Bearer <token>`. Refresh tokens rotate on use and cannot be replayed. Logout revokes the associated session; password reset revokes all active sessions for that account.
 
 - `POST /auth/register`
@@ -16,10 +22,13 @@ After verifying email, log in to receive short-lived access and refresh tokens. 
 - `POST /auth/resend-verification`
 - `POST /auth/password-reset`
 - `POST /auth/password-reset/confirm`
+- `POST /auth/password-change`
 - `GET|PATCH /auth/me`
 - `GET|PATCH /me` and `/users/me` (compatibility aliases)
 
 New passwords must be at least 12 characters. Passwords are hashed with Argon2id through `pwdlib`. Access and refresh tokens are signed JWTs backed by revocable database sessions.
+
+Member profiles include a display name, biography, location, time zone, interests, topics, expertise, researcher identifier, and organization affiliation. Users control whether their profile is public. Unexpected profile fields (including role) are rejected; roles remain operator-managed.
 
 ## Profiles and social
 
@@ -93,4 +102,4 @@ Both require authentication and return `503 Service Unavailable` until an approv
 - Database schema changes are managed with Alembic and applied when the API container starts.
 - Tests: `python -m pytest tests\test_api_contract.py -q`
 
-Rate limiting, MFA enforcement, OIDC, background document ingestion/file scanning, AI-provider integration, and production mail delivery operations remain follow-up work.
+Rate limiting and abuse monitoring, MFA enforcement, OIDC/SSO, session-management UI, account deletion, avatar/media upload, background document ingestion/file scanning, AI-provider integration, and production mail-delivery operations remain follow-up work. The current implementation is not a substitute for these production controls.

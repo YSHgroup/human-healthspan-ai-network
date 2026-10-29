@@ -1,23 +1,21 @@
 # Overall progress implemented
 
-The member-facing web MVP shell is in place. A separate lightweight, noindex Admin App is initialized at `apps/admin/`, with an operator login, dashboard, moderation queue, user management, and audit-log views. It proxies the backend server-side and keeps auth tokens in HttpOnly cookies.
+The member web app now uses the existing FastAPI identity service through same-origin Next.js routes. It supports account registration, email verification/resend, sign-in/out, password reset, authenticated password change, and member profile editing. Access and refresh tokens remain in HttpOnly, SameSite=Strict cookies scoped to `/api`; protected member writes are proxied server-side and derive ownership from the authenticated user.
 
-The backend now has a persistent FastAPI/SQLAlchemy API foundation, Alembic migrations, PostgreSQL runtime configuration, and SQLite-backed integration tests.
+The API profile supports biography, location, time zone, interests, topics, expertise, researcher identifier, organization affiliation, and public/private visibility. Role fields are rejected from member profile updates. A database migration adds the profile fields, and verification/reset emails include links based on `PUBLIC_APP_URL`.
 
-Implemented backend capabilities include email/password registration and login, email verification, password reset, revocable JWT-backed sessions, profile management, public feed and post creation, comments, follows, reactions, bookmarks, six seeded communities, team-scoped research projects/questions/hypotheses/literature/evidence, scoped search/retrieval, reports/moderation, admin account controls, audit events, readiness checks, and an operator command for bootstrapping an administrator.
+The API continues to provide revocable JWT-backed sessions, one-time email/password recovery tokens, admin/moderation endpoints, audit events, project-scoped research, and an operator path for bootstrapping an administrator. A separate admin app remains in place. AI routes return `503` until an approved provider is configured.
 
-SMTP delivery is configurable. Development/test environments return one-time verification/reset tokens in API responses. AI routes explicitly return `503` until an approved provider is configured; no fake AI outputs are returned.
+The member feed and research project listing still use mock-backed data. OAuth/OIDC, enforced MFA, login and recovery rate limiting, session-management UI, account deletion, avatar/media upload, and production mail operations are not implemented and remain launch-readiness work.
 
-The frontend still uses mock-backed feed/projects and its composer still sends a temporary author ID. The backend ignores client-supplied authors and requires authentication for writes, so completing the frontend auth/API integration remains necessary.
-
-The JavaScript apps now use a root npm workspace. Shared Button, Badge, Input, Select, and brand tokens are consumed from `packages/ui`; web and admin retain their own routes, layouts, and remaining app-specific UI. Docker builds use the repository root as context so workspace packages are available.
+The JavaScript apps use a root npm workspace and shared UI primitives in `packages/ui`. Docker builds use the repository root context.
 
 ----------
 # Last Change
 
-Introduced the root npm workspace for the web/admin apps, extracted shared UI primitives into `packages/ui`, updated Docker builds for monorepo context, and revised architecture/roadmap docs to define the current structure, future worker/portal extension points, and scaling gates.
+Completed the member identity flow end to end: cookie-backed web session proxy, registration/login/verification/recovery pages, password change, profile editing and schema migration, authenticated member write gating, refreshed API/email configuration, and identity documentation.
 
 ----------
 # What is the next step?
 
-Integrate member authentication and real API data, implement AI/document-ingestion workflows behind permission and quality gates, and add production observability, rate limiting, and recovery testing before public launch.
+Wire the mock-backed feed and research views to authenticated API data. Before public launch, add rate limiting and abuse monitoring, decide and implement MFA/OIDC requirements, and complete production email, session-management, account deletion, and avatar-storage operations.
