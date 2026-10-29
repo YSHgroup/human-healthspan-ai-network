@@ -21,7 +21,7 @@ A scalable foundation for the Human Healthspan / Scientific Research / AI Networ
 ## Quick start
 
 ```bash
-Copy-Item .env.example .env
+cp .env.example .env
 npm ci
 docker compose up --build
 ```

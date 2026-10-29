@@ -7,5 +7,10 @@ node_modules
 **/tsconfig.tsbuildinfo
 .env
 .pytest_cache
+.venv
+infra
+docs
+tests
+apps/api
 **/__pycache__
 **/*.py[cod]
