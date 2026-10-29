@@ -1,6 +1,23 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  ClipboardList,
+  Database,
+  History,
+  LayoutDashboard,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 type AdminUser = {
   id: string;
@@ -41,11 +58,11 @@ type AdminSession = {
 
 type View = "overview" | "reports" | "users" | "audit";
 
-const navItems: { id: View; label: string; symbol: string; roles: string[] }[] = [
-  { id: "overview", label: "Overview", symbol: "⌂", roles: [] },
-  { id: "reports", label: "Moderation queue", symbol: "▤", roles: ["admin", "moderator", "scientific_reviewer", "support_operator"] },
-  { id: "users", label: "User management", symbol: "♙", roles: ["admin", "support_operator"] },
-  { id: "audit", label: "Audit log", symbol: "◷", roles: ["admin", "read_only_auditor"] },
+const navItems: { id: View; label: string; icon: LucideIcon; roles: string[] }[] = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard, roles: [] },
+  { id: "reports", label: "Moderation queue", icon: ClipboardList, roles: ["admin", "moderator", "scientific_reviewer", "support_operator"] },
+  { id: "users", label: "User management", icon: UsersRound, roles: ["admin", "support_operator"] },
+  { id: "audit", label: "Audit log", icon: History, roles: ["admin", "read_only_auditor"] },
 ];
 
 const roleOptions = [
@@ -148,7 +165,7 @@ function Login({ onLogin }: { onLogin: (user: AdminSession) => void }) {
         {error && <ErrorBanner message={error} />}
         <div className="field">
           <label htmlFor="admin-email">Email address</label>
-          <input
+          <Input
             autoComplete="username"
             className="text-input"
             id="admin-email"
@@ -160,7 +177,7 @@ function Login({ onLogin }: { onLogin: (user: AdminSession) => void }) {
         </div>
         <div className="field">
           <label htmlFor="admin-password">Password</label>
-          <input
+          <Input
             autoComplete="current-password"
             className="text-input"
             id="admin-password"
@@ -170,9 +187,9 @@ function Login({ onLogin }: { onLogin: (user: AdminSession) => void }) {
             value={password}
           />
         </div>
-        <button className="button button-primary" disabled={busy} type="submit">
+        <Button className="button button-primary" disabled={busy} type="submit">
           {busy ? "Signing in…" : "Sign in"}
-        </button>
+        </Button>
         <div className="login-footnote">
           Administrator access is audited. Never use a shared account. Contact your platform owner if you need access.
         </div>
@@ -339,19 +356,20 @@ export default function AdminApp() {
         <div className="nav-label">Workspace</div>
         <nav className="nav-list" aria-label="Admin navigation">
           {visibleNavigation.map((item) => (
-            <button
+            <Button
               aria-current={view === item.id ? "page" : undefined}
               className="nav-item"
               key={item.id}
               onClick={() => { setView(item.id); setError(""); setNotice(""); }}
               type="button"
+              variant="ghost"
             >
-              <span className="nav-symbol" aria-hidden="true">{item.symbol}</span>
+              <item.icon className="nav-symbol size-4 shrink-0" aria-hidden="true" />
               {item.label}
               {item.id === "reports" && reports.length > 0 && (
-                <span className="badge badge-amber" style={{ marginLeft: "auto" }}>{reports.length}</span>
+                <Badge className="badge badge-amber" style={{ marginLeft: "auto" }}>{reports.length}</Badge>
               )}
-            </button>
+            </Button>
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -366,7 +384,7 @@ export default function AdminApp() {
           <div className="admin-identity">
             <span className="identity-dot" aria-hidden="true" />
             <span>{user.display_name} · {humanize(user.role)}</span>
-            <button className="button button-small" onClick={() => void logout()} type="button">Sign out</button>
+            <Button className="button button-small" onClick={() => void logout()} type="button" variant="outline">Sign out</Button>
           </div>
         </header>
 
@@ -377,9 +395,10 @@ export default function AdminApp() {
               <p>{subtitle}</p>
             </div>
             <div className="toolbar">
-              <button className="button" disabled={loading} onClick={() => void loadData(view, userQuery)} type="button">
-                {loading ? "Refreshing…" : "↻ Refresh"}
-              </button>
+              <Button className="button" disabled={loading} onClick={() => void loadData(view, userQuery)} type="button" variant="outline">
+                <RefreshCw aria-hidden="true" />
+                {loading ? "Refreshing…" : "Refresh"}
+              </Button>
             </div>
           </div>
 
@@ -390,35 +409,35 @@ export default function AdminApp() {
             <>
               <section className="metrics" aria-label="Operational metrics">
                 {user.role === "admin" && (
-                  <article className="metric-card">
-                    <div className="metric-top"><span>Accounts loaded</span><span className="metric-icon" aria-hidden="true">♙</span></div>
+                  <Card as="article" className="metric-card !gap-0">
+                    <div className="metric-top"><span>Accounts loaded</span><span className="metric-icon" aria-hidden="true"><UsersRound /></span></div>
                     <div className="metric-value">{users.length}</div>
                     <div className="metric-note">Most recently created accounts</div>
-                  </article>
+                  </Card>
                 )}
-                <article className="metric-card">
-                  <div className="metric-top"><span>Open reports</span><span className="metric-icon" aria-hidden="true">▤</span></div>
+                <Card as="article" className="metric-card !gap-0">
+                  <div className="metric-top"><span>Open reports</span><span className="metric-icon" aria-hidden="true"><ClipboardList /></span></div>
                   <div className="metric-value">{reports.length}</div>
                   <div className="metric-note">Current review queue</div>
-                </article>
-                <article className="metric-card">
-                  <div className="metric-top"><span>AI provider</span><span className="metric-icon" aria-hidden="true">✦</span></div>
+                </Card>
+                <Card as="article" className="metric-card !gap-0">
+                  <div className="metric-top"><span>AI provider</span><span className="metric-icon" aria-hidden="true"><Sparkles /></span></div>
                   <div className="metric-value" style={{ fontSize: 17, marginTop: 13 }}>Not configured</div>
                   <div className="metric-note">AI endpoints remain disabled until enabled</div>
-                </article>
-                <article className="metric-card">
-                  <div className="metric-top"><span>Admin session</span><span className="metric-icon" aria-hidden="true">◉</span></div>
+                </Card>
+                <Card as="article" className="metric-card !gap-0">
+                  <div className="metric-top"><span>Admin session</span><span className="metric-icon" aria-hidden="true"><ShieldCheck /></span></div>
                   <div className="metric-value" style={{ fontSize: 17, marginTop: 13 }}>Active</div>
                   <div className="metric-note">Protected by server-side session cookies</div>
-                </article>
+                </Card>
               </section>
 
               <div className="overview-grid">
-                <section className="panel">
+                <Card as="section" className="panel !gap-0 !py-0">
                   <div className="panel-header">
                     <div><h2>Recent open reports</h2><span>Action required</span></div>
                     {visibleNavigation.some((item) => item.id === "reports") && (
-                      <button className="button button-small" onClick={() => setView("reports")} type="button">View queue</button>
+                      <Button className="button button-small" onClick={() => setView("reports")} type="button" variant="outline">View queue</Button>
                     )}
                   </div>
                   {loading && reports.length === 0 ? <div className="loading">Loading reports…</div> : reports.length ? (
@@ -430,35 +449,35 @@ export default function AdminApp() {
                             <div className="activity-title">{humanize(report.target_type)} · {humanize(report.reason)}</div>
                             <div className="activity-meta">Target {report.target_id.slice(0, 8)} · Reported {formatDate(report.created_at)}</div>
                           </div>
-                          <span className={badgeClass(report.status)}>{humanize(report.status)}</span>
+                          <Badge className={badgeClass(report.status)}>{humanize(report.status)}</Badge>
                         </div>
                       ))}
                     </div>
                   ) : <Empty title="Queue is clear" message="New reports will appear here for review." />}
-                </section>
+                </Card>
 
-                <section className="panel">
+                <Card as="section" className="panel !gap-0 !py-0">
                   <div className="panel-header"><div><h2>Admin services</h2><span>Current integration status</span></div></div>
                   <div className="status-card">
                     <div className="status-row"><span>Admin API</span><span className="status-value"><span className="identity-dot" /> Connected</span></div>
                     <div className="status-row"><span>Role access</span><span>{humanize(user.role)}</span></div>
-                    <div className="status-row"><span>AI provider</span><span className="badge badge-amber">Not configured</span></div>
-                    <div className="status-row"><span>Search integration</span><span className="badge">PostgreSQL</span></div>
+                    <div className="status-row"><span>AI provider</span><Badge className="badge badge-amber" variant="outline"><Sparkles />Not configured</Badge></div>
+                    <div className="status-row"><span>Search integration</span><Badge className="badge" variant="outline"><Database />PostgreSQL</Badge></div>
                   </div>
-                </section>
+                </Card>
 
                 {auditEvents.length > 0 && (
-                  <section className="panel">
+                  <Card as="section" className="panel !gap-0 !py-0">
                     <div className="panel-header">
                       <div><h2>Recent administrative activity</h2><span>Latest recorded events</span></div>
                       {visibleNavigation.some((item) => item.id === "audit") && (
-                        <button className="button button-small" onClick={() => setView("audit")} type="button">View log</button>
+                        <Button className="button button-small" onClick={() => setView("audit")} type="button" variant="outline">View log</Button>
                       )}
                     </div>
                     <div className="activity-list">
                       {auditEvents.slice(0, 5).map((event) => (
                         <div className="activity-row" key={event.id}>
-                          <span className="activity-icon" aria-hidden="true">◷</span>
+                          <span className="activity-icon" aria-hidden="true"><History /></span>
                           <div>
                             <div className="activity-title">{humanize(event.action)}</div>
                             <div className="activity-meta">{event.resource_type} · {event.resource_id?.slice(0, 8) ?? "System"}</div>
@@ -467,14 +486,14 @@ export default function AdminApp() {
                         </div>
                       ))}
                     </div>
-                  </section>
+                  </Card>
                 )}
               </div>
             </>
           )}
 
           {view === "reports" && (
-            <section className="panel">
+            <Card as="section" className="panel !gap-0 !py-0">
               <div className="panel-header">
                 <div><h2>Reports awaiting review</h2><span>{reports.length} open</span></div>
               </div>
@@ -486,22 +505,22 @@ export default function AdminApp() {
                       {reports.map((report) => (
                         <tr key={report.id}>
                           <td>
-                            <span className="badge badge-amber">{humanize(report.status)}</span>
+                            <Badge className="badge badge-amber" variant="outline">{humanize(report.status)}</Badge>
                             <div className="report-reason" style={{ marginTop: 5 }}>{report.reason}</div>
                           </td>
                           <td>
-                            <span className="badge badge-blue">{humanize(report.target_type)}</span>
+                            <Badge className="badge badge-blue" variant="outline">{humanize(report.target_type)}</Badge>
                             <div className="user-email">{report.target_id}</div>
                           </td>
                           <td className="user-email">{report.reporter_id.slice(0, 8)}…</td>
                           <td>{formatDate(report.created_at)}</td>
                           <td>
                             <div className="row-actions">
-                              <button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "dismiss")} type="button">Dismiss</button>
+                              <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "dismiss")} type="button" variant="outline">Dismiss</Button>
                               {report.target_type === "evidence" ? (
-                                <button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "restrict")} type="button">Flag</button>
+                                <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "restrict")} type="button" variant="outline">Flag</Button>
                               ) : (
-                                <button className="button button-danger button-small" disabled={loading} onClick={() => void decideReport(report, "remove")} type="button">Remove</button>
+                                <Button className="button button-danger button-small" disabled={loading} onClick={() => void decideReport(report, "remove")} type="button" variant="destructive">Remove</Button>
                               )}
                             </div>
                           </td>
@@ -511,11 +530,11 @@ export default function AdminApp() {
                   </table>
                 </div>
               ) : <Empty title="No open reports" message="The moderation queue is clear." />}
-            </section>
+            </Card>
           )}
 
           {view === "users" && (
-            <section className="panel">
+            <Card as="section" className="panel !gap-0 !py-0">
               <div className="panel-header">
                 <div><h2>Platform accounts</h2><span>{users.length} accounts in this result</span></div>
                 <form
@@ -526,7 +545,7 @@ export default function AdminApp() {
                     void loadData("users", search);
                   }}
                 >
-                  <input
+                  <Input
                     aria-label="Search users by email"
                     className="search-input filter-input"
                     minLength={2}
@@ -534,7 +553,7 @@ export default function AdminApp() {
                     placeholder="Search email…"
                     value={search}
                   />
-                  <button className="button button-primary button-small" disabled={loading} type="submit">Search</button>
+                  <Button className="button button-primary button-small" disabled={loading} type="submit">Search</Button>
                 </form>
               </div>
               {loading && users.length === 0 ? <div className="loading">Loading accounts…</div> : users.length ? (
@@ -554,7 +573,7 @@ export default function AdminApp() {
                             </div>
                           </td>
                           <td>
-                            <select
+                            <Select
                               aria-label={`Role for ${account.email}`}
                               className="select-input inline-select"
                               disabled={user.role !== "admin"}
@@ -562,25 +581,26 @@ export default function AdminApp() {
                               value={account.role}
                             >
                               {roleOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                            </select>
+                            </Select>
                           </td>
                           <td>
-                            <span className={badgeClass(account.is_active ? "active" : "inactive")}>
+                            <Badge className={badgeClass(account.is_active ? "active" : "inactive")} variant="outline">
                               {account.is_active ? "Active" : "Suspended"}
-                            </span>
-                            <span className={badgeClass(account.is_verified ? "verified" : "unverified")} style={{ marginLeft: 5 }}>
+                            </Badge>
+                            <Badge className={badgeClass(account.is_verified ? "verified" : "unverified")} style={{ marginLeft: 5 }} variant="outline">
                               {account.is_verified ? "Verified" : "Unverified"}
-                            </span>
+                            </Badge>
                           </td>
                           <td>{formatDate(account.created_at)}</td>
                           <td>
-                            <button
+                            <Button
                               className={`button button-small ${account.is_active ? "button-danger" : ""}`}
                               onClick={() => void updateUser(account, undefined, !account.is_active)}
                               type="button"
+                              variant={account.is_active ? "destructive" : "outline"}
                             >
                               {account.is_active ? "Suspend" : "Reactivate"}
-                            </button>
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -588,11 +608,11 @@ export default function AdminApp() {
                   </table>
                 </div>
               ) : <Empty title="No accounts found" message="Try a different email search." />}
-            </section>
+            </Card>
           )}
 
           {view === "audit" && (
-            <section className="panel">
+            <Card as="section" className="panel !gap-0 !py-0">
               <div className="panel-header"><div><h2>Administrative events</h2><span>Most recent 100 records</span></div></div>
               {loading && auditEvents.length === 0 ? <div className="loading">Loading audit log…</div> : auditEvents.length ? (
                 <div className="table-wrap">
@@ -601,7 +621,7 @@ export default function AdminApp() {
                     <tbody>
                       {auditEvents.map((event) => (
                         <tr key={event.id}>
-                          <td className="audit-action">{event.action}</td>
+                          <td className="audit-action"><Activity aria-hidden="true" />{event.action}</td>
                           <td>{event.resource_type}<div className="user-email">{event.resource_id ?? "—"}</div></td>
                           <td className="user-email">{event.actor_id?.slice(0, 8) ?? "System"}</td>
                           <td className="report-reason">{Object.entries(event.details ?? {}).map(([key, value]) => `${key}: ${String(value)}`).join(" · ") || "—"}</td>
@@ -612,7 +632,7 @@ export default function AdminApp() {
                   </table>
                 </div>
               ) : <Empty title="No audit events" message="Administrative actions will be recorded here." />}
-            </section>
+            </Card>
           )}
         </div>
       </main>
