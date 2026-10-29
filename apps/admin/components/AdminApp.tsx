@@ -13,11 +13,11 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@healthspan/ui/badge";
+import { Button } from "@healthspan/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Input } from "@healthspan/ui/input";
+import { Select } from "@healthspan/ui/select";
 
 type AdminUser = {
   id: string;

@@ -1,23 +1,25 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../../../packages/ui/src/tokens.css";
+@source "../../../packages/ui/src";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --navy-950: #061a3d;
-  --navy-900: #0a2a5e;
-  --navy-800: #0f3a7a;
+  --navy-950: var(--healthspan-navy-950);
+  --navy-900: var(--healthspan-navy-900);
+  --navy-800: var(--healthspan-navy-800);
   --ink: #0b1a33;
   --muted: #f1f5f9;
   --line: #dbe5f2;
   --surface: #ffffff;
   --surface-soft: #f3f8ff;
-  --blue: #1f8fff;
-  --cyan: #19c2e8;
-  --green: #22b573;
-  --green-soft: #5fe0a0;
-  --violet: #7a5cf0;
+  --blue: var(--healthspan-blue);
+  --cyan: var(--healthspan-cyan);
+  --green: var(--healthspan-green);
+  --green-soft: var(--healthspan-green-soft);
+  --violet: var(--healthspan-violet);
   --radius: 0.625rem;
   --max: 1160px;
   --background: #ffffff;

@@ -9,7 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import ApiStatus from "./ApiStatus";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@healthspan/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigation = [

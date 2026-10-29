@@ -2,7 +2,7 @@ import PostComposer from "../../components/PostComposer";
 import PageHeader from "../../components/PageHeader";
 import { getFeed } from "../../../lib/data";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@healthspan/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default async function HomePage() {

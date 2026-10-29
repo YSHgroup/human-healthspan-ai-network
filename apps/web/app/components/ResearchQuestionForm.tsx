@@ -3,10 +3,10 @@
 import { FormEvent, useState } from "react";
 import { createResearchQuestion } from "../../lib/api";
 import type { ResearchProject } from "../../lib/mock/data";
-import { Button } from "@/components/ui/button";
+import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Input } from "@healthspan/ui/input";
+import { Select } from "@healthspan/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function ResearchQuestionForm({ projects }: { projects: ResearchProject[] }) {

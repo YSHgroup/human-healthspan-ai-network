@@ -1,0 +1,21 @@
+{
+  "name": "@healthspan/ui",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./badge": "./src/badge.tsx",
+    "./button": "./src/button.tsx",
+    "./input": "./src/input.tsx",
+    "./select": "./src/select.tsx",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "peerDependencies": {
+    "@base-ui/react": "^1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0"
+  }
+}

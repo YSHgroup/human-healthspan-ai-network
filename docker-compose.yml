@@ -54,7 +54,8 @@ services:
 
   web:
     build:
-      context: ./apps/web
+      context: .
+      dockerfile: apps/web/Dockerfile
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
@@ -64,7 +65,8 @@ services:
 
   admin:
     build:
-      context: ./apps/admin
+      context: .
+      dockerfile: apps/admin/Dockerfile
     environment:
       API_INTERNAL_URL: http://api:8000
       NODE_ENV: production

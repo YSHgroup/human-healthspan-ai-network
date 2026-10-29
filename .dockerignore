@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+**/node_modules
+**/.next
+**/coverage
+**/tsconfig.tsbuildinfo
+.env
+.pytest_cache
+**/__pycache__
+**/*.py[cod]

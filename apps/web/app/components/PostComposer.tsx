@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { createPost } from "../../lib/api";
-import { Button } from "@/components/ui/button";
+import { Button } from "@healthspan/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 

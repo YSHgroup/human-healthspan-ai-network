@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../../../packages/ui/src/tokens.css";
+@source "../../../packages/ui/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,8 +11,8 @@
   --line: #e2e8f0;
   --paper: #ffffff;
   --canvas: #f5f7fa;
-  --navy: #0a2a5e;
-  --blue: #2563eb;
+  --navy: var(--healthspan-navy-900);
+  --blue: var(--healthspan-blue);
   --green: #15803d;
   --amber: #a16207;
   --red: #b91c1c;

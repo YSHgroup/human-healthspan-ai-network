@@ -1,7 +1,7 @@
 import ResearchQuestionForm from "../../components/ResearchQuestionForm";
 import { getResearchProjects } from "../../../lib/data";
 import PageHeader from "../../components/PageHeader";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@healthspan/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function ResearchPage() {

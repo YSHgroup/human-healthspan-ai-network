@@ -10,12 +10,14 @@ SMTP delivery is configurable. Development/test environments return one-time ver
 
 The frontend still uses mock-backed feed/projects and its composer still sends a temporary author ID. The backend ignores client-supplied authors and requires authentication for writes, so completing the frontend auth/API integration remains necessary.
 
+The JavaScript apps now use a root npm workspace. Shared Button, Badge, Input, Select, and brand tokens are consumed from `packages/ui`; web and admin retain their own routes, layouts, and remaining app-specific UI. Docker builds use the repository root as context so workspace packages are available.
+
 ----------
 # Last Change
 
-Initialized the separate Admin App, integrated it in Docker Compose at port 3001, and implemented session-protected dashboard, moderation, user management, and audit views. Verified sign-in, user search, moderation queue, audit log, and mobile layout in a browser. Tightened backend access boundaries so admins do not implicitly access private research projects and support operators cannot suspend administrator accounts.
+Introduced the root npm workspace for the web/admin apps, extracted shared UI primitives into `packages/ui`, updated Docker builds for monorepo context, and revised architecture/roadmap docs to define the current structure, future worker/portal extension points, and scaling gates.
 
 ----------
 # What is the next step?
 
-Integrate the member web app with registration, email verification, login, and `/me`; pass bearer tokens on writes and replace mock feed/project data with the API. Then wire an approved AI provider, file/document ingestion with scanning, rate limiting, and production observability before public launch.
+Integrate member authentication and real API data, implement AI/document-ingestion workflows behind permission and quality gates, and add production observability, rate limiting, and recovery testing before public launch.

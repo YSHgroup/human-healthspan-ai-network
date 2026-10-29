@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getHealth } from "../../lib/api";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@healthspan/ui/badge";
 import { cn } from "@/lib/utils";
 
 type Status = "checking" | "online" | "offline";

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@healthspan/ui"],
   poweredByHeader: false,
   async headers() {
     return [

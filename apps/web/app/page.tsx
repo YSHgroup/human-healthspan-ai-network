@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@healthspan/ui/badge";
 import { Card } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@healthspan/ui/button";
 import { cn } from "@/lib/utils";
 
 const audiences = [

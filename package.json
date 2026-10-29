@@ -1,0 +1,25 @@
+{
+  "name": "healthspan-network",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/admin",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @healthspan/web",
+    "dev:admin": "npm run dev --workspace @healthspan/admin",
+    "build:web": "npm run build --workspace @healthspan/web",
+    "build:admin": "npm run build --workspace @healthspan/admin",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck:web": "npm run typecheck --workspace @healthspan/web",
+    "typecheck:admin": "npm run typecheck --workspace @healthspan/admin",
+    "test:api": "python -m pytest tests/test_api_contract.py -q"
+  },
+  "allowScripts": {
+    "sharp@0.34.5": true
+  },
+  "overrides": {
+    "postcss": "^8.5.32"
+  }
+}
