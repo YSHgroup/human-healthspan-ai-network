@@ -16,6 +16,8 @@ The member web app uses same-origin Next.js API routes and HttpOnly, SameSite=St
 
 The home dashboard uses live API data for network/member metrics, research access, community membership, and seven-day post activity. Its community feed and overview refresh periodically and support manual retry; unavailable data is surfaced rather than fabricated. The dashboard now has a more distinctive health-science visual identity, with responsive charts, animated network details, refined navigation, and reduced-motion support.
 
+The public landing page now presents the network with a modern, responsive visual system: a living connection-inspired hero, clearer audience and platform sections, an animated research journey, and polished community/technology highlights. Motion respects reduced-motion preferences.
+
 The JavaScript apps use a root npm workspace and shared UI primitives in `packages/ui`. Docker builds use the repository root context.
 
 Not yet implemented in the member experience: avatar/media uploads, user notifications, account deletion, profile/session management, personalized feed ranking, full-text/semantic document search, and usable AI features. The AI integration is intentionally unavailable until an approved provider and quality/privacy controls are configured.
@@ -23,7 +25,7 @@ Not yet implemented in the member experience: avatar/media uploads, user notific
 ----------
 # Last Change
 
-Redesigned the member dashboard with a polished health-science visual system, interactive seven-day activity chart, live network metrics, refined app navigation, and reduced-motion-aware animation. Completed the API-backed dashboard and end-to-end member API integration for the core MVP screens; added privacy-safe feed/search contracts, community membership summaries, and audited Admin App community controls; isolated refresh rotation by admin session; corrected report actions for support role permissions; and aligned README/API/changelog guidance.
+Redesigned the public landing page with a modern, animated visual identity and responsive sections for contributors, research journey, platform layers, technology, and community. Refined the member dashboard with a polished health-science visual system, interactive seven-day activity chart, live network metrics, refined app navigation, and reduced-motion-aware animation. Completed the API-backed dashboard and end-to-end member API integration for the core MVP screens; added privacy-safe feed/search contracts, community membership summaries, and audited Admin App community controls; isolated refresh rotation by admin session; corrected report actions for support role permissions; and aligned README/API/changelog guidance.
 
 ----------
 # What is the next step?
