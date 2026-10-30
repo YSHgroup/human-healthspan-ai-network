@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@healthspan/ui": "*",
     "@tailwindcss/postcss": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
@@ -17,10 +18,10 @@
     "next": "^15.5.28",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "recharts": "^3.10.1",
     "shadcn": "^4.22.1",
     "tailwindcss": "^4.3.3",
-    "tw-animate-css": "^1.4.0",
-    "@healthspan/ui": "*"
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
