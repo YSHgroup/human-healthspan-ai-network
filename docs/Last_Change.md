@@ -1,21 +1,29 @@
 # Overall progress implemented
 
-The member web app now uses the existing FastAPI identity service through same-origin Next.js routes. It supports account registration, email verification/resend, sign-in/out, password reset, authenticated password change, and member profile editing. Access and refresh tokens remain in HttpOnly, SameSite=Strict cookies scoped to `/api`; protected member writes are proxied server-side and derive ownership from the authenticated user.
+## Backend
 
-The API profile supports biography, location, time zone, interests, topics, expertise, researcher identifier, organization affiliation, and public/private visibility. Role fields are rejected from member profile updates. A database migration adds the profile fields, and verification/reset emails include links based on `PUBLIC_APP_URL`.
+The FastAPI modular monolith provides email/password registration, verification, password recovery/change, revocable sessions, role authorization, audited moderation, social interactions, six seeded communities, scoped research projects/questions/literature/evidence, keyword search, readiness, and admin APIs. Member profile fields include location, timezone, interests, topics, expertise, researcher ID, affiliation, and public/private visibility. A migration adds these profile fields.
 
-The API continues to provide revocable JWT-backed sessions, one-time email/password recovery tokens, admin/moderation endpoints, audit events, project-scoped research, and an operator path for bootstrapping an administrator. A separate admin app remains in place. AI routes return `503` until an approved provider is configured.
+The public feed now includes privacy-safe author labels, content classifications, reaction/comment counts, and per-member reaction/bookmark state. Community responses include actual membership counts and the authenticated member's membership. Search includes public member profiles and excludes private profiles. Admin community activation requires an administrator and a reason, with an audit event. OAuth/OIDC and enforced MFA are not implemented. AI routes return `503` until an approved provider is configured; file ingestion, full-text/semantic indexing, and rate limiting remain incomplete.
 
-The member feed and research project listing still use mock-backed data. OAuth/OIDC, enforced MFA, login and recovery rate limiting, session-management UI, account deletion, avatar/media upload, and production mail operations are not implemented and remain launch-readiness work.
+## Admin
+
+The separate Admin App provides authorized sign-in, service overview, moderation reports, user lookup and safeguarded account updates, audited moderation decisions, and an audit log. Administrators can activate/deactivate communities using reasoned and audited changes. Support operators can view their permitted queue but are not shown decision controls they cannot use. Session refresh deduplication is scoped to the same refresh token so sessions cannot share rotated credentials.
+
+## Member web app
+
+The member web app uses same-origin Next.js API routes and HttpOnly, SameSite=Strict cookies scoped to `/api`; browser JavaScript never receives access or refresh tokens. It supports registration, email verification/resend, sign-in/out, password reset/change, and member profile editing. Posts/comments/reactions/bookmarks/reports, community membership, research projects/questions, network discovery, public profiles/follows, and public literature search now use the API instead of mock data.
 
 The JavaScript apps use a root npm workspace and shared UI primitives in `packages/ui`. Docker builds use the repository root context.
+
+Not yet implemented in the member experience: avatar/media uploads, user notifications, account deletion, profile/session management, personalized feed ranking, full-text/semantic document search, and usable AI features. The AI integration is intentionally unavailable until an approved provider and quality/privacy controls are configured.
 
 ----------
 # Last Change
 
-Completed the member identity flow end to end: cookie-backed web session proxy, registration/login/verification/recovery pages, password change, profile editing and schema migration, authenticated member write gating, refreshed API/email configuration, and identity documentation.
+Completed end-to-end member API integration for the core MVP screens; added privacy-safe feed/search contracts, community membership summaries, and audited Admin App community controls; isolated refresh rotation by admin session; corrected report actions for support role permissions; and aligned README/API/changelog guidance.
 
 ----------
 # What is the next step?
 
-Wire the mock-backed feed and research views to authenticated API data. Before public launch, add rate limiting and abuse monitoring, decide and implement MFA/OIDC requirements, and complete production email, session-management, account deletion, and avatar-storage operations.
+Complete document storage/ingestion and semantic indexing with provenance; implement provider-backed, evaluated AI with citations and authorization gates; add rate limiting/abuse controls and decide on MFA/OIDC; then finish session/account management, production email, and avatar/media operations before public launch. The API-backed member feed and research workflows should receive browser-level end-to-end tests.

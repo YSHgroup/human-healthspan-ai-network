@@ -63,4 +63,4 @@ This repository is an MVP foundation, not a clinical system or finished producti
 
 ## Important for Agent!!! (If you are an AI, must keep the following terms)
 - If you are an AI agent, you need to update the `./docs/Last_Change.md` with the terms `Overall progress implemented`, `Last Change`, `What is the next step?` after updating this project.
-- When you are coding, if you make the something distict in normal and it's important to be inexed, You MUST make the comment with the changes.
+- When you are coding, if you make the something distict in normal and it's important to be inexed, You MUST make the git commit with the changes.

@@ -34,6 +34,7 @@ Member profiles include a display name, biography, location, time zone, interest
 
 - `GET /users/{id}` — public profiles only; private profiles return 404
 - `GET /feed?limit=25&offset=0&community_id=...`
+- Feed records include public-safe author labels, content classification, comment/reaction counts, and the current member's reaction/bookmark state when authenticated.
 - `POST /posts` — authenticated; author identity comes from the token, never the request body
 - `GET|DELETE /posts/{id}`
 - `GET|POST /posts/{id}/comments`
@@ -41,7 +42,9 @@ Member profiles include a display name, biography, location, time zone, interest
 - `POST|DELETE /posts/{id}/bookmark`
 - `POST|DELETE /users/{id}/follow`
 - `GET /communities`
+- Community records include current member counts and, when authenticated, whether the current member has joined.
 - `GET /communities/{id}`
+- `GET /communities/{id}/feed`
 - `GET /communities/{id}/feed`
 - `POST|DELETE /communities/{id}/join`
 
@@ -64,7 +67,7 @@ Project visibility is `private`, `team`, or `public`. Project membership and own
 
 ## Search
 
-- `GET /search?q=...&limit=20` — posts, public projects, and communities
+- `GET /search?q=...&limit=20` — posts, public profiles, public projects, and communities
 - `GET /science/search?q=...&limit=20` — literature metadata attached to public projects
 
 Search currently uses PostgreSQL text matching. Redis and OpenSearch are not yet wired into application behavior.
@@ -76,6 +79,8 @@ Search currently uses PostgreSQL text matching. Redis and OpenSearch are not yet
 - `POST /moderation/reports/{id}/decision`
 - `GET /admin/users` — administrator only
 - `PATCH /admin/users/{id}` — administrator only; requires a reason
+- `GET /admin/communities` — administrator only
+- `PATCH /admin/communities/{id}` — administrator only; activation changes require a reason and are audited
 - `GET /admin/reports`
 - `GET /admin/audit-logs` — administrator or read-only auditor
 - `GET /admin/ai-monitoring` — currently reports provider status
