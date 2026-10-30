@@ -71,8 +71,8 @@ function ActivityChart({ data }: { data: DashboardSummary["activity"] }) {
         <AreaChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>
           <defs>
             <linearGradient id="activity-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#35b69a" stopOpacity={0.28} />
-              <stop offset="95%" stopColor="#35b69a" stopOpacity={0.015} />
+              <stop offset="0%" stopColor="#58a9e3" stopOpacity={0.28} />
+              <stop offset="95%" stopColor="#58a9e3" stopOpacity={0.015} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="#e8eef2" strokeDasharray="3 5" vertical={false} />
@@ -96,11 +96,11 @@ function ActivityChart({ data }: { data: DashboardSummary["activity"] }) {
             labelStyle={{ color: "#4b5c62", fontWeight: 600, marginBottom: 4 }}
           />
           <Area
-            activeDot={{ fill: "#148b77", r: 5, stroke: "#fff", strokeWidth: 3 }}
+            activeDot={{ fill: "#287fba", r: 5, stroke: "#fff", strokeWidth: 3 }}
             dataKey="post_count"
             fill="url(#activity-fill)"
             isAnimationActive
-            stroke="#148b77"
+            stroke="#287fba"
             strokeLinecap="round"
             strokeWidth={3}
             type="monotone"
@@ -125,7 +125,7 @@ function StatCard({
   tone: "mint" | "blue" | "amber" | "violet";
 }) {
   const tones = {
-    mint: "bg-[#e7f7f1] text-[#16866e] ring-[#16866e]/10",
+    mint: "bg-[#e7f3fc] text-[#287fba] ring-[#287fba]/10",
     blue: "bg-[#eaf2ff] text-[#4779ca] ring-[#4779ca]/10",
     amber: "bg-[#fff4df] text-[#c88932] ring-[#c88932]/10",
     violet: "bg-[#f1edff] text-[#8066c7] ring-[#8066c7]/10",
@@ -326,12 +326,12 @@ export default function HomePage() {
           {!loading && posts.length === 0 && !error && (
             <Card className="rounded-[1.5rem] border-dashed border-[#d9e7e1] bg-white/70">
               <CardContent className="flex flex-col items-center px-6 py-11 text-center">
-                <span className="mb-4 flex size-14 items-center justify-center rounded-[1.2rem] bg-[#e7f7f1] text-[#16866e]">
+                <span className="mb-4 flex size-14 items-center justify-center rounded-[1.2rem] bg-[#e7f3fc] text-[#287fba]">
                   <BookOpenCheck aria-hidden="true" className="size-6" />
                 </span>
                 <h3 className="font-semibold text-[#24423a]">Start a thoughtful conversation</h3>
                 <p className="mt-1 max-w-sm text-sm text-[#7b8987]">Share a question or join a community to get the discussion started.</p>
-                <Link className="mt-4 text-sm font-semibold text-[#16866e] hover:underline" href="/communities">Browse communities</Link>
+                <Link className="mt-4 text-sm font-semibold text-[#287fba] hover:underline" href="/communities">Browse communities</Link>
               </CardContent>
             </Card>
           )}
@@ -354,7 +354,7 @@ export default function HomePage() {
             <CardHeader className="flex flex-row items-start justify-between space-y-0 px-5 pb-0 pt-5">
               <div>
                 <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.15em] text-[#78918a]">
-                  <Activity aria-hidden="true" className="size-3.5 text-[#16866e]" /> This week
+                  <Activity aria-hidden="true" className="size-3.5 text-[#287fba]" /> This week
                 </div>
                 <CardTitle className="text-base font-semibold tracking-tight text-[#233c36]">Network activity</CardTitle>
                 <p className="mt-1 text-xs text-[#87938f]">Community posts over the last 7 days</p>
@@ -384,7 +384,7 @@ export default function HomePage() {
                 <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[.15em] text-[#78918a]">Find your people</div>
                 <CardTitle className="text-base font-semibold tracking-tight text-[#233c36]">Communities</CardTitle>
               </div>
-              <Link aria-label="Browse all communities" className="flex size-8 items-center justify-center rounded-lg bg-[#edf6f1] text-[#16866e] transition-colors hover:bg-[#deefe6]" href="/communities">
+              <Link aria-label="Browse all communities" className="flex size-8 items-center justify-center rounded-lg bg-[#eaf4fc] text-[#287fba] transition-colors hover:bg-[#dceefa]" href="/communities">
                 <ArrowUpRight aria-hidden="true" className="size-4" />
               </Link>
             </CardHeader>
@@ -404,19 +404,19 @@ export default function HomePage() {
                       <span className="block text-[11px] text-[#8a9691]">{community.member_count.toLocaleString()} members</span>
                     </span>
                   </span>
-                  <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-[#9ba9a3] transition-transform group-hover:translate-x-0.5 group-hover:text-[#16866e]" />
+                  <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-[#9ba9a3] transition-transform group-hover:translate-x-0.5 group-hover:text-[#287fba]" />
                 </Link>
               ))}
               {loading && communities.length === 0 && <p className="px-3 py-3 text-sm text-[#87938f]">Loading communities…</p>}
               {!loading && communities.length === 0 && <p className="px-3 py-3 text-sm text-[#87938f]">Communities aren’t available right now.</p>}
               {user && activeCommunities.length === 0 && communities.length > 0 && <p className="px-3 pt-2 text-xs text-[#87938f]">Join your first community to make it yours.</p>}
               {user && activeCommunities.length === 0 && communities.length > 0 && (
-                <Link className="mt-2 inline-flex items-center gap-1 px-3 text-sm font-semibold text-[#16866e] hover:underline" href="/communities">
+                <Link className="mt-2 inline-flex items-center gap-1 px-3 text-sm font-semibold text-[#287fba] hover:underline" href="/communities">
                   Find a community <ArrowRight aria-hidden="true" className="size-3.5" />
                 </Link>
               )}
               {!user && communities.length > 0 && (
-                <Link className="mt-2 inline-flex items-center gap-1 px-3 text-sm font-semibold text-[#16866e] hover:underline" href="/communities">
+                <Link className="mt-2 inline-flex items-center gap-1 px-3 text-sm font-semibold text-[#287fba] hover:underline" href="/communities">
                   Explore communities <ArrowRight aria-hidden="true" className="size-3.5" />
                 </Link>
               )}
