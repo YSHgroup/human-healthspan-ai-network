@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 
 const ACCESS_COOKIE = "healthspan_admin_access";
 const REFRESH_COOKIE = "healthspan_admin_refresh";
-let refreshInFlight:
-  | Promise<{ accessToken: string; refreshToken: string; expiresIn: number } | undefined>
-  | undefined;
+type RefreshedSession = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
+};
+const refreshInFlight = new Map<string, Promise<RefreshedSession | undefined>>();
 
 export function backendBaseUrl(): string {
   const configured = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
@@ -22,7 +26,7 @@ export async function getSessionTokens() {
 
 export function setSessionCookies(
   response: NextResponse,
-  tokens: { access_token: string; refresh_token: string },
+  tokens: { access_token: string; refresh_token: string; refresh_expires_in: number },
   accessExpiresIn: number,
 ) {
   const common = {
@@ -37,7 +41,7 @@ export function setSessionCookies(
   });
   response.cookies.set(REFRESH_COOKIE, tokens.refresh_token, {
     ...common,
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: Math.max(1, tokens.refresh_expires_in),
   });
 }
 
@@ -58,10 +62,7 @@ export function clearSessionCookies(response: NextResponse) {
   });
 }
 
-async function performRefresh(): Promise<
-  { accessToken: string; refreshToken: string; expiresIn: number } | undefined
-> {
-  const { refreshToken } = await getSessionTokens();
+async function performRefresh(refreshToken: string): Promise<RefreshedSession | undefined> {
   if (!refreshToken) return undefined;
 
   try {
@@ -72,15 +73,24 @@ async function performRefresh(): Promise<
       cache: "no-store",
     });
     if (!response.ok) return undefined;
-    const result = (await response.json()) as {
-      access_token: string;
-      refresh_token: string;
-      expires_in: number;
-    };
+    const result: unknown = await response.json();
+    if (
+      typeof result !== "object" ||
+      result === null ||
+      !("access_token" in result) ||
+      typeof result.access_token !== "string" ||
+      !("refresh_token" in result) ||
+      typeof result.refresh_token !== "string" ||
+      !("expires_in" in result) ||
+      typeof result.expires_in !== "number" ||
+      !("refresh_expires_in" in result) ||
+      typeof result.refresh_expires_in !== "number"
+    ) return undefined;
     return {
       accessToken: result.access_token,
       refreshToken: result.refresh_token,
       expiresIn: result.expires_in,
+      refreshExpiresIn: result.refresh_expires_in,
     };
   } catch {
     return undefined;
@@ -88,23 +98,31 @@ async function performRefresh(): Promise<
 }
 
 export async function refreshBackendSession() {
-  if (!refreshInFlight) {
-    refreshInFlight = performRefresh().finally(() => {
-      refreshInFlight = undefined;
+  const { refreshToken } = await getSessionTokens();
+  if (!refreshToken) return undefined;
+
+  // Deduplicate rotation only for callers holding the same session cookie; never share tokens across admins.
+  let pending = refreshInFlight.get(refreshToken);
+  if (!pending) {
+    pending = performRefresh(refreshToken);
+    refreshInFlight.set(refreshToken, pending);
+    void pending.finally(() => {
+      if (refreshInFlight.get(refreshToken) === pending) refreshInFlight.delete(refreshToken);
     });
   }
-  return refreshInFlight;
+  return pending;
 }
 
 export function applyRefreshedSession(
   response: NextResponse,
-  refreshed: { accessToken: string; refreshToken: string; expiresIn: number },
+  refreshed: RefreshedSession,
 ) {
   setSessionCookies(
     response,
     {
       access_token: refreshed.accessToken,
       refresh_token: refreshed.refreshToken,
+      refresh_expires_in: refreshed.refreshExpiresIn,
     },
     refreshed.expiresIn,
   );

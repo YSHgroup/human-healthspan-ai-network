@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   applyRefreshedSession,
   backendBaseUrl,
+  clearSessionCookies,
   getSessionTokens,
   refreshBackendSession,
 } from "@/lib/server-api";
@@ -46,10 +47,18 @@ export async function GET() {
       }
     }
   }
-  if (!profile.ok) return NextResponse.json({ user: null }, { status: 200 });
+  if (!profile.ok) {
+    const response = NextResponse.json({ user: null }, { status: 200 });
+    if (profile.status === 401) clearSessionCookies(response);
+    return response;
+  }
 
   const user = await profile.json();
-  if (!adminRoles.has(user.role)) return NextResponse.json({ user: null }, { status: 200 });
+  if (!adminRoles.has(user.role)) {
+    const response = NextResponse.json({ user: null }, { status: 200 });
+    clearSessionCookies(response);
+    return response;
+  }
 
   const response = NextResponse.json({
     user: {

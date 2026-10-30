@@ -40,6 +40,16 @@ type Report = {
   created_at: string;
 };
 
+type AdminCommunity = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  topic: string;
+  is_active: boolean;
+  created_at: string;
+};
+
 type AuditEvent = {
   id: string;
   actor_id?: string | null;
@@ -56,12 +66,13 @@ type AdminSession = {
   display_name: string;
 };
 
-type View = "overview" | "reports" | "users" | "audit";
+type View = "overview" | "reports" | "users" | "communities" | "audit";
 
 const navItems: { id: View; label: string; icon: LucideIcon; roles: string[] }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, roles: [] },
   { id: "reports", label: "Moderation queue", icon: ClipboardList, roles: ["admin", "moderator", "scientific_reviewer", "support_operator"] },
   { id: "users", label: "User management", icon: UsersRound, roles: ["admin", "support_operator"] },
+  { id: "communities", label: "Communities", icon: Database, roles: ["admin"] },
   { id: "audit", label: "Audit log", icon: History, roles: ["admin", "read_only_auditor"] },
 ];
 
@@ -212,6 +223,7 @@ export default function AdminApp() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [view, setView] = useState<View>("overview");
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [communities, setCommunities] = useState<AdminCommunity[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [search, setSearch] = useState("");
@@ -250,6 +262,10 @@ export default function AdminApp() {
         setAuditEvents(await adminRequest<AuditEvent[]>("admin/audit-logs?limit=6"));
       } else if (target === "audit") {
         setAuditEvents(await adminRequest<AuditEvent[]>("admin/audit-logs?limit=100"));
+      }
+
+      if (target === "communities") {
+        setCommunities(await adminRequest<AdminCommunity[]>("admin/communities?limit=100"));
       }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not load admin data.");
@@ -291,6 +307,7 @@ export default function AdminApp() {
     }
     setUser(null);
     setUsers([]);
+    setCommunities([]);
     setReports([]);
     setAuditEvents([]);
     setView("overview");
@@ -335,6 +352,25 @@ export default function AdminApp() {
     }
   }
 
+  async function updateCommunity(community: AdminCommunity) {
+    const isActive = !community.is_active;
+    const operation = isActive ? "reactivate" : "deactivate";
+    const reason = window.prompt(`Reason to ${operation} community "${community.name}"?`);
+    if (!reason?.trim()) return;
+    setError("");
+    setNotice("");
+    try {
+      const updated = await adminRequest<AdminCommunity>(`admin/communities/${community.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_active: isActive, reason: reason.trim() }),
+      });
+      setCommunities((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setNotice("Community status updated and audit event recorded.");
+    } catch (reasonError) {
+      setError(reasonError instanceof Error ? reasonError.message : "Could not update the community.");
+    }
+  }
+
   if (checkingSession) return <div className="loading">Checking administrator access…</div>;
   if (!user) return <Login onLogin={(nextUser) => { setError(""); setUser(nextUser); }} />;
 
@@ -342,6 +378,7 @@ export default function AdminApp() {
     overview: ["Overview", "Platform operations at a glance."],
     reports: ["Moderation queue", "Review reports and record reasoned decisions."],
     users: ["User management", "Look up accounts and apply safeguarded access changes."],
+    communities: ["Communities", "Review starter communities and manage their availability."],
     audit: ["Audit log", "Review privileged actions and administrative access."],
   };
   const [title, subtitle] = titleByView[view];
@@ -515,14 +552,18 @@ export default function AdminApp() {
                           <td className="user-email">{report.reporter_id.slice(0, 8)}…</td>
                           <td>{formatDate(report.created_at)}</td>
                           <td>
-                            <div className="row-actions">
-                              <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "dismiss")} type="button" variant="outline">Dismiss</Button>
-                              {report.target_type === "evidence" ? (
-                                <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "restrict")} type="button" variant="outline">Flag</Button>
-                              ) : (
-                                <Button className="button button-danger button-small" disabled={loading} onClick={() => void decideReport(report, "remove")} type="button" variant="destructive">Remove</Button>
-                              )}
-                            </div>
+                            {user.role === "support_operator" ? (
+                              <span className="user-email">Read-only review</span>
+                            ) : (
+                              <div className="row-actions">
+                                <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "dismiss")} type="button" variant="outline">Dismiss</Button>
+                                {report.target_type === "evidence" ? (
+                                  <Button className="button button-small" disabled={loading} onClick={() => void decideReport(report, "restrict")} type="button" variant="outline">Flag</Button>
+                                ) : (
+                                  <Button className="button button-danger button-small" disabled={loading} onClick={() => void decideReport(report, "remove")} type="button" variant="destructive">Remove</Button>
+                                )}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -608,6 +649,44 @@ export default function AdminApp() {
                   </table>
                 </div>
               ) : <Empty title="No accounts found" message="Try a different email search." />}
+            </Card>
+          )}
+
+          {view === "communities" && (
+            <Card as="section" className="panel !gap-0 !py-0">
+              <div className="panel-header">
+                <div><h2>Platform communities</h2><span>{communities.length} communities</span></div>
+              </div>
+              {loading && communities.length === 0 ? <div className="loading">Loading communities…</div> : communities.length ? (
+                <div className="table-wrap">
+                  <table>
+                    <thead><tr><th>Community</th><th>Topic</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+                    <tbody>
+                      {communities.map((community) => (
+                        <tr key={community.id}>
+                          <td>
+                            <div className="user-name">{community.name}</div>
+                            <div className="user-email">{community.description}</div>
+                          </td>
+                          <td>{community.topic}</td>
+                          <td><Badge className={badgeClass(community.is_active ? "active" : "inactive")} variant="outline">{community.is_active ? "Active" : "Inactive"}</Badge></td>
+                          <td>{formatDate(community.created_at)}</td>
+                          <td>
+                            <Button
+                              className={`button button-small ${community.is_active ? "button-danger" : ""}`}
+                              onClick={() => void updateCommunity(community)}
+                              type="button"
+                              variant={community.is_active ? "destructive" : "outline"}
+                            >
+                              {community.is_active ? "Deactivate" : "Reactivate"}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <Empty title="No communities found" message="Community records will appear here." />}
             </Card>
           )}
 
