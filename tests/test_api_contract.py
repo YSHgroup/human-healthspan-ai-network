@@ -282,6 +282,38 @@ def test_community_list_includes_member_count_and_current_membership(client: Tes
     assert joined_community["is_member"] is True
 
 
+def test_dashboard_summary_reports_real_counts_and_seven_daily_buckets(client: TestClient) -> None:
+    member = register(client, "dashboard@example.org")
+    headers = auth_header(member["tokens"]["access_token"])
+    communities = client.get("/api/v1/communities").json()
+    assert client.post(
+        f"/api/v1/communities/{communities[0]['id']}/join",
+        headers=headers,
+    ).status_code == 204
+    assert client.post(
+        "/api/v1/research/projects",
+        headers=headers,
+        json={"title": "Member project", "description": "An MVP dashboard test project"},
+    ).status_code == 201
+    assert client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={"body": "A recent dashboard post"},
+    ).status_code == 201
+
+    summary = client.get("/api/v1/dashboard/summary", headers=headers)
+    assert summary.status_code == 200
+    data = summary.json()
+    assert data["active_members"] == 1
+    assert data["active_communities"] == len(communities)
+    assert data["your_communities"] == 1
+    assert data["accessible_projects"] == 1
+    assert data["posts_last_7_days"] == 1
+    assert len(data["activity"]) == 7
+    assert sum(day["post_count"] for day in data["activity"]) == 1
+    assert client.get("/api/v1/dashboard/summary").status_code == 401
+
+
 def test_search_and_public_profiles_respect_privacy_and_follow_state(client: TestClient) -> None:
     public = register(client, "public-expert@example.org")
     private = register(client, "private-expert@example.org")

@@ -1,3 +1,4 @@
+from datetime import datetime, time, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
@@ -38,6 +39,7 @@ from app.schemas.content import (
     PostOut,
     ReactionCreate,
 )
+from app.schemas.dashboard import DashboardSummaryOut, DailyActivityOut
 from app.schemas.governance import (
     AdminUserUpdate,
     AdminCommunityOut,
@@ -69,6 +71,51 @@ from app.services.search import SearchService
 
 router = APIRouter()
 router.include_router(auth_router)
+
+
+@router.get("/dashboard/summary", response_model=DashboardSummaryOut)
+def dashboard_summary(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> DashboardSummaryOut:
+    today = utc_now().date()
+    first_day = today - timedelta(days=6)
+    window_start = datetime.combine(first_day, time.min, tzinfo=timezone.utc)
+    posts_by_day = {first_day + timedelta(days=index): 0 for index in range(7)}
+    timestamps = db.scalars(
+        select(Post.created_at).where(
+            Post.deleted_at.is_(None),
+            Post.created_at >= window_start,
+        )
+    )
+    for created_at in timestamps:
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        day = created_at.astimezone(timezone.utc).date()
+        if day in posts_by_day:
+            posts_by_day[day] += 1
+
+    return DashboardSummaryOut(
+        active_members=db.scalar(
+            select(func.count(User.id)).where(User.is_active.is_(True))
+        ) or 0,
+        active_communities=db.scalar(
+            select(func.count(Community.id)).where(Community.is_active.is_(True))
+        ) or 0,
+        your_communities=db.scalar(
+            select(func.count(CommunityMember.id)).where(CommunityMember.user_id == user.id)
+        ) or 0,
+        accessible_projects=db.scalar(
+            select(func.count()).select_from(
+                AuthorizationService(db).readable_project_ids(user).subquery()
+            )
+        ) or 0,
+        posts_last_7_days=sum(posts_by_day.values()),
+        activity=[
+            DailyActivityOut(day=day, post_count=count)
+            for day, count in posts_by_day.items()
+        ],
+    )
 
 
 @router.get("/me", response_model=UserOut)

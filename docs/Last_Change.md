@@ -14,6 +14,8 @@ The separate Admin App provides authorized sign-in, service overview, moderation
 
 The member web app uses same-origin Next.js API routes and HttpOnly, SameSite=Strict cookies scoped to `/api`; browser JavaScript never receives access or refresh tokens. It supports registration, email verification/resend, sign-in/out, password reset/change, and member profile editing. Posts/comments/reactions/bookmarks/reports, community membership, research projects/questions, network discovery, public profiles/follows, and public literature search now use the API instead of mock data.
 
+The home dashboard uses live API data for network/member metrics, research access, community membership, and seven-day post activity. Its community feed and overview refresh periodically and support manual retry; unavailable data is surfaced rather than fabricated.
+
 The JavaScript apps use a root npm workspace and shared UI primitives in `packages/ui`. Docker builds use the repository root context.
 
 Not yet implemented in the member experience: avatar/media uploads, user notifications, account deletion, profile/session management, personalized feed ranking, full-text/semantic document search, and usable AI features. The AI integration is intentionally unavailable until an approved provider and quality/privacy controls are configured.
@@ -21,7 +23,7 @@ Not yet implemented in the member experience: avatar/media uploads, user notific
 ----------
 # Last Change
 
-Completed end-to-end member API integration for the core MVP screens; added privacy-safe feed/search contracts, community membership summaries, and audited Admin App community controls; isolated refresh rotation by admin session; corrected report actions for support role permissions; and aligned README/API/changelog guidance.
+Added an API-backed member dashboard with real network metrics, a seven-day activity visualization, community and research context, and refresh/error states. Completed end-to-end member API integration for the core MVP screens; added privacy-safe feed/search contracts, community membership summaries, and audited Admin App community controls; isolated refresh rotation by admin session; corrected report actions for support role permissions; and aligned README/API/changelog guidance.
 
 ----------
 # What is the next step?

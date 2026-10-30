@@ -103,6 +103,15 @@ export interface HealthOut {
   service: string;
 }
 
+export interface DashboardSummary {
+  active_members: number;
+  active_communities: number;
+  your_communities: number;
+  accessible_projects: number;
+  posts_last_7_days: number;
+  activity: { day: string; post_count: number }[];
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -152,6 +161,10 @@ export function getHealth(): Promise<HealthOut> {
 export function getFeed(limit = 25, offset = 0): Promise<FeedPost[]> {
   const parameters = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   return request<FeedPost[]>(`/api/v1/feed?${parameters.toString()}`, { cache: "no-store" });
+}
+
+export function getDashboardSummary(): Promise<DashboardSummary> {
+  return request<DashboardSummary>("/api/v1/dashboard/summary", { cache: "no-store" });
 }
 
 export function getCommunities(): Promise<Community[]> {
