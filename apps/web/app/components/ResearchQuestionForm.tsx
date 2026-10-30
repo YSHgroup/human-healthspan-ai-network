@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createResearchQuestion } from "../../lib/api";
-import type { ResearchProject } from "../../lib/mock/data";
+import type { ResearchProject } from "@/lib/api";
 import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@healthspan/ui/input";
@@ -19,6 +19,12 @@ export default function ResearchQuestionForm({ projects }: { projects: ResearchP
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (projects.length && !projects.some((project) => project.id === projectId)) {
+      setProjectId(projects[0].id);
+    }
+  }, [projects, projectId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,7 +64,7 @@ export default function ResearchQuestionForm({ projects }: { projects: ResearchP
       <CardHeader className="px-5 pt-5 sm:px-6 sm:pt-6">
         <CardTitle className="text-xl">Ask a research question</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Questions are sent to the API. The current backend returns a demo response and does not save them.
+          Questions are saved to the selected project and visible to members who have project access.
         </p>
       </CardHeader>
       <CardContent className="p-5 pt-4 sm:px-6 sm:pb-6">

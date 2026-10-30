@@ -15,6 +15,7 @@ export interface SessionTokens {
 }
 
 const backendBaseUrl = (process.env.API_INTERNAL_URL ?? "http://localhost:8000").replace(/\/+$/, "");
+const refreshInFlight = new Map<string, Promise<Response>>();
 
 export async function backendFetch(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(`${backendBaseUrl}${path}`, {
@@ -36,11 +37,21 @@ export async function getSessionTokens(): Promise<{
 }
 
 export async function refreshSession(refreshToken: string): Promise<Response> {
-  return backendFetch("/api/v1/auth/refresh", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
+  // Share token rotation only among requests carrying the same session cookie, never across members.
+  let pending = refreshInFlight.get(refreshToken);
+  if (!pending) {
+    pending = backendFetch("/api/v1/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    refreshInFlight.set(refreshToken, pending);
+    const cleanup = () => {
+      if (refreshInFlight.get(refreshToken) === pending) refreshInFlight.delete(refreshToken);
+    };
+    void pending.then(cleanup, cleanup);
+  }
+  return (await pending).clone();
 }
 
 export async function applySessionCookies(

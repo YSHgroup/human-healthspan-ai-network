@@ -37,6 +37,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         })
       : null;
     let rotatedTokens: SessionTokens | null = null;
+    let refreshRejected = false;
 
     if ((!upstream || upstream.status === 401) && refreshToken) {
       const refreshed = await refreshSession(refreshToken);
@@ -51,12 +52,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
         });
       } else if (refreshed.status !== 401) {
         return await jsonFromResponse(refreshed);
+      } else {
+        refreshRejected = true;
       }
     }
 
     if (!upstream || upstream.status === 401) {
       const response = unauthorized();
-      if (!refreshToken) clearSessionCookies(response);
+      if (refreshRejected || !refreshToken) clearSessionCookies(response);
       return response;
     }
     const response = await jsonFromResponse(upstream);

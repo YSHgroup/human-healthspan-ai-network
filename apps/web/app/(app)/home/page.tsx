@@ -1,12 +1,32 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import PostComposer from "../../components/PostComposer";
 import PageHeader from "../../components/PageHeader";
-import { getFeed } from "../../../lib/data";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@healthspan/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import FeedPostCard from "../../components/FeedPostCard";
+import { Button } from "@healthspan/ui/button";
+import { getFeed, type FeedPost } from "@/lib/api";
 
-export default async function HomePage() {
-  const posts = await getFeed();
+export default function HomePage() {
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadFeed = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setPosts(await getFeed());
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Unable to load the community feed.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadFeed();
+  }, [loadFeed]);
 
   return (
     <>
@@ -15,27 +35,15 @@ export default async function HomePage() {
         title="Home"
         description="Questions, ideas, and conversations from across the healthspan community."
       />
-      <PostComposer />
+      <PostComposer onPostCreated={() => void loadFeed()} />
+      {error && <div className="mb-5 flex flex-wrap items-center justify-between gap-3" role="alert">
+        <p className="text-sm text-destructive">{error}</p>
+        <Button disabled={loading} onClick={() => void loadFeed()} size="sm" type="button" variant="outline">Retry</Button>
+      </div>}
+      {loading && posts.length === 0 && <p className="text-sm text-muted-foreground">Loading community posts…</p>}
+      {!loading && !error && posts.length === 0 && <p className="text-sm text-muted-foreground">No posts yet. Start the conversation.</p>}
       <section className="grid gap-4" aria-label="Community feed">
-        {posts.map((post) => (
-          <Card className="gap-0 rounded-2xl border-border py-0 shadow-sm" key={post.id}>
-            <CardContent className="space-y-4 p-5 sm:p-6">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10 rounded-full">
-                  <AvatarFallback className="rounded-full bg-secondary font-semibold text-primary">
-                    {post.author_name.slice(0, 1)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{post.author_name}</p>
-                  <p className="text-xs text-muted-foreground">{post.role} · {post.posted_at}</p>
-                </div>
-              </div>
-              <p className="whitespace-pre-wrap text-sm leading-6 text-foreground/90">{post.body}</p>
-              <Badge className="text-[10px] uppercase tracking-wide" variant="secondary">Sample feed post</Badge>
-            </CardContent>
-          </Card>
-        ))}
+        {posts.map((post) => <FeedPostCard key={post.id} post={post} />)}
       </section>
     </>
   );

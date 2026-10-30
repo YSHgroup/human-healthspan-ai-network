@@ -48,6 +48,7 @@ async function proxy(
     const body = method === "GET" ? undefined : await request.text();
     let upstream = await backendFetch(backendPath, { method, headers, body });
     let rotatedTokens: SessionTokens | null = null;
+    let refreshRejected = false;
 
     if (upstream.status === 401 && refreshToken) {
       const refreshed = await refreshSession(refreshToken);
@@ -60,10 +61,13 @@ async function proxy(
         upstream = await backendFetch(backendPath, { method, headers, body });
       } else if (refreshed.status !== 401) {
         return await jsonFromResponse(refreshed);
+      } else {
+        refreshRejected = true;
       }
     }
 
     const response = await jsonFromResponse(upstream);
+    if (upstream.status === 401 && refreshRejected) clearSessionCookies(response);
     if (rotatedTokens) await applySessionCookies(response, rotatedTokens);
     return response;
   } catch {
