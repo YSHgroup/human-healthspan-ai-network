@@ -14,6 +14,21 @@ class CommunityOut(BaseModel):
     topic: str
 
 
+class CommunitySummaryOut(CommunityOut):
+    member_count: int
+    is_member: bool = False
+
+
+class AdminCommunityOut(CommunityOut):
+    is_active: bool
+    created_at: datetime
+
+
+class AdminCommunityUpdate(BaseModel):
+    is_active: bool
+    reason: str = Field(min_length=3, max_length=500)
+
+
 class ReportCreate(BaseModel):
     target_type: str = Field(pattern="^(post|comment|user|evidence)$")
     target_id: UUID

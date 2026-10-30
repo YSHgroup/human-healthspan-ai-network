@@ -212,6 +212,138 @@ def test_post_identity_comes_from_authenticated_user(client: TestClient) -> None
     assert feed.json()[0]["id"] == response.json()["id"]
 
 
+def test_feed_exposes_safe_author_and_interaction_summaries(client: TestClient) -> None:
+    member = register(client, "private-feed@example.org")
+    headers = auth_header(member["tokens"]["access_token"])
+    assert client.patch(
+        "/api/v1/me",
+        headers=headers,
+        json={"display_name": "Private Name", "is_public": False},
+    ).status_code == 200
+    post = client.post("/api/v1/posts", headers=headers, json={"body": "A private-profile post"})
+    assert post.status_code == 201
+    post_id = post.json()["id"]
+    assert client.post(
+        f"/api/v1/posts/{post_id}/comments",
+        headers=headers,
+        json={"body": "A useful comment"},
+    ).status_code == 201
+    assert client.post(
+        f"/api/v1/posts/{post_id}/reactions",
+        headers=headers,
+        json={"kind": "insightful"},
+    ).status_code == 201
+    comments = client.get(f"/api/v1/posts/{post_id}/comments")
+    assert comments.status_code == 200
+    assert comments.json()[0]["author_display_name"] == "Member"
+
+    anonymous_feed = client.get("/api/v1/feed")
+    assert anonymous_feed.status_code == 200
+    item = next(post for post in anonymous_feed.json() if post["id"] == post_id)
+    assert item["author_display_name"] == "Member"
+    assert item["comment_count"] == 1
+    assert item["reaction_count"] == 1
+    assert item["is_reacted"] is False
+    assert item["is_bookmarked"] is False
+
+    member_feed = client.get("/api/v1/feed", headers=headers)
+    member_item = next(post for post in member_feed.json() if post["id"] == post_id)
+    assert member_item["author_display_name"] == "Member"
+    assert member_item["is_reacted"] is True
+
+
+def test_community_list_includes_member_count_and_current_membership(client: TestClient) -> None:
+    member = register(client, "community-member@example.org")
+    headers = auth_header(member["tokens"]["access_token"])
+    communities = client.get("/api/v1/communities")
+    assert communities.status_code == 200
+    community = communities.json()[0]
+    assert community["member_count"] == 0
+    assert community["is_member"] is False
+
+    joined = client.post(f"/api/v1/communities/{community['id']}/join", headers=headers)
+    assert joined.status_code == 204
+    detail = client.get(f"/api/v1/communities/{community['id']}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["is_member"] is True
+    assert detail.json()["member_count"] == 1
+    community_post = client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={"community_id": community["id"], "body": "A community discussion"},
+    )
+    assert community_post.status_code == 201
+    feed = client.get(f"/api/v1/communities/{community['id']}/feed")
+    assert feed.status_code == 200
+    assert feed.json()[0]["id"] == community_post.json()["id"]
+    updated = client.get("/api/v1/communities", headers=headers)
+    joined_community = next(item for item in updated.json() if item["id"] == community["id"])
+    assert joined_community["member_count"] == 1
+    assert joined_community["is_member"] is True
+
+
+def test_search_and_public_profiles_respect_privacy_and_follow_state(client: TestClient) -> None:
+    public = register(client, "public-expert@example.org")
+    private = register(client, "private-expert@example.org")
+    visitor = register(client, "visitor@example.org")
+    private_headers = auth_header(private["tokens"]["access_token"])
+    visitor_headers = auth_header(visitor["tokens"]["access_token"])
+
+    assert client.patch(
+        "/api/v1/me",
+        headers=auth_header(public["tokens"]["access_token"]),
+        json={"display_name": "Visible Expert", "is_public": True},
+    ).status_code == 200
+    assert client.patch(
+        "/api/v1/me",
+        headers=private_headers,
+        json={"display_name": "Hidden Expert", "is_public": False},
+    ).status_code == 200
+
+    search = client.get("/api/v1/search", params={"q": "Expert"})
+    assert search.status_code == 200
+    assert [person["display_name"] for person in search.json()["people"]] == ["Visible Expert"]
+
+    private_profile = client.get(f"/api/v1/users/{private['user']['id']}")
+    assert private_profile.status_code == 404
+    public_profile = client.get(f"/api/v1/users/{public['user']['id']}", headers=visitor_headers)
+    assert public_profile.status_code == 200
+    assert public_profile.json()["is_following"] is False
+    assert client.post(f"/api/v1/users/{public['user']['id']}/follow", headers=visitor_headers).status_code == 204
+    followed_profile = client.get(f"/api/v1/users/{public['user']['id']}", headers=visitor_headers)
+    assert followed_profile.json()["is_following"] is True
+    assert client.get(
+        f"/api/v1/users/{private['user']['id']}",
+        headers=private_headers,
+    ).status_code == 404
+
+
+def test_admin_can_deactivate_community_with_audited_reason(client: TestClient) -> None:
+    admin = register(client, "community-admin@example.org")
+    member = register(client, "community-user@example.org")
+    with SessionLocal.begin() as db:
+        db.get(User, UUID(admin["user"]["id"])).role = "admin"
+
+    admin_headers = auth_header(admin["tokens"]["access_token"])
+    member_headers = auth_header(member["tokens"]["access_token"])
+    communities = client.get("/api/v1/admin/communities", headers=admin_headers)
+    assert communities.status_code == 200
+    community = communities.json()[0]
+    forbidden = client.get("/api/v1/admin/communities", headers=member_headers)
+    assert forbidden.status_code == 403
+
+    updated = client.patch(
+        f"/api/v1/admin/communities/{community['id']}",
+        headers=admin_headers,
+        json={"is_active": False, "reason": "Temporarily paused for review"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["is_active"] is False
+    assert all(item["id"] != community["id"] for item in client.get("/api/v1/communities").json())
+    logs = client.get("/api/v1/admin/audit-logs", headers=admin_headers)
+    assert any(event["action"] == "admin.community.updated" for event in logs.json())
+
+
 def test_research_project_visibility_and_team_permissions(client: TestClient) -> None:
     owner = register(client, "researcher@example.org")
     member = register(client, "collaborator@example.org")

@@ -2,11 +2,11 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import false, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.auth import router as auth_router
-from app.api.dependencies import get_current_user, require_roles
+from app.api.dependencies import get_current_user, get_optional_current_user, require_roles
 from app.db.base import utc_now
 from app.db.session import get_db
 from app.models.domain import (
@@ -29,10 +29,21 @@ from app.models.domain import (
     User,
 )
 from app.schemas.auth import AdminUserOut, ProfileOut, PublicUserOut, UserOut, UserProfileUpdate
-from app.schemas.content import CommentCreate, CommentOut, PostCreate, PostOut, ReactionCreate
+from app.schemas.content import (
+    CommentCreate,
+    CommentFeedOut,
+    CommentOut,
+    FeedPostOut,
+    PostCreate,
+    PostOut,
+    ReactionCreate,
+)
 from app.schemas.governance import (
     AdminUserUpdate,
+    AdminCommunityOut,
+    AdminCommunityUpdate,
     CommunityOut,
+    CommunitySummaryOut,
     ModerationDecision,
     ReportCreate,
     ReportOut,
@@ -122,7 +133,11 @@ def version() -> dict[str, str]:
 
 
 @router.get("/users/{user_id}", response_model=PublicUserOut)
-def get_public_user(user_id: UUID, db: Session = Depends(get_db)) -> PublicUserOut:
+def get_public_user(
+    user_id: UUID,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> PublicUserOut:
     user = db.get(User, user_id)
     profile = db.scalar(select(Profile).where(Profile.user_id == user_id))
     if user is None or profile is None or not profile.is_public or not user.is_active:
@@ -131,23 +146,97 @@ def get_public_user(user_id: UUID, db: Session = Depends(get_db)) -> PublicUserO
         id=user.id,
         role=user.role,
         profile=ProfileOut.model_validate(profile),
+        is_following=(
+            current_user is not None
+            and db.scalar(
+                select(Follow.id).where(
+                    Follow.follower_id == current_user.id,
+                    Follow.followed_id == user_id,
+                )
+            ) is not None
+        ),
     )
 
 
-@router.get("/feed", response_model=list[PostOut])
+def _feed_posts(
+    db: Session,
+    limit: int,
+    offset: int,
+    community_id: UUID | None,
+    user: User | None,
+) -> list[FeedPostOut]:
+    comment_count = (
+        select(func.count(Comment.id))
+        .where(Comment.post_id == Post.id, Comment.deleted_at.is_(None))
+        .correlate(Post)
+        .scalar_subquery()
+    )
+    reaction_count = (
+        select(func.count(Reaction.id))
+        .where(Reaction.post_id == Post.id)
+        .correlate(Post)
+        .scalar_subquery()
+    )
+    is_reacted = (
+        select(Reaction.id)
+        .where(Reaction.post_id == Post.id, Reaction.user_id == user.id)
+        .exists()
+        if user is not None
+        else false()
+    )
+    is_bookmarked = (
+        select(Bookmark.id)
+        .where(Bookmark.post_id == Post.id, Bookmark.user_id == user.id)
+        .exists()
+        if user is not None
+        else false()
+    )
+    query = (
+        select(
+            Post,
+            User.role,
+            Profile.display_name,
+            Profile.is_public,
+            comment_count,
+            reaction_count,
+            is_reacted,
+            is_bookmarked,
+        )
+        .join(User, User.id == Post.author_id)
+        .outerjoin(Profile, Profile.user_id == Post.author_id)
+        .where(Post.deleted_at.is_(None), User.is_active.is_(True))
+    )
+    if community_id is not None:
+        query = query.where(Post.community_id == community_id)
+    rows = db.execute(
+        query.order_by(Post.created_at.desc(), Post.id).limit(limit).offset(offset)
+    )
+    posts: list[FeedPostOut] = []
+    for post, role, display_name, profile_is_public, comments, reactions, reacted, bookmarked in rows:
+        # Public feeds must not expose display names from profiles marked private.
+        posts.append(
+            FeedPostOut(
+                **PostOut.model_validate(post).model_dump(),
+                author_display_name=display_name if profile_is_public and display_name else "Member",
+                author_role=role,
+                comment_count=comments,
+                reaction_count=reactions,
+                is_reacted=reacted,
+                is_bookmarked=bookmarked,
+            )
+        )
+    return posts
+
+
+@router.get("/feed", response_model=list[FeedPostOut])
 def get_feed(
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     offset: Annotated[int, Query(ge=0)] = 0,
     community_id: UUID | None = None,
+    user: User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
-) -> list[Post]:
-    query = select(Post).join(User, User.id == Post.author_id).where(
-        Post.deleted_at.is_(None),
-        User.is_active.is_(True),
-    )
-    if community_id is not None:
-        query = query.where(Post.community_id == community_id)
-    return list(db.scalars(query.order_by(Post.created_at.desc(), Post.id).limit(limit).offset(offset)))
+) -> list[FeedPostOut]:
+    return _feed_posts(db, limit, offset, community_id, user)
 
 
 @router.post("/posts", response_model=PostOut, status_code=status.HTTP_201_CREATED)
@@ -195,43 +284,42 @@ def get_post(post_id: UUID, db: Session = Depends(get_db)) -> Post:
 
 
 @router.get("/communities/{community_id}")
-def get_community(community_id: UUID, db: Session = Depends(get_db)) -> dict[str, object]:
+def get_community(
+    community_id: UUID,
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> CommunitySummaryOut:
     community = db.get(Community, community_id)
     if community is None or not community.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Community not found.")
     member_count = db.scalar(
         select(func.count()).select_from(CommunityMember).where(CommunityMember.community_id == community_id)
     )
-    return {
-        "id": community.id,
-        "slug": community.slug,
-        "name": community.name,
-        "description": community.description,
-        "topic": community.topic,
-        "member_count": member_count or 0,
-    }
+    is_member = user is not None and db.scalar(
+        select(CommunityMember.id).where(
+            CommunityMember.community_id == community_id,
+            CommunityMember.user_id == user.id,
+        )
+    ) is not None
+    return CommunitySummaryOut(
+        **CommunityOut.model_validate(community).model_dump(),
+        member_count=member_count or 0,
+        is_member=is_member,
+    )
 
 
-@router.get("/communities/{community_id}/feed", response_model=list[PostOut])
+@router.get("/communities/{community_id}/feed", response_model=list[FeedPostOut])
 def community_feed(
     community_id: UUID,
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     offset: Annotated[int, Query(ge=0)] = 0,
+    user: User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
-) -> list[Post]:
+) -> list[FeedPostOut]:
     community = db.get(Community, community_id)
     if community is None or not community.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Community not found.")
-    return list(
-        db.scalars(
-            select(Post)
-            .join(User, User.id == Post.author_id)
-            .where(Post.community_id == community_id, Post.deleted_at.is_(None), User.is_active.is_(True))
-            .order_by(Post.created_at.desc(), Post.id)
-            .limit(limit)
-            .offset(offset)
-        )
-    )
+    return _feed_posts(db, limit, offset, community_id, user)
 
 
 @router.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -250,22 +338,33 @@ def delete_post(
     db.commit()
 
 
-@router.get("/posts/{post_id}/comments", response_model=list[CommentOut])
+@router.get("/posts/{post_id}/comments", response_model=list[CommentFeedOut])
 def list_comments(
     post_id: UUID,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     db: Session = Depends(get_db),
-) -> list[Comment]:
+) -> list[CommentFeedOut]:
     post = db.get(Post, post_id)
     if post is None or post.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
     query = (
-        select(Comment)
+        select(Comment, Profile.display_name, Profile.is_public)
         .join(User, User.id == Comment.author_id)
+        .outerjoin(Profile, Profile.user_id == Comment.author_id)
         .where(Comment.post_id == post_id, Comment.deleted_at.is_(None), User.is_active.is_(True))
     )
-    return list(db.scalars(query.order_by(Comment.created_at.asc()).limit(limit).offset(offset)))
+    return [
+        CommentFeedOut(
+            **CommentOut.model_validate(comment).model_dump(),
+            author_display_name=(
+                display_name if profile_is_public and display_name else "Member"
+            ),
+        )
+        for comment, display_name, profile_is_public in db.execute(
+            query.order_by(Comment.created_at.asc()).limit(limit).offset(offset)
+        )
+    ]
 
 
 @router.post("/posts/{post_id}/comments", response_model=CommentOut, status_code=status.HTTP_201_CREATED)
@@ -393,13 +492,42 @@ def unfollow_user(
         db.commit()
 
 
-@router.get("/communities", response_model=list[CommunityOut])
-def list_communities(db: Session = Depends(get_db)) -> list[Community]:
-    return list(
-        db.scalars(
-            select(Community).where(Community.is_active.is_(True)).order_by(Community.name.asc())
-        )
+@router.get("/communities", response_model=list[CommunitySummaryOut])
+def list_communities(
+    user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> list[CommunitySummaryOut]:
+    communities = list(
+        db.scalars(select(Community).where(Community.is_active.is_(True)).order_by(Community.name.asc()))
     )
+    community_ids = [community.id for community in communities]
+    if not community_ids:
+        return []
+    member_counts = dict(
+        db.execute(
+            select(CommunityMember.community_id, func.count(CommunityMember.id))
+            .where(CommunityMember.community_id.in_(community_ids))
+            .group_by(CommunityMember.community_id)
+        ).all()
+    )
+    joined_ids = set()
+    if user is not None:
+        joined_ids = set(
+            db.scalars(
+                select(CommunityMember.community_id).where(
+                    CommunityMember.user_id == user.id,
+                    CommunityMember.community_id.in_(community_ids),
+                )
+            )
+        )
+    return [
+        CommunitySummaryOut(
+            **CommunityOut.model_validate(community).model_dump(),
+            member_count=member_counts.get(community.id, 0),
+            is_member=community.id in joined_ids,
+        )
+        for community in communities
+    ]
 
 
 @router.post("/communities/{community_id}/join", status_code=status.HTTP_204_NO_CONTENT)
@@ -934,6 +1062,42 @@ def admin_users(
         )
         for item in users
     ]
+
+
+@router.get("/admin/communities", response_model=list[AdminCommunityOut])
+def admin_communities(
+    _: User = Depends(require_roles("admin")),
+    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+    db: Session = Depends(get_db),
+) -> list[Community]:
+    return list(
+        db.scalars(select(Community).order_by(Community.name.asc()).limit(limit))
+    )
+
+
+@router.patch("/admin/communities/{community_id}", response_model=AdminCommunityOut)
+def update_admin_community(
+    community_id: UUID,
+    payload: AdminCommunityUpdate,
+    admin: User = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+) -> Community:
+    community = db.get(Community, community_id)
+    if community is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Community not found.")
+    if community.is_active != payload.is_active:
+        community.is_active = payload.is_active
+        record_audit_event(
+            db,
+            admin.id,
+            "admin.community.updated",
+            "community",
+            community.id,
+            {"reason": payload.reason, "is_active": community.is_active},
+        )
+        db.commit()
+        db.refresh(community)
+    return community
 
 
 @router.patch("/admin/users/{user_id}", response_model=AdminUserOut)

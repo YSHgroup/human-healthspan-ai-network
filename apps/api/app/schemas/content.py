@@ -39,6 +39,15 @@ class PostOut(BaseModel):
     created_at: datetime
 
 
+class FeedPostOut(PostOut):
+    author_display_name: str
+    author_role: str
+    comment_count: int
+    reaction_count: int
+    is_reacted: bool = False
+    is_bookmarked: bool = False
+
+
 class CommentCreate(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
 
@@ -58,6 +67,10 @@ class CommentOut(BaseModel):
     author_id: UUID
     body: str
     created_at: datetime
+
+
+class CommentFeedOut(CommentOut):
+    author_display_name: str
 
 
 class ReactionCreate(BaseModel):

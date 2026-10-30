@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.models.domain import Community, Post, ResearchProject, User
+from app.models.domain import Community, Post, Profile, ResearchProject, User
 
 
 class SearchService:
@@ -32,6 +32,16 @@ class SearchService:
             )
             .limit(limit)
         )
+        people = self.db.execute(
+            select(User, Profile)
+            .join(Profile, Profile.user_id == User.id)
+            .where(
+                User.is_active.is_(True),
+                Profile.is_public.is_(True),
+                Profile.display_name.ilike(pattern),
+            )
+            .limit(limit)
+        )
         return {
             "posts": [
                 {"id": str(post.id), "body": post.body, "classification": post.classification}
@@ -44,5 +54,13 @@ class SearchService:
             "communities": [
                 {"id": str(community.id), "name": community.name, "topic": community.topic}
                 for community in communities
+            ],
+            "people": [
+                {
+                    "id": str(user.id),
+                    "display_name": profile.display_name,
+                    "role": user.role,
+                }
+                for user, profile in people
             ],
         }

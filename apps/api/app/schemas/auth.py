@@ -94,6 +94,7 @@ class PublicUserOut(BaseModel):
     id: UUID
     role: str
     profile: ProfileOut
+    is_following: bool = False
 
 
 class AdminUserOut(UserOut):
