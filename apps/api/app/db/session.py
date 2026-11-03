@@ -32,7 +32,7 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def initialize_database() -> None:
-    from app.models import domain  # noqa: F401
+    from app.models import domain, platform  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     seed_communities()

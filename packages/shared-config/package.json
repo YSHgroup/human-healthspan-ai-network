@@ -1,0 +1,9 @@
+{
+  "name": "@healthspan/shared-config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./portals": "./src/portals.ts",
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  }
+}

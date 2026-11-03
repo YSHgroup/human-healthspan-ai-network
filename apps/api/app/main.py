@@ -19,8 +19,8 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="Human Healthspan Network API",
-    version="0.3.0",
-    description="Phase 1 modular monolith API foundation.",
+    version="0.4.0",
+    description="Modular monolith API: User API (/api/v1/user/{social,personal,researcher}) and Admin API (/api/v1/admin).",
     lifespan=lifespan,
 )
 

@@ -65,6 +65,11 @@ from app.schemas.research import (
     ResearchQuestionCreate,
     ResearchQuestionOut,
 )
+from app.ai import orchestrator
+from app.ai.router import to_answer
+from app.domains.notifications.service import notify
+from app.domains.research.access import project_or_404, require_project_read, require_project_write
+from app.schemas.platform import AIAnswerOut, LegacyAIChatRequest
 from app.services.audit import record_audit_event
 from app.services.authorization import AuthorizationService
 from app.services.search import SearchService
@@ -157,26 +162,9 @@ def update_me_alias(
     )
 
 
-def project_or_404(db: Session, project_id: UUID) -> ResearchProject:
-    project = db.get(ResearchProject, project_id)
-    if project is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Research project not found.")
-    return project
-
-
-def require_project_read(db: Session, user: User, project: ResearchProject) -> None:
-    if not AuthorizationService(db).can_read_project(user, project):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Research project not found.")
-
-
-def require_project_write(db: Session, user: User, project: ResearchProject) -> None:
-    if not AuthorizationService(db).can_write_project(user, project):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot modify this research project.")
-
-
 @router.get("/version")
 def version() -> dict[str, str]:
-    return {"api": "v1", "roadmap_phase": "1"}
+    return {"api": "v1", "roadmap_phase": "2", "architecture": "v1.2"}
 
 
 @router.get("/users/{user_id}", response_model=PublicUserOut)
@@ -211,6 +199,7 @@ def _feed_posts(
     offset: int,
     community_id: UUID | None,
     user: User | None,
+    content_type: str | None = None,
 ) -> list[FeedPostOut]:
     comment_count = (
         select(func.count(Comment.id))
@@ -255,6 +244,8 @@ def _feed_posts(
     )
     if community_id is not None:
         query = query.where(Post.community_id == community_id)
+    if content_type is not None:
+        query = query.where(Post.content_type == content_type)
     rows = db.execute(
         query.order_by(Post.created_at.desc(), Post.id).limit(limit).offset(offset)
     )
@@ -428,6 +419,7 @@ def create_comment(
     db.add(comment)
     db.flush()
     record_audit_event(db, user.id, "comment.created", "comment", comment.id)
+    notify(db, post.author_id, "post.comment", "New comment on your post", comment.body[:200], "post", post.id, user.id)
     db.commit()
     db.refresh(comment)
     return comment
@@ -521,6 +513,7 @@ def follow_user(
     if existing is None:
         db.add(Follow(follower_id=user.id, followed_id=user_id))
         record_audit_event(db, user.id, "user.followed", "user", user_id)
+        notify(db, user_id, "user.followed", "You have a new follower", None, "user", user.id, user.id)
         db.commit()
 
 
@@ -1232,17 +1225,21 @@ def admin_audit_logs(
     ]
 
 
-@router.get("/admin/ai-monitoring")
-def admin_ai_monitoring(
-    _: User = Depends(require_roles("admin", "read_only_auditor")),
-) -> dict[str, str]:
-    return {"status": "not_configured", "detail": "No AI provider or AI-run store is configured."}
+@router.post("/ai/chat", response_model=AIAnswerOut)
+def legacy_ai_chat(
+    payload: LegacyAIChatRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AIAnswerOut:
+    """Compatibility alias for the General Platform AI (new clients use /user/ai/general/chat)."""
+    return to_answer(orchestrator.ask(db, user, "general", payload.prompt, None, payload.conversation_id))
 
 
-@router.post("/ai/chat")
-@router.post("/ai/research")
-def ai_unavailable(_: User = Depends(get_current_user)) -> Response:
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="AI is unavailable because no approved provider is configured.",
-    )
+@router.post("/ai/research", response_model=AIAnswerOut)
+def legacy_ai_research(
+    payload: LegacyAIChatRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AIAnswerOut:
+    """Compatibility alias for the Private AI Scientist; requires approved researcher membership."""
+    return to_answer(orchestrator.ask(db, user, "scientist", payload.prompt, None, payload.conversation_id))

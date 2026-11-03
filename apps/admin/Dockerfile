@@ -23,5 +23,5 @@ COPY --from=builder /workspace/apps/admin ./apps/admin
 COPY --from=builder /workspace/apps/web/package.json ./apps/web/package.json
 COPY --from=builder /workspace/packages/ui ./packages/ui
 COPY --from=builder /workspace/node_modules ./node_modules
-EXPOSE 3001
+EXPOSE 3004
 CMD ["npm", "run", "start", "--workspace", "@healthspan/admin"]

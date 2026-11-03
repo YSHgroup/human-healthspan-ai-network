@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     email_from: str | None = None
     public_app_url: str = "http://localhost:3000"
+    # AI providers. The default "extractive" provider is deterministic, offline and cites sources;
+    # an external provider is only used for the General Platform AI unless explicitly allowed.
+    ai_provider: str = "extractive"
+    ai_api_key: str | None = None
+    ai_model: str | None = None
+    ai_allow_external_for_private: bool = False
 
     @field_validator("public_app_url")
     @classmethod

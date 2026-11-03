@@ -7,7 +7,9 @@
     "./button": "./src/button.tsx",
     "./input": "./src/input.tsx",
     "./select": "./src/select.tsx",
-    "./tokens.css": "./src/tokens.css"
+    "./tokens.css": "./src/tokens.css",
+    "./ai-chat": "./src/ai-chat.tsx",
+    "./verification-badge": "./src/verification-badge.tsx"
   },
   "peerDependencies": {
     "@base-ui/react": "^1.9.0",
@@ -17,5 +19,8 @@
   },
   "devDependencies": {
     "@types/react": "^19.3.0"
+  },
+  "dependencies": {
+    "@healthspan/shared-types": "*"
   }
 }

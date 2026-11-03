@@ -4,6 +4,9 @@
   "workspaces": [
     "apps/web",
     "apps/admin",
+    "apps/social-web",
+    "apps/personal-web",
+    "apps/researcher-web",
     "packages/*"
   ],
   "scripts": {
@@ -14,7 +17,13 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck:web": "npm run typecheck --workspace @healthspan/web",
     "typecheck:admin": "npm run typecheck --workspace @healthspan/admin",
-    "test:api": "python -m pytest tests/test_api_contract.py -q"
+    "test:api": "python -m pytest tests -q",
+    "dev:social": "npm run dev --workspace @healthspan/social-web",
+    "typecheck:social": "npm run typecheck --workspace @healthspan/social-web",
+    "dev:personal": "npm run dev --workspace @healthspan/personal-web",
+    "typecheck:personal": "npm run typecheck --workspace @healthspan/personal-web",
+    "dev:researcher": "npm run dev --workspace @healthspan/researcher-web",
+    "typecheck:researcher": "npm run typecheck --workspace @healthspan/researcher-web"
   },
   "allowScripts": {
     "sharp@0.34.5": true

@@ -1,0 +1,12 @@
+{
+  "name": "@healthspan/auth-client",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.tsx",
+    "./session": "./src/session.tsx"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

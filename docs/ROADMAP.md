@@ -1,69 +1,53 @@
-# Roadmap
+# Revised development roadmap v3 — aligned to Blueprint V2.2 and Architecture v1.2
 
-This is the concise project roadmap. See [Human_Healthspan_AI_Scientific_Network_Roadmap.md](Human_Healthspan_AI_Scientific_Network_Roadmap.md) for scope, requirements, and exit criteria.
+Priority order used: **1. Blueprint → 2. Architecture → 3. Roadmap.** Where the v2 roadmap conflicted with the Architecture, the Architecture won.
 
-## Principles
+## 1. Does the roadmap need updating? Yes — in five places
 
-- Build a useful, safe MVP on a modular monolith before adding advanced infrastructure.
-- Keep web/admin clients and shared frontend packages in a workspace monorepo; deploy client apps independently when useful.
-- Centralize domain behavior and authorization in the versioned API rather than adding portal-specific backends.
-- Add shared packages and worker processes to solve real reuse or workload needs; avoid empty scaffolding.
-- Deliver the member-facing platform and a separate, first-class Admin App together for the MVP.
-- Make privacy, consent, least privilege, resource-level authorization, provenance, and auditability foundational.
-- Gate later capabilities on validated product value, governance, and operational readiness.
+| # | v2 roadmap said | Architecture / Blueprint says | Change in v3 |
+|---|---|---|---|
+| 1 | Keep one member app (`apps/web`) and a Next.js admin; "do not rebuild" | Three independent Next.js portals (Social, Personal, Researcher) + a separate React/Vite admin; shared packages | Phase 1 now includes the **portal split**. `apps/web` stays as a legacy app during migration, not extended. |
+| 2 | One flat API (`/api/v1/...`) | User API `/api/v1/user/{social,personal,researcher}` and Admin API `/api/v1/admin` | Portal API boundaries added as aliases over proven routes; old paths kept for compatibility. |
+| 3 | Organizations, health data, messaging, events, badges, entitlements appear late or not at all | These are first-class domains (Architecture §3, §12) with backend-enforced entitlements | Pulled forward into a new **Phase 1B – Platform domains**. |
+| 4 | AI activates in Phase 3 (general) and Phase 4 (private) | Three separate AI systems with their own authorization, plus an audited orchestrator | A governed **AI baseline** (retrieval + citations + audit, no proprietary model) is delivered in 1B; Phases 3/4/7 now mean *upgrading* it (document ingestion, vector search, stronger models). |
+| 5 | Admin = moderation/users only | Admin also owns organizations, events, subscriptions, payments, badges, AI monitoring, configuration | Admin scope expanded; admin migrates to Vite + a small BFF. |
 
-## Phase 0 — Validation and Architecture
+**Kept from v2 unchanged:** the phase ordering after Phase 1 (documents → general AI → private AI → collaboration → advanced AI → organization AI → shared learning → global), all exit criteria for security/testing/deployment, the "do not let AI invent evidence" rules, and the list of items deliberately kept outside the MVP.
 
-Validate MVP journeys, personas, success metrics, architecture, data boundaries, permissions, governance, and operational requirements. Establish the data model, tests, CI, and local/deployment workflows. Set up the npm workspace for the web/admin apps and extract only the UI primitives they actually share.
+## 2. Status of each phase (after this update)
 
-## Phase 1 — MVP: Social Platform, Research Foundation, and Essential Admin App
+| Phase | v3 scope | Status |
+|---|---|---|
+| 1A. MVP completion | auth hardening, rate limiting, MFA strategy, email, CI/CD, E2E tests | **Not done** (unchanged from v2) |
+| 1B. Platform domains + portal split | organizations, researcher access, tasks/work history, professional records, badges, health data + sharing + consent, messaging, events, notifications, entitlements/payments (manual), User/Admin API boundaries | **Backend done (unverified at runtime)**; frontend **partly done** (see handover) |
+| 2. Scientific documents & search | file upload, object storage, parsing, OpenSearch/pgvector | Not started (text-only org documents exist as a stopgap) |
+| 3. General Platform AI | real provider, evaluation set | **Baseline done**: public-knowledge retrieval, citations, evidence labels, uncertainty, audit; optional external-provider adapter (untested) |
+| 4. Private AI Scientist | researcher-only AI over authorized projects | **Baseline done**: same retriever pattern + approval gate. No proprietary models. |
+| 5. Research collaboration | structured claims, reviews, version history | Partly: tasks, progress, org projects. Reviews/claims not started |
+| 6. Advanced Scientist | proprietary specialization | Not started |
+| 7. Organization AI | paid per-org AI instance, isolated knowledge | **Baseline done**: entitlement-gated instance, org-scoped documents and retrieval |
+| 8. Shared learning | governed feedback → improvement | **Foundation only**: feedback with explicit permitted-use + consent records |
+| 9. Global | i18n, regional compliance | Not started |
 
-Deliver accounts and profiles, starter communities, social participation and discovery, scientific evidence with provenance, foundational research projects with scoped permissions, and evidence-grounded AI support where it meets quality requirements.
+## 3. Revised sequence from today
 
-Launch a separate Admin App alongside the member platform, sharing its backend API and domain services. Include secure administrator access, server-enforced least-privilege roles, platform and service overview, account and community management, moderation and scientific-review queues, audited privileged actions, operational visibility, and incident/reporting entry points. Verify access boundaries, privacy, and audit behavior before launch.
+**Sprint 1 — make it run (blocking)**
+1. Install deps, run `pytest tests -q`; fix whatever fails (this code was never executed — see handover).
+2. `npm install` to regenerate `package-lock.json`; `npm run typecheck:*` for each portal; fix type errors.
+3. Run `alembic upgrade head` on a fresh Postgres.
 
-Complete end-to-end member and admin journeys against the same API. Keep application code independently buildable; require production deployment and load tests before claiming traffic scalability.
+**Sprint 2 — finish Phase 1B frontend**
+Social: events, messages, notifications, Ask-AI. Personal: overview, professional, health, sharing, privacy & plan, activity. Researcher: workspace, project detail (tasks/progress), organizations, Organization AI, AI Scientist. The typed API client and shared `AiChat` / `VerificationBadge` components already exist.
 
-## Phase 2 — Research and Governance Maturity
+**Sprint 3 — Admin migration**
+Port `apps/admin` to React + Vite with a small BFF that keeps HttpOnly cookies; add screens for organizations, events, subscriptions/payments, badges, researcher applications, AI monitoring, configuration.
 
-Strengthen project permissions and access reviews, evidence review and correction handling, conflicts-of-interest declarations, privacy requests, sensitive-data controls, and governance reporting.
+**Sprint 4 — Phase 1A hardening** (rate limiting on Redis, MFA, production email, CI with API + Playwright tests, secrets, backups, monitoring).
 
-**Gate:** Demonstrate reliable research permissions, provenance, and review processes before expanding powerful AI or institutional data features.
+**Then Phase 2** (documents/ingestion/search), which unlocks real value for all three AI systems.
 
-## Phase 3 — AI Operations and Evidence-Grounded Assistance
-
-Expand AI Q&A, document analysis, literature synthesis, citation support, and project assistance. Add model routing, quality and cost evaluation, operational oversight, and audited Admin App configuration. Introduce a worker process using existing API domain modules for ingestion, indexing, and other long-running tasks. Preserve user, team, and resource permissions throughout retrieval and tool use.
-
-**Gate:** Require appropriate evaluations, privacy controls, human review, logging, and incident response for each higher-impact capability.
-
-## Phase 4 — Knowledge Infrastructure
-
-Add structured scientific entities, relationships, claims, evidence, and provenance; improve discovery, ingestion, deduplication, taxonomy, and quality review. Keep PostgreSQL and existing search/retrieval as the system of record unless product and scale needs justify more infrastructure.
-
-## Phase 5 — Collaboration and Research Opportunities
-
-Add researcher matching, collaboration and project discovery, research opportunities, events, challenges, and supporting administration and abuse prevention.
-
-## Phase 6 — Scientific AI and Research Automation
-
-Introduce specialized agents, data analysis, bioinformatics workflows, and research-discovery tools only where justified, with scoped permissions, human oversight, provenance, evaluations, and controlled tool access.
-
-**Gate:** Each advanced capability needs a risk assessment, reproducible evaluations, human oversight, and a rollback or disable mechanism.
-
-## Phase 7 — Institutional Environments
-
-Support organization workspaces with strong tenant isolation, delegated administration, institutional policies and audit reporting, validated SSO needs, data ownership and retention controls, and scoped research APIs. Add an institution-facing portal as a separately deployed client only after API-enforced tenant isolation and delegated roles pass security tests.
-
-## Phase 8 — Global Ecosystem
-
-Grow cross-community and cross-institution collaboration under explicit governance. Consider broader research marketplace and funding capabilities when validated; continue improving localization, accessibility, resilience, abuse prevention, and operational scalability.
-
-## Continuous engineering commitments
-
-Across every phase, maintain automated testing and CI, dependency and image maintenance, backups and recovery, observability, privacy and consent controls, secure authentication and authorization, encryption and secrets management, rate limiting, audit logging, evidence and citation integrity, correction mechanisms, accessible responsive UX, privacy-respecting analytics, and disciplined migrations and API evolution.
-
-As multiple clients need the same contracts, add a typed API client generated from or verified against the API schema. Add shared types or tooling configuration only when there are real consumers; maintain one authoritative API schema and keep app-specific configuration local where that improves isolation.
-
-## Explicitly deferred until justified
-
-The MVP does not depend on a full biomedical knowledge graph, dedicated genomic-analysis platform, autonomous AI scientists, advanced bioinformatics infrastructure, funding marketplace, native mobile apps, Kubernetes, or microservices. Revisit these only when user demand, technical evidence, scale, and governance readiness support them.
+## 4. Release gates added in v3
+- No portal ships a premium feature gated only in the UI; every entitlement is enforced by the API (done and tested in `tests/test_platform_contract.py`).
+- Health data must stay unreachable from AI/search code (static guard test included).
+- Org AI must never return another organization's content (tested).
+- Payment provider integration is required before any paid feature is offered publicly (currently manual reconciliation by an admin).
