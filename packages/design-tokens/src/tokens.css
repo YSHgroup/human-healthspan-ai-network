@@ -1,0 +1,13 @@
+:root {
+  --healthspan-ink: #092947;
+  --healthspan-ink-soft: #31516b;
+  --healthspan-muted: #718497;
+  --healthspan-blue: #0876d8;
+  --healthspan-blue-deep: #0756a3;
+  --healthspan-cyan: #16b8c8;
+  --healthspan-green: #0eaa84;
+  --healthspan-paper: #f8fbfc;
+  --healthspan-line: #dce8ed;
+  --healthspan-font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --healthspan-font-sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}

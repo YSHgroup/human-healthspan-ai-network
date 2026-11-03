@@ -1,66 +1,75 @@
-# Human Healthspan, Scientific Research & AI Network — Round 2
+# Human Healthspan Scientific AI Network
 
-A scalable foundation for the Human Healthspan / Scientific Research / AI Network.
+A people-first, science-led network where open community participation can connect to governed research and responsible AI. This repository currently establishes the workspace and portal foundations, not a feature-complete MVP.
 
-## Round 2 focus
+## Product direction
 
-- Social network foundation: profiles, follows, posts, comments, communities
-- Research foundation: projects, research questions, hypotheses, evidence, literature metadata
-- Permission-aware AI/RAG boundary
-- Unified search boundary
-- Audit and governance foundations
-- Dockerized local development
-- PostgreSQL as system of record
-- Redis for cache/queues
-- OpenSearch for search
-- pgvector-ready PostgreSQL for embeddings
-- Next.js + TypeScript web application
-- FastAPI + Python backend
-- Clean module boundaries so later rounds can add knowledge graph, collaboration engine, agents and institutional controls
+The platform connects three experiences over a shared backend:
 
-## Quick start
+- **Social Portal** — discover topics, learn, discuss and connect.
+- **Personal Portal** — manage an individual profile, preferences and saved knowledge.
+- **Researcher Portal** — participate in approved research communities and collaborate in controlled workspaces.
+- **Admin Application** — a separate operations and governance surface.
+
+The long-term AI architecture has three distinct environments: General Platform AI, a permission-controlled Private AI Scientist, and Organization-Specialized AI. They are not interchangeable; private research and personal health information must never cross their boundaries without explicit authorization.
+
+The product progression is **Discover → Learn → Connect → Participate → Collaborate → Research → Validate → Share appropriate knowledge**. Popularity is not scientific evidence, AI hypotheses are not findings, and health information remains private by default.
+
+## Repository layout
+
+```text
+apps/
+  social-web/       Next.js public entry point and landing page
+  personal-web/     Next.js personal portal foundation
+  researcher-web/   Next.js researcher portal foundation
+  admin/            React + Vite administration foundation
+api/                Python + FastAPI modular API foundation
+ai/                 Separate Python AI platform foundation
+packages/           Shared frontend types, config, tokens, and API client
+infra/              Local PostgreSQL and Redis development services
+tests/              Cross-area test suites
+docs/               Architecture, MVP scope, and roadmap
+references/         Original product source documents and legacy reference
+```
+
+## Getting started
+
+Requirements: Node.js 20+, pnpm 9, Python 3.10+, and Docker Compose (for local infrastructure).
 
 ```bash
 cp .env.example .env
-npm ci
-docker compose up --build
+pnpm install
+pnpm dev:social
 ```
 
-Web: http://localhost:3000
-Admin: http://localhost:3001
-API: http://localhost:8000/docs
-OpenSearch: http://localhost:9200
-
-The JavaScript applications use npm workspaces rooted at the repository. For local frontend development without Docker:
+The Social Portal is available at [http://localhost:3000](http://localhost:3000). Other frontends can be started independently:
 
 ```bash
-npm run dev:web
-npm run dev:admin
+pnpm dev:personal     # http://localhost:3001
+pnpm dev:researcher   # http://localhost:3002
+pnpm dev:admin        # http://localhost:3003
 ```
 
-Build both portals with `npm run build`, or build one with `npm run build:web` / `npm run build:admin`. Shared shadcn primitives live in `packages/ui`; routes, layouts, and remaining UI stay with their respective apps.
-
-The API applies Alembic migrations when its container starts and seeds the six MVP communities. Member registration, verification, login, password reset/change, logout, and profile editing are available in the web app. In development, account registration returns a one-time email-verification token in the response because no mail provider is configured. Set SMTP values and `PUBLIC_APP_URL` in `.env` to deliver verification and password-reset links.
-
-Create the first administrator from an operator shell:
+Start local dependencies with `docker compose -f infra/docker-compose.yml up -d`. The API can be started separately after installing its Python dependencies:
 
 ```bash
-docker compose exec api python -m app.cli create-admin admin@example.org
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e "api[dev]"
+uvicorn app.main:app --app-dir api --reload --port 8000
 ```
 
-The API tests use SQLite and do not require Docker:
+The API currently exposes only a basic health check. Authentication, persistence, community workflows, AI behavior, and administrative operations are planned work and must not be inferred from the portal scaffolds.
+
+## Project checks
 
 ```bash
-python -m pip install -r apps/api/requirements.txt
-python -m pytest tests/test_api_contract.py -q
+pnpm build
+pnpm lint
+pnpm typecheck
+pytest -q tests/api
 ```
 
-The Python API remains an independently managed modular monolith; JavaScript workspace commands do not install or manage Python dependencies.
+## Source of truth
 
-## Important
-
-This repository is an MVP foundation, not a clinical system or finished production platform. External AI, OpenSearch/Redis integration, file upload/scan pipelines, rate limiting, MFA enforcement, and production observability still require implementation. Health and scientific claims require governance, provenance, and review before production use.
-
-## Important for Agent!!! (If you are an AI, must keep the following terms)
-- If you are an AI agent, you need to update the `./docs/Last_Change.md` with the terms `Overall progress implemented`, `Last Change`, `What is the next step?` after updating this project.
-- When you are coding, if you make the something distict in normal and it's important to be inexed, You MUST make the git commit with the changes.
+Read [the system architecture](./docs/SYSTEM_DEVELOPMENT_ARCHITECTURE.md), [MVP specification](./docs/MVP_SPECIFICATION.md), and [development roadmap](./docs/DEVELOPMENT_ROADMAP.md) before extending the project. The references directory contains the original blueprint, white paper, and an older project archive. The archive is a source for selected visual assets and context only; it is not the implementation template for this project.

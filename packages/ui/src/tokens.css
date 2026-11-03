@@ -1,10 +1,29 @@
-:root {
-  --healthspan-navy-950: #061a3d;
-  --healthspan-navy-900: #0a2a5e;
-  --healthspan-navy-800: #0f3a7a;
-  --healthspan-blue: #1f8fff;
-  --healthspan-cyan: #19c2e8;
-  --healthspan-green: #22b573;
-  --healthspan-green-soft: #5fe0a0;
-  --healthspan-violet: #7a5cf0;
+.healthspan-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.healthspan-button--primary {
+  background: var(--healthspan-blue, #0876d8);
+  color: white;
+}
+
+.healthspan-button--secondary {
+  border-color: var(--healthspan-line, #dce8ed);
+  background: white;
+  color: var(--healthspan-ink, #092947);
+}
+
+.healthspan-button--quiet {
+  background: transparent;
+  color: var(--healthspan-ink-soft, #31516b);
 }

@@ -1,0 +1,1 @@
+"""Administrative operations domain (planned)."""

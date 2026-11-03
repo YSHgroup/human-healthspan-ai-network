@@ -1,0 +1,16 @@
+{
+  "name": "@healthspan/auth-client",
+  "version": "0.1.0",
+  "private": true,
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@healthspan/shared-types": "workspace:*"
+  },
+  "scripts": {
+    "lint": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  }
+}

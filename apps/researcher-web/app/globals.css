@@ -1,0 +1,191 @@
+@import "../../../packages/design-tokens/src/tokens.css";
+
+:root {
+  color-scheme: light;
+  --ink: var(--healthspan-ink);
+  --muted: var(--healthspan-muted);
+  --green: var(--healthspan-green);
+  --blue: var(--healthspan-blue);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f7fafb;
+  color: var(--ink);
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.research-header {
+  display: flex;
+  height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 max(32px, calc((100vw - 1120px) / 2));
+  border-bottom: 1px solid rgba(9, 41, 71, 0.1);
+  background: white;
+}
+
+.research-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.research-mark {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #075aa6, #0eaa84);
+  color: white;
+  font-size: 26px;
+}
+
+.research-brand > span:last-child {
+  display: grid;
+  gap: 4px;
+}
+
+.research-brand strong {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.research-brand small {
+  color: #708799;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+}
+
+.research-access {
+  color: #718696;
+  font-size: 11px;
+}
+
+.research-content {
+  width: min(880px, calc(100% - 44px));
+  margin: 94px auto;
+}
+
+.research-eyebrow {
+  margin: 0;
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.19em;
+}
+
+.research-content h1 {
+  margin: 19px 0 15px;
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: clamp(43px, 8vw, 62px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.research-lead {
+  max-width: 590px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.research-boundary {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 36px;
+  padding: 19px 21px;
+  border: 1px solid #d8ece6;
+  border-radius: 6px;
+  background: #f1faf7;
+}
+
+.boundary-icon {
+  color: #0b9a78;
+  font-size: 21px;
+}
+
+.research-boundary p {
+  margin: 0;
+  color: #477362;
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.research-foundations {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 13px;
+  margin-top: 34px;
+}
+
+.research-foundations article {
+  min-height: 165px;
+  padding: 20px;
+  border: 1px solid #e0e9ec;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.research-foundations article > span {
+  color: #129e81;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.research-foundations h2 {
+  margin: 22px 0 8px;
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.research-foundations p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.research-status {
+  margin-top: 19px;
+  color: #81939e;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .research-header {
+    padding-inline: 20px;
+  }
+
+  .research-access {
+    display: none;
+  }
+
+  .research-content {
+    margin-top: 65px;
+  }
+
+  .research-foundations {
+    grid-template-columns: 1fr;
+  }
+
+  .research-foundations article {
+    min-height: auto;
+  }
+}
