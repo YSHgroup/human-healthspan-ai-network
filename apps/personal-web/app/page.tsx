@@ -1,112 +1,240 @@
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowUpRight, Bookmark, HeartPulse, LockKeyhole, Sparkles } from "lucide-react";
+import {
+  Bookmark,
+  CircleUserRound,
+  Heart,
+  House,
+  LockKeyhole,
+  Settings2,
+  Sparkles,
+} from "lucide-react";
 
-import { Badge } from "@healthspan/ui/badge";
 import { Alert, AlertDescription } from "@healthspan/ui/alert";
+import { Badge } from "@healthspan/ui/badge";
 import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
+import {
+  EmptyState,
+  PageShell,
+  ProfileAvatar,
+  SectionHeading,
+  Separator,
+  SiteFooter,
+  SiteHeader,
+} from "@healthspan/ui/composites";
+import { Skeleton } from "@healthspan/ui/skeleton";
+import { ThemeToggle } from "@healthspan/ui/theme-toggle";
 
-const interests = ["Healthy aging", "Sleep", "Nutrition", "Brain health"];
 const socialPortalUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+
+const sections = [
+  { label: "Overview", href: "#overview", icon: House },
+  { label: "Your profile", href: "#profile", icon: CircleUserRound },
+  { label: "Saved knowledge", href: "#saved", icon: Bookmark },
+  { label: "Privacy settings", href: "#privacy", icon: Settings2 },
+];
 
 export default function PersonalHome() {
   return (
-    <main className="personal-shell min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-10 border-b border-border/80 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5">
-          <Link className="block w-[190px]" href={socialPortalUrl} aria-label="Healthspan home">
-            <Image
-              src="/brand/logo.png"
-              alt="Healthspan Network"
-              width={1112}
-              height={385}
-              priority
-            />
-          </Link>
-          <Badge className="hidden sm:inline-flex" variant="outline">
-            Personal portal foundation
-          </Badge>
-          <Button
-            render={<Link href={socialPortalUrl} />}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
+    <div className="min-h-screen bg-background text-foreground">
+      <SiteHeader
+        title="Your personal space"
+        eyebrow="Personal Portal · Foundation"
+        homeHref="#overview"
+        links={sections}
+        themeToggle={<ThemeToggle />}
+        actions={
+          <a
+            href={socialPortalUrl}
+            className="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:inline-flex"
           >
-            Community <ArrowUpRight aria-hidden="true" />
-          </Button>
-        </div>
-      </header>
-
-      <section className="mx-auto grid max-w-6xl gap-8 px-5 py-12 md:grid-cols-[1fr_0.78fr] md:items-center md:py-20">
-        <div>
-          <Badge className="mb-5 gap-2 bg-emerald-500/10 text-emerald-800" variant="secondary">
-            <Sparkles aria-hidden="true" /> Your space in the network
-          </Badge>
-          <h1 className="max-w-2xl font-serif text-5xl leading-[1.04] tracking-tight text-[#0b2f50] sm:text-6xl">
-            A more personal way to explore.
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-            Your profile, interests, and saved knowledge will come together here. Personal health
-            information stays private by default.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Button
-              render={<Link href={`${socialPortalUrl}#network`} />}
-              size="lg"
-              className="rounded-full"
+            Community <Sparkles aria-hidden="true" className="size-4" />
+          </a>
+        }
+      />
+      <main id="overview">
+        <PageShell wide className="grid gap-8 xl:grid-cols-[15rem_minmax(0,1fr)]">
+          <aside className="hidden xl:block">
+            <nav
+              aria-label="Personal portal sections"
+              className="sticky top-24 grid gap-1 rounded-xl border border-border/70 bg-card/70 p-2 shadow-xs"
             >
-              Explore the network <ArrowUpRight aria-hidden="true" />
-            </Button>
-            <Button variant="outline" size="lg" className="rounded-full" disabled>
-              <Bookmark aria-hidden="true" /> Saved knowledge
-            </Button>
-          </div>
-        </div>
-
-        <Card className="relative overflow-hidden border-emerald-900/10 bg-white/90 shadow-xl shadow-emerald-950/5">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-14 -top-20 size-56 rounded-full border border-emerald-700/10 bg-emerald-300/10"
-          />
-          <CardHeader className="relative">
-            <Badge className="w-fit" variant="outline">
-              EXAMPLE ONLY
-            </Badge>
-            <CardTitle className="mt-2 font-serif text-2xl font-medium">
-              Start with what you care about.
-            </CardTitle>
-            <CardDescription>
-              These sample interests demonstrate a future personalized experience. Nothing here is
-              saved to a profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="flex flex-wrap gap-2">
-              {interests.map((interest) => (
-                <Badge
-                  className="border-emerald-900/10 bg-emerald-50 px-3 py-1.5 text-emerald-900"
-                  key={interest}
-                  variant="outline"
+              <p className="px-3 py-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Your space
+              </p>
+              {sections.map(({ label, href, icon: Icon }, index) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-current={index === 0 ? "page" : undefined}
+                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 ${
+                    index === 0
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
                 >
-                  {interest}
-                </Badge>
+                  <Icon aria-hidden="true" className="size-4" />
+                  {label}
+                </a>
               ))}
-            </div>
-            <Alert className="mt-7 flex items-start gap-3 rounded-xl border-emerald-900/10 bg-emerald-50/70 p-4">
-              <LockKeyhole className="mt-0.5 size-4 shrink-0 text-emerald-800" aria-hidden="true" />
-              <AlertDescription className="pl-0 text-xs leading-5 text-emerald-950/75">
-                Health records, sharing controls, and AI personalization are not implemented in this
-                foundation.
+              <Separator className="my-2" />
+              <p className="px-3 pb-2 text-xs leading-relaxed text-muted-foreground">
+                Personal health information stays private by default.
+              </p>
+            </nav>
+          </aside>
+
+          <div className="min-w-0">
+            <nav
+              aria-label="Personal portal sections"
+              className="mb-7 flex gap-2 overflow-x-auto pb-2 xl:hidden"
+            >
+              {sections.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                >
+                  <Icon aria-hidden="true" className="size-4" />
+                  {label}
+                </a>
+              ))}
+            </nav>
+
+            <section aria-labelledby="welcome-heading" className="mb-7">
+              <Badge variant="outline" className="mb-4 gap-1.5 bg-accent/70">
+                <Heart aria-hidden="true" />A calmer space for your health journey
+              </Badge>
+              <h1
+                id="welcome-heading"
+                className="max-w-3xl font-display text-4xl leading-tight tracking-tight sm:text-5xl"
+              >
+                Your health story, on your terms.
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                This private portal is a foundation. Account, health-record, and personalization
+                features are not connected yet.
+              </p>
+            </section>
+
+            <Alert className="mb-7 flex items-start gap-3 border-success/25 bg-success-muted/60">
+              <LockKeyhole aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
+              <AlertDescription className="pl-0 text-foreground">
+                <strong className="font-semibold">Private by default.</strong> This preview has no
+                connected personal health data, and it does not save health information.
               </AlertDescription>
             </Alert>
-            <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
-              <HeartPulse className="size-4 text-emerald-700" aria-hidden="true" />
-              Private by default. Shared only with your permission.
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-    </main>
+
+            <section id="profile" aria-labelledby="profile-heading" className="mb-8 scroll-mt-24">
+              <Card className="overflow-hidden border-primary/10 bg-gradient-to-br from-card to-accent/35 shadow-sm">
+                <CardContent className="flex flex-col gap-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:py-6">
+                  <div className="flex items-center gap-4">
+                    <ProfileAvatar initials="HS" className="size-14 text-base" />
+                    <div className="min-w-0">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <h2 id="profile-heading" className="font-display text-xl">
+                          Your profile
+                        </h2>
+                        <Badge variant="warning">Setup planned</Badge>
+                      </div>
+                      <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+                        Profile details will appear here when account setup is available. Nothing
+                        has been entered or saved.
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" disabled className="shrink-0">
+                    <Settings2 aria-hidden="true" />
+                    Profile setup planned
+                  </Button>
+                </CardContent>
+              </Card>
+            </section>
+
+            <section id="saved" aria-labelledby="saved-heading" className="mb-8 scroll-mt-24">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <SectionHeading
+                  eyebrow="Your library"
+                  title="Saved knowledge"
+                  description="A place for resources you choose to keep, when saving is available."
+                />
+                <Badge variant="outline">Planned</Badge>
+              </div>
+              <EmptyState
+                icon={Bookmark}
+                title="Your library is ready when you are"
+                description="Saved articles and notes are not available in this foundation. No sample health records or saved items are shown."
+                className="min-h-56"
+              />
+            </section>
+
+            <section
+              id="privacy"
+              aria-labelledby="privacy-heading"
+              className="grid gap-4 lg:grid-cols-2"
+            >
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground">
+                      <LockKeyhole aria-hidden="true" className="size-5" />
+                    </span>
+                    <Badge variant="outline">Planned controls</Badge>
+                  </div>
+                  <CardTitle id="privacy-heading" className="pt-2 font-display text-xl">
+                    Privacy settings
+                  </CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    Sharing controls and consent settings will be designed before personal records
+                    are connected.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <EmptyState
+                    icon={LockKeyhole}
+                    title="No settings to change yet"
+                    description="There are no connected records or sharing preferences in this preview."
+                    className="min-h-44 border-0 bg-surface-raised/60"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
+                      <Sparkles aria-hidden="true" className="size-5" />
+                    </span>
+                    <Badge variant="outline">Illustration only</Badge>
+                  </div>
+                  <CardTitle className="pt-2 font-display text-xl">
+                    Future dashboard panel
+                  </CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    A loading-state example for a future panel. It contains no health data.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div
+                    role="img"
+                    aria-label="Example loading placeholder with no connected health data"
+                    className="grid gap-3 rounded-xl border border-border/70 bg-surface-raised/60 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="size-10 rounded-full" />
+                      <div className="grid flex-1 gap-2">
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          </div>
+        </PageShell>
+      </main>
+      <SiteFooter note="Private by default · No health information is connected to this preview." />
+    </div>
   );
 }

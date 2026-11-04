@@ -6,15 +6,38 @@
 
 @custom-variant dark (&:is(.dark *));
 
+* {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
+  min-width: 360px;
   margin: 0;
   background:
-    radial-gradient(ellipse at 86% 16%, rgba(35, 198, 169, 0.1), transparent 34%),
-    #f7fbfc;
+    radial-gradient(ellipse at 92% 10%, var(--hero-glow), transparent 34rem), var(--background);
+  color: var(--foreground);
   font-family: var(--healthspan-font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
