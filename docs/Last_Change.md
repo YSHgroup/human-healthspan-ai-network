@@ -3,7 +3,10 @@
 ## APPS
 
 - Independent Next.js foundations for Social, Personal and Researcher portals; React + Vite foundation for Admin.
-- Social Portal landing page; shadcn/ui, Tailwind CSS v4 and shared Button, Badge and Card primitives (`@healthspan/ui`).
+- Redesigned all four portal visual layers with a shared shadcn/ui and Tailwind CSS v4 system, responsive shells, light/dark themes, accessible status badges, and reduced-motion-aware animation.
+- Expanded `@healthspan/ui` with Base UI-backed shadcn primitives and reusable composites; added `motion`, `cmdk`, `sonner`, and `next-themes` for motion, command search, toasts, and Next.js theme handling.
+- Added semantic palette, typography, radius, shadow, and spacing tokens, plus Social, Personal, Researcher, and Admin accent variations.
+- Social Portal now has a public landing page; Personal and Researcher are clearly labeled foundations, and Admin remains a planned operations foundation.
 - Personal and Researcher portals and Admin are never indexable (`robots` metadata, `robots.ts`, `noindex`); only the Social Portal is public.
 - All portals send baseline security headers; Admin reads only `VITE_*` values from the root `.env`.
 - Feature directories follow the architecture (`features/`, `services/`, `components/`, `tests/`) and are empty placeholders.
@@ -28,11 +31,13 @@
 
 ## Last Change
 
-Aligned the repository with the architecture and blueprint: fixed workspace install configuration, completed the target structure, added the missing documentation set and automated architecture checks.
+Redesigned the Social, Personal, Researcher, and Admin visual layers around shared tokens and components. The portals now share typography, theme controls, responsive navigation, and consistent visual language while retaining their separate app boundaries. Private portals remain non-indexable, no browser token storage was added, and all disconnected or planned functionality remains labeled honestly.
+
+Verification: `npm install`, workspace typecheck, serial workspace build, JavaScript unit tests, and API tests passed. The root lint and architecture checks still report existing repository issues: formatting in `packages/shared-types/src/index.ts`, and nested app lockfiles that conflict with the current architecture test. These were left unchanged to preserve the requested lockfile strategy. The architecture suite otherwise passed 19 tests; the API suite passed 6 tests.
 
 ## What is the next step?
 
-1. Run `npm install` (or `pnpm install`), then `npm run typecheck`, `npm test`, `npm run build` and fix anything they report (nothing has been installed or built in this environment).
-2. Complete the M1 inventory of the existing MVP in `MIGRATION_PLAN.md` and add characterization tests.
-3. Resolve the MVP-blocking open decisions (audience, MVP boundary, regulatory scope) and write the PRD.
-4. Add ESLint and Playwright to the tooling, then start shared identity (M2). Do not expose health records or private research until consent, authorization and audit controls exist.
+1. Complete the M1 inventory of the existing MVP in `MIGRATION_PLAN.md` and add characterization tests.
+2. Resolve the MVP-blocking open decisions (audience, MVP boundary, regulatory scope) and write the PRD.
+3. Resolve the existing lint and architecture-check failures without changing the npm/pnpm lockfile strategy.
+4. Add ESLint and Playwright to the tooling, then start shared identity (M2). Do not expose health records or private research until consent, authorization, and audit controls exist.
