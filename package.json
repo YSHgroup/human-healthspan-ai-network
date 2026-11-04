@@ -12,6 +12,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "check": "pnpm lint && pnpm typecheck",
+    "sync:brand-assets": "node scripts/sync-brand-assets.mjs",
     "dev:social": "pnpm --filter @healthspan/social-web dev",
     "dev:personal": "pnpm --filter @healthspan/personal-web dev",
     "dev:researcher": "pnpm --filter @healthspan/researcher-web dev",

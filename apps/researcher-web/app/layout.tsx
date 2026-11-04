@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Researcher Portal | Healthspan Network",
   description: "A foundation for protected scientific collaboration.",
+  icons: {
+    icon: "/brand/mark.png",
+  },
 };
 
 export default function RootLayout({

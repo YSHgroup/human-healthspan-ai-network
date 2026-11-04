@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Personal Portal | Healthspan Network",
   description: "Your personal profile and interests in the Healthspan Network.",
+  icons: {
+    icon: "/brand/mark.png",
+  },
 };
 
 export default function RootLayout({

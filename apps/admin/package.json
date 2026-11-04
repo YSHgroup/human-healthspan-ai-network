@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 3003",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 3003",
+    "dev": "node ../../scripts/sync-brand-assets.mjs && vite --host 0.0.0.0 --port 3003",
+    "build": "node ../../scripts/sync-brand-assets.mjs && tsc --noEmit && vite build",
+    "preview": "node ../../scripts/sync-brand-assets.mjs && vite preview --host 0.0.0.0 --port 3003",
     "lint": "prettier --check .",
     "typecheck": "tsc --noEmit --pretty"
   },

@@ -44,14 +44,10 @@ a {
 }
 
 .admin-mark {
-  display: grid;
   width: 39px;
   height: 39px;
-  place-items: center;
   border-radius: 12px;
-  background: linear-gradient(145deg, #0876d8, #12bb99);
-  font-family: Georgia, serif;
-  font-size: 23px;
+  object-fit: cover;
 }
 
 .admin-brand > span:last-child {

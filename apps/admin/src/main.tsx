@@ -9,9 +9,7 @@ function AdminApp() {
     <main className="admin-shell">
       <aside className="admin-sidebar">
         <a className="admin-brand" href="http://localhost:3000">
-          <span className="admin-mark" aria-hidden="true">
-            H
-          </span>
+          <img className="admin-mark" src="/brand/mark.png" alt="" />
           <span>
             <strong>HEALTHSPAN</strong>
             <small>ADMINISTRATION</small>

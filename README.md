@@ -26,6 +26,8 @@ apps/
 api/                Python + FastAPI modular API foundation
 ai/                 Separate Python AI platform foundation
 packages/           Shared frontend types, config, tokens, and API client
+packages/ui/        Shared shadcn-style primitives for the user portals
+public/brand/       Canonical shared logo and emblem assets
 infra/              Local PostgreSQL and Redis development services
 tests/              Cross-area test suites
 docs/               Architecture, MVP scope, and roadmap
@@ -42,7 +44,9 @@ pnpm install
 pnpm dev:social
 ```
 
-The Social Portal is available at [http://localhost:3000](http://localhost:3000). Other frontends can be started independently:
+The Social Portal is available at [http://localhost:3000](http://localhost:3000). The Social, Personal, and Researcher portals are configured with shadcn/ui, Tailwind CSS v4, and shared UI primitives. The original logo and emblem live under `public/brand`; app scripts sync them into each app's generated public directory before development and builds.
+
+Other frontends can be started independently:
 
 ```bash
 pnpm dev:personal     # http://localhost:3001

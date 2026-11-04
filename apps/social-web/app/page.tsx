@@ -1,242 +1,370 @@
 import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUpRight,
+  Atom,
+  Brain,
+  Dna,
+  Dumbbell,
+  FlaskConical,
+  HeartPulse,
+  Microscope,
+  Moon,
+  Network,
+  ShieldCheck,
+  Sparkles,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 
-const pillars = [
-  {
-    number: "01",
-    title: "Open community",
-    description:
-      "A welcoming place to ask better questions, share perspectives, and find people who care about healthier, longer lives.",
-    icon: "community",
-  },
-  {
-    number: "02",
-    title: "Protected research",
-    description:
-      "Approved researchers turn curiosity into collaborative work, with clear membership and resource permissions.",
-    icon: "research",
-  },
-  {
-    number: "03",
-    title: "Responsible AI",
-    description:
-      "Purpose-built AI can make knowledge easier to explore while respecting evidence, privacy, and scientific boundaries.",
-    icon: "ai",
-  },
+import { Badge } from "@healthspan/ui/badge";
+import { Button, buttonVariants } from "@healthspan/ui/button";
+import { Card } from "@healthspan/ui/card";
+import { cn } from "@healthspan/ui/utils";
+
+const audiences: { name: string; roles: string; icon: LucideIcon; tone: string }[] = [
+  { name: "People", roles: "Connect · Share · Learn", icon: UsersRound, tone: "mint" },
+  { name: "Researchers", roles: "Collaborate · Innovate", icon: Microscope, tone: "blue" },
+  { name: "Health professionals", roles: "Share · Advise · Improve", icon: HeartPulse, tone: "rose" },
+  { name: "Scientists", roles: "Discover · Validate · Publish", icon: FlaskConical, tone: "violet" },
+  { name: "Engineers", roles: "Build · Advance · Create", icon: Atom, tone: "amber" },
+  { name: "Institutions", roles: "Support · Enable · Scale", icon: Network, tone: "sky" },
+];
+
+const focusAreas: { name: string; icon: LucideIcon }[] = [
+  { name: "Health & aging", icon: HeartPulse },
+  { name: "Strength", icon: Dumbbell },
+  { name: "Nutrition", icon: Sparkles },
+  { name: "Sleep", icon: Moon },
+  { name: "Brain & cognition", icon: Brain },
+  { name: "Research", icon: Microscope },
 ];
 
 const journey = [
-  "Discover",
-  "Learn",
-  "Connect",
-  "Participate",
-  "Collaborate",
+  "Questions",
+  "Discussion",
+  "Evidence",
+  "Knowledge",
+  "Collaboration",
   "Research",
-  "Validate",
-  "Share",
+  "Validation",
 ];
 
-function ArrowIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-      <path d="M4.25 10h11.5m-4.75-4.75L15.75 10 11 14.75" />
-    </svg>
-  );
-}
+const pillars: {
+  key: string;
+  icon: LucideIcon;
+  title: string;
+  tagline: string;
+  items: string[];
+}[] = [
+  {
+    key: "human",
+    icon: UsersRound,
+    title: "Human & health",
+    tagline: "Real people. Better questions. Healthier lives.",
+    items: ["Community and conversation", "Health and performance learning", "Experts and peers"],
+  },
+  {
+    key: "science",
+    icon: Microscope,
+    title: "Science & research",
+    tagline: "Trusted evidence. Shared effort. Greater impact.",
+    items: ["Research communities", "Projects and collaboration", "Sources and provenance"],
+  },
+  {
+    key: "ai",
+    icon: Sparkles,
+    title: "Responsible AI",
+    tagline: "Grounded in evidence. Designed for discovery.",
+    items: ["Source-aware assistance", "Permission-aware research", "Uncertainty and oversight"],
+  },
+];
 
-function NetworkIllustration() {
-  return (
-    <div
-      className="network-art"
-      role="img"
-      aria-label="Community, research, and AI connected in one network"
-    >
-      <div className="network-orbit orbit-outer" />
-      <div className="network-orbit orbit-inner" />
-      <span className="orbit-line orbit-line-one" />
-      <span className="orbit-line orbit-line-two" />
-      <span className="orbit-line orbit-line-three" />
-      <span className="orbit-node node-community">
-        <span className="node-symbol">◌</span>
-        <span>People</span>
-      </span>
-      <span className="orbit-node node-science">
-        <span className="node-symbol">⌬</span>
-        <span>Science</span>
-      </span>
-      <span className="orbit-node node-ai">
-        <span className="node-symbol">✳</span>
-        <span>AI</span>
-      </span>
-      <span className="orbit-node node-health">
-        <span className="node-symbol">＋</span>
-        <span>Health</span>
-      </span>
-      <div className="network-center">
-        <div className="center-glow" />
-        <Image
-          src="/brand/mark.png"
-          alt=""
-          width={94}
-          height={94}
-          priority
-          className="center-mark"
-        />
-        <span>Better, together</span>
-      </div>
-      <div className="art-caption">
-        <span className="caption-dot" />
-        One network. Many ways to contribute.
-      </div>
-    </div>
-  );
-}
+const personalPortalUrl = process.env.PERSONAL_APP_URL ?? "http://localhost:3001";
+const researcherPortalUrl = process.env.RESEARCHER_APP_URL ?? "http://localhost:3002";
 
 export default function Home() {
   return (
-    <>
+    <div className="landing-page" id="top">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="Healthspan Network home">
-          <Image
-            src="/brand/logo.png"
-            alt="Healthspan Network — Better People. Better Science. A Healthier Future."
-            width={190}
-            height={66}
-            priority
-            className="brand-logo"
-          />
-        </a>
-        <nav className="main-nav" aria-label="Main navigation">
-          <a href="#mission">Our mission</a>
-          <a href="#network">The network</a>
-          <a href="#principles">Our principles</a>
-        </nav>
-        <a className="header-link" href="#network">
-          Explore the network <ArrowIcon />
-        </a>
+        <div className="landing-container header-inner">
+          <Link className="brand" href="#top" aria-label="Healthspan Network home">
+            <Image
+              src="/brand/logo.png"
+              alt="Healthspan Network — Better People. Better Science. A Healthier Future."
+              width={1112}
+              height={385}
+              priority
+            />
+          </Link>
+          <nav className="main-nav" aria-label="Primary">
+            <Link href="#network">Network</Link>
+            <Link href="#journey">Journey</Link>
+            <Link href="#platform">Platform</Link>
+            <Link href="#principles">Principles</Link>
+          </nav>
+          <Link className="header-cta" href="#network">
+            Explore the network <ArrowUpRight aria-hidden="true" />
+          </Link>
+        </div>
       </header>
 
-      <main id="home">
-        <section className="hero page-width">
-          <div className="hero-copy">
-            <div className="eyebrow">
-              <span className="eyebrow-mark" />
-              A shared project for humanity
-            </div>
-            <h1>
-              A healthier future is a <em>scientific</em> project.
-            </h1>
-            <p className="hero-description">
-              Bringing people and researchers together to turn the questions we all care about into
-              knowledge, collaboration, and better human healthspan.
-            </p>
-            <div className="hero-actions">
-              <a className="button button-primary" href="#mission">
-                Discover our mission <ArrowIcon />
-              </a>
-              <a className="text-link" href="#network">
-                See how it connects <span aria-hidden="true">↓</span>
-              </a>
-            </div>
-            <div className="hero-note">
-              <span className="note-line" />
-              People-first <span>·</span> Science-led <span>·</span> Privacy-aware
-            </div>
-          </div>
-          <NetworkIllustration />
-          <div className="hero-footnote">
-            <span>01</span> / A connected ecosystem for health and discovery
-          </div>
-        </section>
-
-        <section className="mission-section" id="mission">
-          <div className="page-width mission-grid">
-            <div className="section-intro">
-              <p className="section-kicker">WHY WE’RE HERE</p>
-              <h2>Curiosity deserves a path to discovery.</h2>
-            </div>
-            <div className="mission-copy">
-              <p>
-                The most important questions about how we live, age, and feel are asked everywhere.
-                The knowledge to answer them is often scattered. We are building a place where
-                public curiosity can meet scientific rigor.
+      <main>
+        <section className="landing-hero">
+          <div className="landing-container hero-grid">
+            <div className="hero-copy">
+              <Badge className="hero-kicker" variant="outline">
+                <span className="live-dot" aria-hidden="true" />
+                People · Science · Possibility
+              </Badge>
+              <p className="hero-eyebrow">The human healthspan network</p>
+              <h1>
+                Better healthspan.
+                <span>Built together.</span>
+              </h1>
+              <p className="hero-lead">
+                A living network where people, researchers, clinicians, and technology come
+                together to turn better questions into better science.
               </p>
-              <a className="inline-link" href="#principles">
-                What guides us <ArrowIcon />
-              </a>
+              <div className="hero-actions">
+                <Button
+                  render={<Link href="#network" />}
+                  className="hero-button hero-button-primary"
+                  size="lg"
+                >
+                  Discover the network <ArrowRight aria-hidden="true" />
+                </Button>
+                <Link
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "hero-button hero-button-secondary",
+                  )}
+                  href="#journey"
+                >
+                  See how it works <ArrowDown aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="hero-trust-line">
+                <span>
+                  <ShieldCheck aria-hidden="true" /> Open by design
+                </span>
+                <i aria-hidden="true" />
+                <span>Privacy-aware</span>
+                <i aria-hidden="true" />
+                <span>Evidence-led</span>
+              </div>
+            </div>
+
+            <div className="hero-visual" role="img" aria-label="People and science connected">
+              <div className="visual-glow" aria-hidden="true" />
+              <div className="visual-grid" aria-hidden="true" />
+              <div className="visual-orbit orbit-outer" aria-hidden="true" />
+              <div className="visual-orbit orbit-middle" aria-hidden="true" />
+              <div className="visual-orbit orbit-inner" aria-hidden="true" />
+              <div className="orbit-node node-people" aria-hidden="true">
+                <UsersRound />
+              </div>
+              <div className="orbit-node node-science" aria-hidden="true">
+                <Microscope />
+              </div>
+              <div className="orbit-node node-ai" aria-hidden="true">
+                <Sparkles />
+              </div>
+              <div className="orbit-node node-health" aria-hidden="true">
+                <HeartPulse />
+              </div>
+              <div className="visual-center">
+                <span className="center-halo" />
+                <Image src="/brand/mark.png" alt="" width={371} height={371} priority />
+              </div>
+              <div className="visual-label label-top">
+                <span className="visual-label-icon">
+                  <Dna aria-hidden="true" />
+                </span>
+                <span>
+                  <strong>Human potential</strong>
+                  <small>Explore what’s possible</small>
+                </span>
+              </div>
+              <div className="visual-label label-bottom">
+                <span className="visual-signal" />
+                <span>
+                  <strong>Curiosity in motion</strong>
+                  <small>Questions grow into discovery</small>
+                </span>
+                <ArrowUpRight aria-hidden="true" />
+              </div>
+              <span className="visual-spark spark-one" aria-hidden="true">
+                ✦
+              </span>
+              <span className="visual-spark spark-two" aria-hidden="true">
+                ✧
+              </span>
             </div>
           </div>
-          <div className="journey page-width" aria-label="From curiosity to shared knowledge">
-            {journey.map((step, index) => (
-              <div className="journey-step" key={step}>
-                <span className="journey-number">0{index + 1}</span>
-                <span>{step}</span>
-                {index < journey.length - 1 && <span className="journey-connector" />}
-              </div>
-            ))}
+          <div className="landing-container hero-bottom-line">
+            <span>One connected space for a healthier future</span>
+            <span className="hero-bottom-rule" />
+            <a href="#network">
+              Scroll to explore <ArrowDown aria-hidden="true" />
+            </a>
           </div>
         </section>
 
-        <section className="network-section page-width" id="network">
-          <div className="network-heading">
-            <div>
-              <p className="section-kicker">ONE NETWORK, THREE LAYERS</p>
-              <h2>Different roles. Shared purpose.</h2>
+        <section className="network-intro section-light" id="network">
+          <div className="landing-container">
+            <div className="section-heading">
+              <span className="section-eyebrow">A network with room for everyone</span>
+              <h2>
+                Many perspectives.
+                <span>One shared direction.</span>
+              </h2>
+              <p>
+                Healthspan is too important for any one discipline to solve alone. We bring diverse
+                contributors into the same conversation.
+              </p>
             </div>
-            <p>
-              An open community creates reach. A protected research environment creates credibility.
-              Responsible AI helps knowledge travel further.
+            <div className="audience-grid">
+              {audiences.map(({ name, roles, icon: Icon, tone }, index) => (
+                <Card className={`audience-card audience-${tone}`} key={name}>
+                  <span className="audience-icon">
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <span className="audience-index">0{index + 1}</span>
+                  <h3>{name}</h3>
+                  <p>{roles}</p>
+                </Card>
+              ))}
+            </div>
+            <div className="focus-panel">
+              <p>Explore what matters to you</p>
+              <div className="focus-chips">
+                {focusAreas.map(({ name, icon: Icon }) => (
+                  <Badge className="focus-chip" key={name} variant="outline">
+                    <Icon aria-hidden="true" />
+                    {name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="journey-section" id="journey">
+          <div className="journey-decoration" aria-hidden="true" />
+          <div className="landing-container">
+            <div className="section-heading section-heading-dark">
+              <span className="section-eyebrow">From spark to science</span>
+              <h2>
+                Good questions can
+                <span>change what comes next.</span>
+              </h2>
+              <p>
+                Make the journey from curiosity to validated knowledge more connected, transparent,
+                and collaborative.
+              </p>
+            </div>
+            <ol className="journey-track">
+              {journey.map((step, index) => (
+                <li key={step}>
+                  <span className="journey-node">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="journey-step">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="journey-note">
+              <Sparkles aria-hidden="true" />
+              <span>
+                <strong>AI alongside the journey</strong> — designed to help people ask better
+                questions and explore evidence responsibly.
+              </span>
             </p>
           </div>
-          <div className="pillar-grid">
-            {pillars.map((pillar) => (
-              <article className={`pillar-card pillar-${pillar.icon}`} key={pillar.number}>
-                <div className="pillar-topline">
-                  <span>{pillar.number}</span>
-                  <span className="pillar-icon" aria-hidden="true">
-                    {pillar.icon === "community" ? "◎" : pillar.icon === "research" ? "⌬" : "✳"}
-                  </span>
-                </div>
-                <h3>{pillar.title}</h3>
-                <p>{pillar.description}</p>
-                <span className="pillar-rule" />
-              </article>
-            ))}
-          </div>
-          <div className="portal-links">
-            <div>
-              <span className="portal-label">A place for every perspective</span>
-              <p>Start with what brings you here. Find your way from there.</p>
+        </section>
+
+        <section className="platform-section section-light" id="platform">
+          <div className="landing-container">
+            <div className="section-heading">
+              <span className="section-eyebrow">A connected foundation</span>
+              <h2>
+                Three layers.
+                <span>Working as one.</span>
+              </h2>
+              <p>
+                People-first community, protected research, and an accountable intelligence layer—
+                designed to strengthen each other.
+              </p>
             </div>
-            <div className="portal-list">
-              <a href="http://localhost:3000">Social <ArrowIcon /></a>
-              <a href="http://localhost:3001">Personal <ArrowIcon /></a>
-              <a href="http://localhost:3002">Research <ArrowIcon /></a>
+            <div className="pillar-grid">
+              {pillars.map(({ key, title, tagline, items, icon: Icon }, index) => (
+                <Card className={`pillar-card pillar-${key}`} key={key}>
+                  <div className="pillar-topline">
+                    <span>0{index + 1} / 03</span>
+                    <Icon aria-hidden="true" />
+                  </div>
+                  <h3>{title}</h3>
+                  <p className="pillar-tagline">{tagline}</p>
+                  <ul>
+                    {items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <span className="pillar-watermark">
+                    <Icon aria-hidden="true" />
+                  </span>
+                </Card>
+              ))}
+            </div>
+            <div className="portal-choices">
+              <div>
+                <span className="section-eyebrow">Find your place</span>
+                <h3>One network, distinct experiences.</h3>
+              </div>
+              <div className="portal-links">
+                <Link href={personalPortalUrl}>
+                  Personal portal <ArrowUpRight aria-hidden="true" />
+                </Link>
+                <Link href={researcherPortalUrl}>
+                  Researcher portal <ArrowUpRight aria-hidden="true" />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
         <section className="principles-section" id="principles">
-          <div className="page-width principles-grid">
-            <div>
-              <p className="section-kicker">A FOUNDATION OF TRUST</p>
+          <div className="landing-container principles-inner">
+            <div className="principles-copy">
+              <Badge className="principles-badge" variant="outline">
+                Built on trust
+              </Badge>
               <h2>Progress only matters when it’s responsible.</h2>
+              <p>
+                Better healthspan needs more than good intentions. It needs evidence, clear
+                permissions, and respect for the people behind the data.
+              </p>
+              <Link className="principles-link" href="#top">
+                Our guiding principles <ArrowUpRight aria-hidden="true" />
+              </Link>
             </div>
-            <div className="principle-list">
+            <div className="principles-list">
               <div>
                 <span>01</span>
-                <p>Evidence and personal experience are different—and both deserve context.</p>
+                <p>Popularity and scientific evidence are not the same thing.</p>
               </div>
               <div>
                 <span>02</span>
-                <p>Personal health information stays private by default and under your control.</p>
+                <p>Personal health information stays private by default.</p>
               </div>
               <div>
                 <span>03</span>
-                <p>Research is protected by explicit access, clear provenance, and accountability.</p>
+                <p>Research and AI respect explicit permissions and provenance.</p>
               </div>
               <div>
                 <span>04</span>
-                <p>AI can support discovery; its hypotheses are not scientific findings.</p>
+                <p>AI hypotheses are proposals, not validated findings.</p>
               </div>
             </div>
           </div>
@@ -244,22 +372,16 @@ export default function Home() {
       </main>
 
       <footer className="site-footer">
-        <div className="page-width footer-inner">
-          <a className="brand footer-brand" href="#home">
-            <Image
-              src="/brand/logo.png"
-              alt="Healthspan Network"
-              width={160}
-              height={55}
-              className="brand-logo"
-            />
-          </a>
-          <p>Better health. Better research. A healthier future.</p>
-          <a className="back-top" href="#home">
-            Back to top ↑
-          </a>
+        <div className="landing-container footer-inner">
+          <Link className="footer-brand" href="#top" aria-label="Back to Healthspan Network home">
+            <Image src="/brand/logo.png" alt="Healthspan Network" width={1112} height={385} />
+          </Link>
+          <p>Better people. Better science. A healthier future.</p>
+          <Link className="back-to-top" href="#top">
+            Back to top <ArrowUpRight aria-hidden="true" />
+          </Link>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
