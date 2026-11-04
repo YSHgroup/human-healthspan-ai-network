@@ -29,7 +29,7 @@ These rules apply to contributors and coding agents working in this repository.
 - Keep documentation aligned with the implementation and label planned work as planned.
 - Run the smallest relevant lint, type-check available.
 - Update `docs/Last_Change.md` with completed work and the next step.
-- During coding, whenever a distinct, important change is complete, you MUST make a git commit with it.
+- During coding, whenever a distinct, important change is complete, you MUST make a git commits with it. (Don't make one commit after running. You need to make git commits whenever important changes to be explained are created)
 
 ## Existing MVP and migration
 
