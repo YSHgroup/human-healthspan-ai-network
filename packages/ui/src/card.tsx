@@ -7,7 +7,7 @@ function Card({ className, ...props }: ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-6 rounded-xl border border-border bg-card py-6 text-card-foreground shadow-sm",
+        "flex flex-col gap-6 rounded-xl border border-border/80 bg-card py-6 text-card-foreground shadow-xs transition-[border-color,box-shadow] duration-200 focus-within:border-primary/25 focus-within:shadow-sm",
         className,
       )}
       {...props}
@@ -55,11 +55,7 @@ function CardContent({ className, ...props }: ComponentProps<"div">) {
 
 function CardFooter({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div
-      data-slot="card-footer"
-      className={cn("flex items-center px-6", className)}
-      {...props}
-    />
+    <div data-slot="card-footer" className={cn("flex items-center px-6", className)} {...props} />
   );
 }
 

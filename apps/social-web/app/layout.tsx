@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 
 import "./globals.css";
+import { ThemeProvider } from "@healthspan/ui/theme-provider";
+import { Toaster } from "@healthspan/ui/sonner";
 
 const sans = DM_Sans({
   subsets: ["latin"],
@@ -46,7 +48,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-portal="social" suppressHydrationWarning>
-      <body className={`${sans.variable} ${display.variable}`}>{children}</body>
+      <body className={`${sans.variable} ${display.variable}`}>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
