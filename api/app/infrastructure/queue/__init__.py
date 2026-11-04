@@ -1,0 +1,1 @@
+"""Queue infrastructure adapter (planned)."""

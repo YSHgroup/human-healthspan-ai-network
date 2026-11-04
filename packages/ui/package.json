@@ -2,6 +2,7 @@
   "name": "@healthspan/ui",
   "version": "0.1.0",
   "private": true,
+  "sideEffects": false,
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
@@ -15,12 +16,16 @@
     "class-variance-authority": "^0.7.1",
     "react": "^19.0.0"
   },
-  "devDependencies": {
-    "@types/react": "^19.0.10"
-  },
   "dependencies": {
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@types/react": "^19.0.10",
+    "class-variance-authority": "^0.7.1",
+    "react": "^19.0.0",
+    "typescript": "^5.8.2"
   },
   "scripts": {
     "lint": "prettier --check .",

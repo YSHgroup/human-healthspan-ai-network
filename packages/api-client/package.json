@@ -7,10 +7,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@healthspan/shared-types": "workspace:*"
+    "@healthspan/shared-types": "*"
   },
   "scripts": {
     "lint": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

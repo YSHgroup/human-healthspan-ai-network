@@ -1,0 +1,1 @@
+"""Observability infrastructure adapter (planned)."""

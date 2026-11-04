@@ -17,6 +17,9 @@ export interface ApiClientOptions {
   fetcher?: typeof fetch;
 }
 
+/** Version prefix of the backend API (architecture section 5.2). */
+export const API_VERSION_PATH = "/api/v1";
+
 export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) {
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
 
@@ -28,6 +31,8 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
       }
 
       const response = await fetcher(`${normalizedBaseUrl}/${path.replace(/^\/+/, "")}`, {
+        // Sessions travel in secure cookies; tokens are never kept in browser storage.
+        credentials: "include",
         ...init,
         headers,
       });

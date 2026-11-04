@@ -518,7 +518,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | Milestone | Status |
 |---|---|
 | M0 Existing MVP baseline | Existing |
-| M1 Foundation and inventory | Planned |
+| M1 Foundation and inventory | In progress (tooling, package skeletons, `docs/` set, `AGENT_RULE.md` and architecture tests exist; the feature inventory, PRD, backlog and decisions are open) |
 | M2 Social and Personal portals | Planned |
 | M3 Researcher portal and Admin | Planned |
 | M4 MVP launch | Planned |

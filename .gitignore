@@ -15,3 +15,6 @@ playwright-report/
 test-results/
 .pnpm-store/
 /apps/*/public/brand/
+pnpm-debug.log*
+npm-debug.log*
+yarn.lock

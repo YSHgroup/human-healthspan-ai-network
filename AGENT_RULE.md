@@ -29,4 +29,32 @@ These rules apply to contributors and coding agents working in this repository.
 - Keep documentation aligned with the implementation and label planned work as planned.
 - Run the smallest relevant lint, type-check available.
 - Update `docs/Last_Change.md` with completed work and the next step.
-- When you are coding, if you make the something distinct in normal and it's important to be inexed, You MUST make the git commit with the changes.
+- During coding, whenever a distinct, important change is complete, you MUST make a git commit with it.
+
+## Existing MVP and migration
+
+- Do not replace working MVP functionality without a verified migration; map existing functionality to the target architecture before moving, replacing or removing it.
+- Preserve existing database migrations and API compatibility during migrations.
+- Add tests before removing any existing functionality.
+
+## Boundaries
+
+- Do not duplicate shared business logic across Social, Personal, Researcher and Admin APIs; it lives in a domain module.
+- Do not access the database directly from frontend applications.
+- Keep the three AI environments (General Platform AI, Private AI Scientist, Organization-Specialized AI) logically separated; they must not import one another.
+- Reach AI from the API only through `healthspan_ai.gateway` and `healthspan_ai.shared`.
+- Keep API code out of `apps/` and AI code out of `api/`.
+- Preserve organization-level data isolation.
+- Do not automatically use personal health data for AI training.
+- Do not store tokens in browser storage; sessions use secure cookies.
+
+## Tooling
+
+- JavaScript tooling works with npm or pnpm. Local packages are linked with a plain `*` range (never the pnpm-only `workspace:` protocol). Keep lockfiles at the repository root only and do not use yarn. Keep the Python toolchain separate.
+- Run `npm run test:architecture` (or the pnpm equivalent) before finishing; it enforces the rules above.
+
+## Documentation
+
+- Maintain the documents listed in architecture section 20. Update them after architectural changes.
+- Do not claim planned functionality is implemented; mark it as planned with its roadmap milestone.
+- When documents disagree, follow the idea blueprint, then the architecture, then the roadmap.

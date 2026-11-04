@@ -2,31 +2,49 @@
   "name": "human-healthspan-ai-network",
   "private": true,
   "packageManager": "pnpm@9.15.9",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "check": "pnpm lint && pnpm typecheck",
+    "check": "turbo lint typecheck",
     "sync:brand-assets": "node scripts/sync-brand-assets.mjs",
-    "dev:social": "pnpm --filter @healthspan/social-web dev",
-    "dev:personal": "pnpm --filter @healthspan/personal-web dev",
-    "dev:researcher": "pnpm --filter @healthspan/researcher-web dev",
-    "dev:admin": "pnpm --filter @healthspan/admin dev",
+    "dev:social": "turbo dev --filter=@healthspan/social-web",
+    "dev:personal": "turbo dev --filter=@healthspan/personal-web",
+    "dev:researcher": "turbo dev --filter=@healthspan/researcher-web",
+    "dev:admin": "turbo dev --filter=@healthspan/admin",
     "dev:api": "cd api && python -m uvicorn app.main:app --reload --port 8000",
     "test:api": "PYTHONPATH=api:ai python -m pytest tests/api -q",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "clean": "node -e \"for (const d of ['node_modules','.turbo']) require('fs').rmSync(d,{recursive:true,force:true})\"",
+    "test:web": "turbo test",
+    "test:architecture": "python -m pytest tests/architecture -q",
+    "test": "turbo test && python -m pytest tests/architecture -q && PYTHONPATH=api:ai python -m pytest tests/api -q",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "eslint": "^9.16.0",
     "prettier": "^3.4.2",
     "turbo": "^2.5.4",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }

@@ -15,6 +15,11 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": []
     }
-  }
+  },
+  "globalPassThroughEnv": ["PUBLIC_APP_URL", "SOCIAL_APP_URL", "PERSONAL_APP_URL", "RESEARCHER_APP_URL", "ADMIN_APP_URL", "NEXT_PUBLIC_API_URL", "VITE_API_URL", "VITE_SOCIAL_APP_URL"]
 }

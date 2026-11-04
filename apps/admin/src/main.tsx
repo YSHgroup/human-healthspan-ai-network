@@ -3,12 +3,13 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const plannedModules = ["Users and organizations", "Community moderation", "Audit and security"];
+const socialPortalUrl = import.meta.env.VITE_SOCIAL_APP_URL ?? "http://localhost:3000";
 
 function AdminApp() {
   return (
     <main className="admin-shell">
       <aside className="admin-sidebar">
-        <a className="admin-brand" href="http://localhost:3000">
+        <a className="admin-brand" href={socialPortalUrl}>
           <img className="admin-mark" src="/brand/mark.png" alt="" />
           <span>
             <strong>HEALTHSPAN</strong>
