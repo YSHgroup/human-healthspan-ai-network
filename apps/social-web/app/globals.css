@@ -16,7 +16,6 @@ html {
 }
 
 body {
-  min-width: 360px;
   margin: 0;
   background: var(--background);
   color: var(--foreground);
@@ -39,7 +38,7 @@ body {
 .hero-orb {
   position: absolute;
   z-index: 0;
-  border: 1px solid color-mix(in oklch, var(--primary-foreground) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 12%, transparent);
   border-radius: 9999px;
   pointer-events: none;
 }
@@ -67,7 +66,7 @@ body {
 .hero-ring {
   position: absolute;
   aspect-ratio: 1;
-  border: 1px solid color-mix(in oklch, var(--primary-foreground) 18%, transparent);
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 18%, transparent);
   border-radius: 9999px;
 }
 
@@ -95,10 +94,10 @@ body {
   width: clamp(2.75rem, 8vw, 3.5rem);
   aspect-ratio: 1;
   place-items: center;
-  border: 1px solid color-mix(in oklch, var(--primary-foreground) 20%, transparent);
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 20%, transparent);
   border-radius: 1rem;
   background: color-mix(in oklch, var(--background) 78%, transparent);
-  color: var(--primary-foreground);
+  color: var(--hero-foreground);
   box-shadow: var(--healthspan-shadow-md);
   backdrop-filter: blur(0.75rem);
 }

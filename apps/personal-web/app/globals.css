@@ -16,7 +16,6 @@ html {
 }
 
 body {
-  min-width: 360px;
   margin: 0;
   background:
     radial-gradient(ellipse at 92% 10%, var(--hero-glow), transparent 34rem), var(--background);

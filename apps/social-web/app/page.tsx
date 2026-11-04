@@ -139,26 +139,27 @@ export default function Home() {
       />
 
       <main id="main-content">
-        <section className="hero-surface relative isolate overflow-hidden text-primary-foreground">
+        <section className="hero-surface relative isolate overflow-hidden text-hero-foreground">
           <div className="hero-orb hero-orb-one" aria-hidden="true" />
           <div className="hero-orb hero-orb-two" aria-hidden="true" />
           <PageShell className="relative grid min-h-[min(44rem,calc(100dvh-4.5rem))] items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:py-24">
             <Reveal className="relative z-10 max-w-2xl">
-              <Badge className="mb-6 gap-2 border-primary-foreground/25 bg-primary-foreground/10 text-primary-foreground">
+              <Badge className="mb-6 gap-2 border-hero-foreground/25 bg-hero-foreground/10 text-hero-foreground">
                 <span className="size-2 rounded-full bg-success" aria-hidden="true" />A place for
                 better questions
               </Badge>
               <h1 className="max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
                 Human healthspan,
-                <span className="mt-1 block text-primary/80">built together.</span>
+                <span className="mt-1 block text-hero-foreground/80">built together.</span>
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-primary-foreground/80 sm:text-lg">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-hero-foreground/80 sm:text-lg">
                 A connected space for people and scientific communities to explore questions,
                 perspectives, and evidence with care.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button
                   render={<a href="#network" />}
+                  nativeButton={false}
                   size="lg"
                   className="bg-card text-foreground hover:bg-card/90"
                 >
@@ -166,20 +167,21 @@ export default function Home() {
                 </Button>
                 <Button
                   render={<a href="#journey" />}
+                  nativeButton={false}
                   variant="outline"
                   size="lg"
-                  className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+                  className="border-hero-foreground/30 bg-transparent text-hero-foreground hover:bg-hero-foreground/10"
                 >
                   How it works <ArrowDown aria-hidden="true" />
                 </Button>
               </div>
-              <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-primary-foreground/75">
+              <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-hero-foreground/75">
                 <span className="inline-flex items-center gap-2">
                   <ShieldCheck aria-hidden="true" className="size-4 text-success" />
                   Privacy-aware
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <Microscope aria-hidden="true" className="size-4 text-primary/80" />
+                  <Microscope aria-hidden="true" className="size-4 text-hero-foreground/80" />
                   Evidence-conscious
                 </span>
               </div>
@@ -189,11 +191,11 @@ export default function Home() {
               delay={0.08}
               className="relative mx-auto grid w-full max-w-[34rem] place-items-center"
             >
-              <div className="hero-art relative grid aspect-square w-full place-items-center rounded-[2rem] border border-primary-foreground/15 bg-primary-foreground/[0.045] shadow-glow">
+              <div className="hero-art relative grid aspect-square w-full place-items-center rounded-[2rem] border border-hero-foreground/15 bg-hero-foreground/[0.045] shadow-glow">
                 <div className="hero-ring hero-ring-one" aria-hidden="true" />
                 <div className="hero-ring hero-ring-two" aria-hidden="true" />
                 <div className="hero-ring hero-ring-three" aria-hidden="true" />
-                <div className="relative z-10 grid size-32 place-items-center rounded-[2rem] border border-primary-foreground/20 bg-primary-foreground/10 p-4 shadow-lg backdrop-blur sm:size-40">
+                <div className="relative z-10 grid size-32 place-items-center rounded-[2rem] border border-hero-foreground/20 bg-hero-foreground/10 p-4 shadow-lg backdrop-blur sm:size-40">
                   <Image
                     src="/brand/mark.png"
                     alt=""
@@ -213,7 +215,7 @@ export default function Home() {
                     <Icon aria-hidden="true" className="size-5" />
                   </span>
                 ))}
-                <div className="hero-caption absolute right-3 bottom-4 left-3 mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-primary-foreground/15 bg-background/90 p-3 text-foreground shadow-md backdrop-blur sm:right-6 sm:bottom-6 sm:left-6">
+                <div className="hero-caption absolute right-3 bottom-4 left-3 mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-hero-foreground/15 bg-background/90 p-3 text-foreground shadow-md backdrop-blur sm:right-6 sm:bottom-6 sm:left-6">
                   <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
                     <Dna aria-hidden="true" className="size-5" />
                   </span>
@@ -227,13 +229,13 @@ export default function Home() {
               </div>
             </Reveal>
           </PageShell>
-          <div className="border-t border-primary-foreground/10">
-            <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-4 text-xs text-primary-foreground/70 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+          <div className="border-t border-hero-foreground/10">
+            <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-4 text-xs text-hero-foreground/70 sm:flex-row sm:items-center sm:px-6 lg:px-8">
               <span>A network for curiosity, collaboration, and careful science.</span>
-              <span className="hidden h-px flex-1 bg-primary-foreground/15 sm:block" />
+              <span className="hidden h-px flex-1 bg-hero-foreground/15 sm:block" />
               <a
                 href="#network"
-                className="inline-flex min-h-11 items-center gap-2 font-medium hover:text-primary-foreground"
+                className="inline-flex min-h-11 items-center gap-2 font-medium hover:text-hero-foreground"
               >
                 Meet the network <ArrowDown aria-hidden="true" className="size-4" />
               </a>
@@ -439,6 +441,7 @@ export default function Home() {
             </div>
             <Button
               render={<a href="#network" />}
+              nativeButton={false}
               size="lg"
               className="w-full bg-card text-foreground hover:bg-card/90 sm:w-auto"
             >
