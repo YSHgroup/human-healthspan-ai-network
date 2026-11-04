@@ -1,15 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Atom,
   Brain,
   Dna,
-  Dumbbell,
   FlaskConical,
   HeartPulse,
+  LockKeyhole,
   Microscope,
   Moon,
   Network,
@@ -20,389 +18,441 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@healthspan/ui/badge";
-import { Button, buttonVariants } from "@healthspan/ui/button";
+import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
-import { cn } from "@healthspan/ui/utils";
+import {
+  EmptyState,
+  EvidenceBadge,
+  FeatureCard,
+  PageShell,
+  PortalSwitcher,
+  SectionHeading,
+  SiteFooter,
+  SiteHeader,
+} from "@healthspan/ui/composites";
+import { Reveal, StatCard } from "@healthspan/ui/motion";
+import { ThemeToggle } from "@healthspan/ui/theme-toggle";
 
-const audiences: { name: string; roles: string; icon: LucideIcon; tone: string }[] = [
-  { name: "People", roles: "Connect · Share · Learn", icon: UsersRound, tone: "mint" },
-  { name: "Researchers", roles: "Collaborate · Innovate", icon: Microscope, tone: "blue" },
-  {
-    name: "Health professionals",
-    roles: "Share · Advise · Improve",
-    icon: HeartPulse,
-    tone: "rose",
-  },
-  {
-    name: "Scientists",
-    roles: "Discover · Validate · Publish",
-    icon: FlaskConical,
-    tone: "violet",
-  },
-  { name: "Engineers", roles: "Build · Advance · Create", icon: Atom, tone: "amber" },
-  { name: "Institutions", roles: "Support · Enable · Scale", icon: Network, tone: "sky" },
-];
-
-const focusAreas: { name: string; icon: LucideIcon }[] = [
-  { name: "Health & aging", icon: HeartPulse },
-  { name: "Strength", icon: Dumbbell },
-  { name: "Nutrition", icon: Sparkles },
-  { name: "Sleep", icon: Moon },
-  { name: "Brain & cognition", icon: Brain },
-  { name: "Research", icon: Microscope },
-];
-
-const journey = [
-  "Questions",
-  "Discussion",
-  "Evidence",
-  "Knowledge",
-  "Collaboration",
-  "Research",
-  "Validation",
-];
-
-const pillars: {
-  key: string;
-  icon: LucideIcon;
-  title: string;
-  tagline: string;
-  items: string[];
-}[] = [
-  {
-    key: "human",
-    icon: UsersRound,
-    title: "Human & health",
-    tagline: "Real people. Better questions. Healthier lives.",
-    items: ["Community and conversation", "Health and performance learning", "Experts and peers"],
-  },
-  {
-    key: "science",
-    icon: Microscope,
-    title: "Science & research",
-    tagline: "Trusted evidence. Shared effort. Greater impact.",
-    items: ["Research communities", "Projects and collaboration", "Sources and provenance"],
-  },
-  {
-    key: "ai",
-    icon: Sparkles,
-    title: "Responsible AI",
-    tagline: "Grounded in evidence. Designed for discovery.",
-    items: ["Source-aware assistance", "Permission-aware research", "Uncertainty and oversight"],
-  },
-];
-
+const socialPortalUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
 const personalPortalUrl = process.env.PERSONAL_APP_URL ?? "http://localhost:3001";
 const researcherPortalUrl = process.env.RESEARCHER_APP_URL ?? "http://localhost:3002";
 
+const navigation = [
+  { label: "The network", href: "#network" },
+  { label: "How it works", href: "#journey" },
+  { label: "Principles", href: "#principles" },
+];
+
+const audiences: { title: string; description: string; icon: LucideIcon }[] = [
+  {
+    title: "People",
+    description: "Bring questions, experience, and curiosity to a thoughtful community.",
+    icon: UsersRound,
+  },
+  {
+    title: "Researchers",
+    description: "Find collaborators and make research context easier to follow.",
+    icon: Microscope,
+  },
+  {
+    title: "Health professionals",
+    description: "Contribute professional perspectives with clear verification boundaries.",
+    icon: HeartPulse,
+  },
+  {
+    title: "Scientists and builders",
+    description: "Connect disciplines while keeping methods and evidence visible.",
+    icon: FlaskConical,
+  },
+];
+
+const journey = [
+  { label: "Ask", detail: "Start with a useful question.", icon: Sparkles },
+  { label: "Discuss", detail: "Bring different perspectives together.", icon: UsersRound },
+  { label: "Explore", detail: "Look at sources and uncertainty.", icon: Microscope },
+  { label: "Collaborate", detail: "Find the right people and context.", icon: Network },
+];
+
+const principles = [
+  {
+    title: "Evidence over popularity",
+    description: "Engagement and scientific support are different things.",
+    icon: FlaskConical,
+  },
+  {
+    title: "Privacy by default",
+    description: "Personal health information stays private unless people choose otherwise.",
+    icon: LockKeyhole,
+  },
+  {
+    title: "Clear provenance",
+    description: "Sources and evidence classes should be visible in context.",
+    icon: Dna,
+  },
+  {
+    title: "Responsible AI",
+    description: "AI-generated ideas are hypotheses, not validated findings.",
+    icon: ShieldCheck,
+  },
+];
+
+const focusAreas = [
+  { label: "Health & aging", icon: HeartPulse },
+  { label: "Sleep", icon: Moon },
+  { label: "Brain & cognition", icon: Brain },
+  { label: "Research", icon: Microscope },
+];
+
 export default function Home() {
   return (
-    <div className="landing-page" id="top">
-      <header className="site-header">
-        <div className="landing-container header-inner">
-          <Link className="brand" href="#top" aria-label="Healthspan Network home">
-            <Image
-              src="/brand/logo.png"
-              alt="Healthspan Network — Better People. Better Science. A Healthier Future."
-              width={1112}
-              height={385}
-              priority
-            />
-          </Link>
-          <nav className="main-nav" aria-label="Primary">
-            <Link href="#network">Network</Link>
-            <Link href="#journey">Journey</Link>
-            <Link href="#platform">Platform</Link>
-            <Link href="#principles">Principles</Link>
-          </nav>
-          <Button
-            render={<Link href="#network" />}
-            variant="outline"
-            size="sm"
-            className="header-cta"
+    <div id="top" className="min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only z-50 rounded-md bg-card px-4 py-3 text-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus-visible:ring-[3px] focus-visible:ring-ring/40"
+      >
+        Skip to content
+      </a>
+      <SiteHeader
+        eyebrow="People · Science · Possibility"
+        title="Healthspan Network"
+        homeHref="#top"
+        brand={
+          <Image
+            src="/brand/logo.png"
+            alt="Healthspan Network"
+            width={1112}
+            height={385}
+            priority
+            className="h-auto w-36 sm:w-40"
+          />
+        }
+        links={navigation}
+        themeToggle={<ThemeToggle />}
+        actions={
+          <a
+            href="#portals"
+            className="hidden min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:inline-flex"
           >
-            Explore the network <ArrowUpRight aria-hidden="true" />
-          </Button>
-        </div>
-      </header>
+            Find your space <ArrowUpRight aria-hidden="true" className="size-4" />
+          </a>
+        }
+      />
 
-      <main>
-        <section className="landing-hero">
-          <div className="landing-container hero-grid">
-            <div className="hero-copy">
-              <Badge className="hero-kicker" variant="outline">
-                <span className="live-dot" aria-hidden="true" />
-                People · Science · Possibility
+      <main id="main-content">
+        <section className="hero-surface relative isolate overflow-hidden text-primary-foreground">
+          <div className="hero-orb hero-orb-one" aria-hidden="true" />
+          <div className="hero-orb hero-orb-two" aria-hidden="true" />
+          <PageShell className="relative grid min-h-[min(44rem,calc(100dvh-4.5rem))] items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:py-24">
+            <Reveal className="relative z-10 max-w-2xl">
+              <Badge className="mb-6 gap-2 border-primary-foreground/25 bg-primary-foreground/10 text-primary-foreground">
+                <span className="size-2 rounded-full bg-success" aria-hidden="true" />A place for
+                better questions
               </Badge>
-              <p className="hero-eyebrow">The human healthspan network</p>
-              <h1>
-                Better healthspan.
-                <span>Built together.</span>
+              <h1 className="max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+                Human healthspan,
+                <span className="mt-1 block text-primary/80">built together.</span>
               </h1>
-              <p className="hero-lead">
-                A living network where people, researchers, clinicians, and technology come together
-                to turn better questions into better science.
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-primary-foreground/80 sm:text-lg">
+                A connected space for people and scientific communities to explore questions,
+                perspectives, and evidence with care.
               </p>
-              <div className="hero-actions">
+              <div className="mt-8 flex flex-wrap gap-3">
                 <Button
-                  render={<Link href="#network" />}
-                  className="hero-button hero-button-primary"
+                  render={<a href="#network" />}
                   size="lg"
+                  className="bg-card text-foreground hover:bg-card/90"
                 >
-                  Discover the network <ArrowRight aria-hidden="true" />
+                  Explore the network <ArrowRight aria-hidden="true" />
                 </Button>
-                <Link
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "hero-button hero-button-secondary",
-                  )}
-                  href="#journey"
+                <Button
+                  render={<a href="#journey" />}
+                  variant="outline"
+                  size="lg"
+                  className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
                 >
-                  See how it works <ArrowDown aria-hidden="true" />
-                </Link>
+                  How it works <ArrowDown aria-hidden="true" />
+                </Button>
               </div>
-              <div className="hero-trust-line">
-                <span>
-                  <ShieldCheck aria-hidden="true" /> Open by design
+              <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-primary-foreground/75">
+                <span className="inline-flex items-center gap-2">
+                  <ShieldCheck aria-hidden="true" className="size-4 text-success" />
+                  Privacy-aware
                 </span>
-                <i aria-hidden="true" />
-                <span>Privacy-aware</span>
-                <i aria-hidden="true" />
-                <span>Evidence-led</span>
+                <span className="inline-flex items-center gap-2">
+                  <Microscope aria-hidden="true" className="size-4 text-primary/80" />
+                  Evidence-conscious
+                </span>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="hero-visual" role="img" aria-label="People and science connected">
-              <div className="visual-glow" aria-hidden="true" />
-              <div className="visual-grid" aria-hidden="true" />
-              <div className="visual-orbit orbit-outer" aria-hidden="true" />
-              <div className="visual-orbit orbit-middle" aria-hidden="true" />
-              <div className="visual-orbit orbit-inner" aria-hidden="true" />
-              <div className="orbit-node node-people" aria-hidden="true">
-                <UsersRound />
+            <Reveal
+              delay={0.08}
+              className="relative mx-auto grid w-full max-w-[34rem] place-items-center"
+            >
+              <div className="hero-art relative grid aspect-square w-full place-items-center rounded-[2rem] border border-primary-foreground/15 bg-primary-foreground/[0.045] shadow-glow">
+                <div className="hero-ring hero-ring-one" aria-hidden="true" />
+                <div className="hero-ring hero-ring-two" aria-hidden="true" />
+                <div className="hero-ring hero-ring-three" aria-hidden="true" />
+                <div className="relative z-10 grid size-32 place-items-center rounded-[2rem] border border-primary-foreground/20 bg-primary-foreground/10 p-4 shadow-lg backdrop-blur sm:size-40">
+                  <Image
+                    src="/brand/mark.png"
+                    alt=""
+                    width={371}
+                    height={371}
+                    priority
+                    className="size-full object-contain"
+                  />
+                </div>
+                {[
+                  { icon: UsersRound, label: "People", position: "art-node-one" },
+                  { icon: Microscope, label: "Research", position: "art-node-two" },
+                  { icon: Sparkles, label: "Ideas", position: "art-node-three" },
+                  { icon: HeartPulse, label: "Health", position: "art-node-four" },
+                ].map(({ icon: Icon, label, position }) => (
+                  <span key={label} className={`hero-node ${position}`} aria-label={label}>
+                    <Icon aria-hidden="true" className="size-5" />
+                  </span>
+                ))}
+                <div className="hero-caption absolute right-3 bottom-4 left-3 mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-primary-foreground/15 bg-background/90 p-3 text-foreground shadow-md backdrop-blur sm:right-6 sm:bottom-6 sm:left-6">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
+                    <Dna aria-hidden="true" className="size-5" />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold">People, ideas, evidence</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Connected with context
+                    </span>
+                  </span>
+                </div>
               </div>
-              <div className="orbit-node node-science" aria-hidden="true">
-                <Microscope />
-              </div>
-              <div className="orbit-node node-ai" aria-hidden="true">
-                <Sparkles />
-              </div>
-              <div className="orbit-node node-health" aria-hidden="true">
-                <HeartPulse />
-              </div>
-              <div className="visual-center">
-                <span className="center-halo" />
-                <Image src="/brand/mark.png" alt="" width={371} height={371} priority />
-              </div>
-              <div className="visual-label label-top">
-                <span className="visual-label-icon">
-                  <Dna aria-hidden="true" />
-                </span>
-                <span>
-                  <strong>Human potential</strong>
-                  <small>Explore what’s possible</small>
-                </span>
-              </div>
-              <div className="visual-label label-bottom">
-                <span className="visual-signal" />
-                <span>
-                  <strong>Curiosity in motion</strong>
-                  <small>Questions grow into discovery</small>
-                </span>
-                <ArrowUpRight aria-hidden="true" />
-              </div>
-              <span className="visual-spark spark-one" aria-hidden="true">
-                ✦
-              </span>
-              <span className="visual-spark spark-two" aria-hidden="true">
-                ✧
-              </span>
+            </Reveal>
+          </PageShell>
+          <div className="border-t border-primary-foreground/10">
+            <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-4 text-xs text-primary-foreground/70 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+              <span>A network for curiosity, collaboration, and careful science.</span>
+              <span className="hidden h-px flex-1 bg-primary-foreground/15 sm:block" />
+              <a
+                href="#network"
+                className="inline-flex min-h-11 items-center gap-2 font-medium hover:text-primary-foreground"
+              >
+                Meet the network <ArrowDown aria-hidden="true" className="size-4" />
+              </a>
             </div>
-          </div>
-          <div className="landing-container hero-bottom-line">
-            <span>One connected space for a healthier future</span>
-            <span className="hero-bottom-rule" />
-            <a href="#network">
-              Scroll to explore <ArrowDown aria-hidden="true" />
-            </a>
           </div>
         </section>
 
-        <section className="network-intro section-light" id="network">
-          <div className="landing-container">
-            <div className="section-heading">
-              <span className="section-eyebrow">A network with room for everyone</span>
-              <h2>
-                Many perspectives.
-                <span>One shared direction.</span>
-              </h2>
-              <p>
-                Healthspan is too important for any one discipline to solve alone. We bring diverse
-                contributors into the same conversation.
-              </p>
-            </div>
-            <div className="audience-grid">
-              {audiences.map(({ name, roles, icon: Icon, tone }, index) => (
-                <Card className={`audience-card audience-${tone}`} key={name}>
-                  <CardHeader className="audience-header">
-                    <span className="audience-icon">
-                      <Icon aria-hidden="true" />
-                    </span>
-                    <span className="audience-index">0{index + 1}</span>
-                    <CardTitle>{name}</CardTitle>
-                    <CardDescription>{roles}</CardDescription>
-                  </CardHeader>
-                </Card>
+        <section id="network" className="scroll-mt-24 py-section-sm sm:py-section">
+          <PageShell>
+            <Reveal>
+              <SectionHeading
+                eyebrow="A network with room for everyone"
+                title="Different perspectives. Shared curiosity."
+                description="Questions about healthspan cross disciplines. The network is designed to make it easier to find perspectives and collaborate without blurring the boundaries between community and research."
+              />
+            </Reveal>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {audiences.map((audience, index) => (
+                <Reveal key={audience.title} delay={index * 0.045}>
+                  <FeatureCard {...audience} />
+                </Reveal>
               ))}
             </div>
-            <div className="focus-panel">
-              <p>Explore what matters to you</p>
-              <div className="focus-chips">
-                {focusAreas.map(({ name, icon: Icon }) => (
-                  <Badge className="focus-chip" key={name} variant="outline">
-                    <Icon aria-hidden="true" />
-                    {name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
+            <Card className="mt-7 border-primary/10 bg-surface-raised/60 shadow-none">
+              <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="font-display text-lg">Explore topics that interest you</p>
+                <div className="flex flex-wrap gap-2">
+                  {focusAreas.map(({ label, icon: Icon }) => (
+                    <Badge key={label} variant="outline" className="gap-1.5 bg-card px-3 py-1.5">
+                      <Icon aria-hidden="true" />
+                      {label}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </PageShell>
         </section>
 
-        <section className="journey-section" id="journey">
-          <div className="journey-decoration" aria-hidden="true" />
-          <div className="landing-container">
-            <div className="section-heading section-heading-dark">
-              <span className="section-eyebrow">From spark to science</span>
-              <h2>
-                Good questions can
-                <span>change what comes next.</span>
-              </h2>
-              <p>
-                Make the journey from curiosity to validated knowledge more connected, transparent,
-                and collaborative.
-              </p>
-            </div>
-            <ol className="journey-track">
-              {journey.map((step, index) => (
-                <li key={step}>
-                  <span className="journey-node">{String(index + 1).padStart(2, "0")}</span>
-                  <span className="journey-step">{step}</span>
-                </li>
+        <section
+          id="journey"
+          className="border-y border-border/70 bg-surface-raised/65 py-section-sm sm:py-section"
+        >
+          <PageShell>
+            <Reveal>
+              <SectionHeading
+                eyebrow="How it works"
+                title="From a question to a clearer conversation."
+                description="A thoughtful research journey is iterative. Each step can surface new context, collaborators, and questions."
+                centered
+              />
+            </Reveal>
+            <ol className="journey-grid mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {journey.map(({ label, detail, icon: Icon }, index) => (
+                <Reveal key={label} delay={index * 0.06}>
+                  <li className="h-full">
+                    <Card className="h-full bg-card/80 shadow-xs">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <span className="font-display text-2xl text-primary">0{index + 1}</span>
+                          <span className="grid size-11 place-items-center rounded-xl bg-accent text-accent-foreground">
+                            <Icon aria-hidden="true" className="size-5" />
+                          </span>
+                        </div>
+                        <CardTitle className="font-display text-xl">{label}</CardTitle>
+                        <CardDescription className="leading-relaxed">{detail}</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </li>
+                </Reveal>
               ))}
             </ol>
-            <p className="journey-note">
-              <Sparkles aria-hidden="true" />
-              <span>
-                <strong>AI alongside the journey</strong> — designed to help people ask better
-                questions and explore evidence responsibly.
-              </span>
-            </p>
-          </div>
+            <Reveal delay={0.1}>
+              <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/15 bg-card p-4 sm:mx-auto sm:max-w-2xl">
+                <Sparkles aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  AI may assist exploration in future workflows. Suggestions remain proposals and
+                  require evidence, human judgement, and appropriate permissions.
+                </p>
+              </div>
+            </Reveal>
+          </PageShell>
         </section>
 
-        <section className="platform-section section-light" id="platform">
-          <div className="landing-container">
-            <div className="section-heading">
-              <span className="section-eyebrow">A connected foundation</span>
-              <h2>
-                Three layers.
-                <span>Working as one.</span>
-              </h2>
-              <p>
-                People-first community, protected research, and an accountable intelligence layer—
-                designed to strengthen each other.
-              </p>
-            </div>
-            <div className="pillar-grid">
-              {pillars.map(({ key, title, tagline, items, icon: Icon }, index) => (
-                <Card className={`pillar-card pillar-${key}`} key={key}>
-                  <CardHeader className="pillar-header">
-                    <div className="pillar-topline">
-                      <span>0{index + 1} / 03</span>
-                      <Icon aria-hidden="true" />
-                    </div>
-                    <CardTitle>{title}</CardTitle>
-                    <CardDescription className="pillar-tagline">{tagline}</CardDescription>
+        <section className="py-section-sm sm:py-section">
+          <PageShell>
+            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+              <Reveal>
+                <SectionHeading
+                  eyebrow="Evidence-aware by design"
+                  title="Evidence needs context, not a single score."
+                  description="A label describes a source class. It does not replace appraisal, provenance, or uncertainty."
+                />
+                <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+                  These labels come from the shared model and illustrate how different kinds of
+                  sources can be distinguished. They are not endorsements of any finding.
+                </p>
+              </Reveal>
+              <Reveal delay={0.08}>
+                <Card className="border-primary/10 bg-gradient-to-br from-card to-surface-raised shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="font-display text-xl">
+                      Evidence classes are visible
+                    </CardTitle>
+                    <CardDescription>
+                      Every class is named explicitly; color is reinforced with an icon and label.
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="pillar-content">
-                    <ul>
-                      {items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
+                  <CardContent className="flex flex-wrap gap-2">
+                    <EvidenceBadge evidenceClass="peer_reviewed" />
+                    <EvidenceBadge evidenceClass="clinical_trial" />
+                    <EvidenceBadge evidenceClass="human_observational" />
+                    <EvidenceBadge evidenceClass="preprint" />
+                    <EvidenceBadge evidenceClass="ai_generated_hypothesis" />
+                    <EvidenceBadge evidenceClass="speculation" />
                   </CardContent>
-                  <span className="pillar-watermark">
-                    <Icon aria-hidden="true" />
-                  </span>
                 </Card>
+              </Reveal>
+            </div>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <StatCard label="Evidence classes" value={11} detail="In the shared type model" />
+              <StatCard label="User portals" value={3} detail="Social, Personal, Researcher" />
+              <StatCard label="Guiding principles" value={4} detail="Shown below" />
+            </div>
+          </PageShell>
+        </section>
+
+        <section id="principles" className="bg-surface-raised/65 py-section-sm sm:py-section">
+          <PageShell>
+            <Reveal>
+              <SectionHeading
+                eyebrow="Built on trust"
+                title="Progress only matters when it is responsible."
+                description="Our foundations prioritize privacy, evidence, and transparent boundaries."
+              />
+            </Reveal>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {principles.map(({ title, description, icon: Icon }, index) => (
+                <Reveal key={title} delay={index * 0.05}>
+                  <FeatureCard
+                    title={title}
+                    description={description}
+                    icon={Icon}
+                    className="min-h-44"
+                  />
+                </Reveal>
               ))}
             </div>
-            <div className="portal-choices">
-              <div>
-                <span className="section-eyebrow">Find your place</span>
-                <h3>One network, distinct experiences.</h3>
-              </div>
-              <div className="portal-links">
-                <Link href={personalPortalUrl}>
-                  Personal portal <ArrowUpRight aria-hidden="true" />
-                </Link>
-                <Link href={researcherPortalUrl}>
-                  Researcher portal <ArrowUpRight aria-hidden="true" />
-                </Link>
-              </div>
-            </div>
-          </div>
+          </PageShell>
         </section>
 
-        <section className="principles-section" id="principles">
-          <div className="landing-container principles-inner">
-            <div className="principles-copy">
-              <Badge className="principles-badge" variant="outline">
-                Built on trust
-              </Badge>
-              <h2>Progress only matters when it’s responsible.</h2>
-              <p>
-                Better healthspan needs more than good intentions. It needs evidence, clear
-                permissions, and respect for the people behind the data.
+        <section id="portals" className="py-section-sm sm:py-section">
+          <PageShell>
+            <Reveal>
+              <SectionHeading
+                eyebrow="Find your place"
+                title="One network, distinct spaces."
+                description="Each portal has a different purpose. A portal alone never grants access to restricted resources."
+              />
+            </Reveal>
+            <PortalSwitcher
+              className="mt-7"
+              portals={[
+                {
+                  title: "Social Portal",
+                  description: "Community and ideas",
+                  href: socialPortalUrl,
+                  icon: UsersRound,
+                },
+                {
+                  title: "Personal Portal",
+                  description: "Your private space",
+                  href: personalPortalUrl,
+                  icon: LockKeyhole,
+                },
+                {
+                  title: "Researcher Portal",
+                  description: "Research workspace",
+                  href: researcherPortalUrl,
+                  icon: Microscope,
+                },
+              ]}
+            />
+            <Reveal delay={0.08} className="mt-7">
+              <EmptyState
+                icon={Network}
+                title="The network is taking shape"
+                description="This public page describes the foundation. Member accounts, research tools, and personal records are not available here."
+              />
+            </Reveal>
+          </PageShell>
+        </section>
+
+        <section className="border-t border-border/70 bg-primary text-primary-foreground">
+          <PageShell className="grid items-center gap-7 py-12 sm:py-16 lg:grid-cols-[1fr_auto]">
+            <div>
+              <p className="mb-2 text-sm font-medium text-primary-foreground/75">
+                Better questions begin with many perspectives
               </p>
-              <Link className="principles-link" href="#top">
-                Our guiding principles <ArrowUpRight aria-hidden="true" />
-              </Link>
+              <h2 className="max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
+                Explore the network at your own pace.
+              </h2>
             </div>
-            <div className="principles-list">
-              <div>
-                <span>01</span>
-                <p>Popularity and scientific evidence are not the same thing.</p>
-              </div>
-              <div>
-                <span>02</span>
-                <p>Personal health information stays private by default.</p>
-              </div>
-              <div>
-                <span>03</span>
-                <p>Research and AI respect explicit permissions and provenance.</p>
-              </div>
-              <div>
-                <span>04</span>
-                <p>AI hypotheses are proposals, not validated findings.</p>
-              </div>
-            </div>
-          </div>
+            <Button
+              render={<a href="#network" />}
+              size="lg"
+              className="w-full bg-card text-foreground hover:bg-card/90 sm:w-auto"
+            >
+              Start exploring <ArrowUpRight aria-hidden="true" />
+            </Button>
+          </PageShell>
         </section>
       </main>
-
-      <footer className="site-footer">
-        <div className="landing-container footer-inner">
-          <Link className="footer-brand" href="#top" aria-label="Back to Healthspan Network home">
-            <Image src="/brand/logo.png" alt="Healthspan Network" width={1112} height={385} />
-          </Link>
-          <p>Better people. Better science. A healthier future.</p>
-          <Link className="back-to-top" href="#top">
-            Back to top <ArrowUpRight aria-hidden="true" />
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter>
+        <span className="inline-flex items-center gap-2">
+          <ShieldCheck aria-hidden="true" className="size-4 text-success" />
+          Evidence-minded · Privacy-aware · Human-led
+        </span>
+      </SiteFooter>
     </div>
   );
 }
