@@ -126,6 +126,7 @@ a {
   color: #145e92;
   font-size: 10px;
   font-weight: 700;
+  text-decoration: none;
   transition:
     border-color 160ms ease,
     background 160ms ease,
@@ -446,7 +447,11 @@ a {
   place-items: center;
   border: 1px solid rgba(197, 237, 247, 0.43);
   border-radius: 50%;
-  background: radial-gradient(circle at 36% 23%, rgba(41, 186, 168, 0.3), rgba(5, 28, 63, 0.91) 68%);
+  background: radial-gradient(
+    circle at 36% 23%,
+    rgba(41, 186, 168, 0.3),
+    rgba(5, 28, 63, 0.91) 68%
+  );
   box-shadow:
     0 0 0 12px rgba(160, 231, 231, 0.045),
     0 0 55px rgba(26, 192, 174, 0.21),
@@ -661,6 +666,11 @@ a {
     transform 180ms ease,
     box-shadow 180ms ease,
     border-color 180ms ease;
+}
+
+.audience-header {
+  display: block;
+  padding: 0;
 }
 
 .audience-card::after {
@@ -917,8 +927,7 @@ a {
 .platform-section {
   padding: 92px 0 80px;
   background:
-    radial-gradient(780px 310px at 5% 2%, rgba(30, 147, 215, 0.055), transparent 70%),
-    #fff;
+    radial-gradient(780px 310px at 5% 2%, rgba(30, 147, 215, 0.055), transparent 70%), #fff;
 }
 
 .pillar-grid {
@@ -941,6 +950,15 @@ a {
   transition:
     transform 180ms ease,
     box-shadow 180ms ease;
+}
+
+.pillar-header,
+.pillar-content {
+  padding: 0;
+}
+
+.pillar-header {
+  display: block;
 }
 
 .pillar-card:hover {
@@ -1123,7 +1141,9 @@ a {
   height: 470px;
   border: 1px solid rgba(143, 228, 198, 0.12);
   border-radius: 50%;
-  box-shadow: 0 0 0 27px rgba(143, 228, 198, 0.025), 0 0 0 63px rgba(143, 228, 198, 0.02);
+  box-shadow:
+    0 0 0 27px rgba(143, 228, 198, 0.025),
+    0 0 0 63px rgba(143, 228, 198, 0.02);
   content: "";
 }
 

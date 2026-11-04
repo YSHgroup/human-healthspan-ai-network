@@ -21,14 +21,24 @@ import {
 
 import { Badge } from "@healthspan/ui/badge";
 import { Button, buttonVariants } from "@healthspan/ui/button";
-import { Card } from "@healthspan/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
 import { cn } from "@healthspan/ui/utils";
 
 const audiences: { name: string; roles: string; icon: LucideIcon; tone: string }[] = [
   { name: "People", roles: "Connect · Share · Learn", icon: UsersRound, tone: "mint" },
   { name: "Researchers", roles: "Collaborate · Innovate", icon: Microscope, tone: "blue" },
-  { name: "Health professionals", roles: "Share · Advise · Improve", icon: HeartPulse, tone: "rose" },
-  { name: "Scientists", roles: "Discover · Validate · Publish", icon: FlaskConical, tone: "violet" },
+  {
+    name: "Health professionals",
+    roles: "Share · Advise · Improve",
+    icon: HeartPulse,
+    tone: "rose",
+  },
+  {
+    name: "Scientists",
+    roles: "Discover · Validate · Publish",
+    icon: FlaskConical,
+    tone: "violet",
+  },
   { name: "Engineers", roles: "Build · Advance · Create", icon: Atom, tone: "amber" },
   { name: "Institutions", roles: "Support · Enable · Scale", icon: Network, tone: "sky" },
 ];
@@ -105,9 +115,14 @@ export default function Home() {
             <Link href="#platform">Platform</Link>
             <Link href="#principles">Principles</Link>
           </nav>
-          <Link className="header-cta" href="#network">
+          <Button
+            render={<Link href="#network" />}
+            variant="outline"
+            size="sm"
+            className="header-cta"
+          >
             Explore the network <ArrowUpRight aria-hidden="true" />
-          </Link>
+          </Button>
         </div>
       </header>
 
@@ -125,8 +140,8 @@ export default function Home() {
                 <span>Built together.</span>
               </h1>
               <p className="hero-lead">
-                A living network where people, researchers, clinicians, and technology come
-                together to turn better questions into better science.
+                A living network where people, researchers, clinicians, and technology come together
+                to turn better questions into better science.
               </p>
               <div className="hero-actions">
                 <Button
@@ -229,12 +244,14 @@ export default function Home() {
             <div className="audience-grid">
               {audiences.map(({ name, roles, icon: Icon, tone }, index) => (
                 <Card className={`audience-card audience-${tone}`} key={name}>
-                  <span className="audience-icon">
-                    <Icon aria-hidden="true" />
-                  </span>
-                  <span className="audience-index">0{index + 1}</span>
-                  <h3>{name}</h3>
-                  <p>{roles}</p>
+                  <CardHeader className="audience-header">
+                    <span className="audience-icon">
+                      <Icon aria-hidden="true" />
+                    </span>
+                    <span className="audience-index">0{index + 1}</span>
+                    <CardTitle>{name}</CardTitle>
+                    <CardDescription>{roles}</CardDescription>
+                  </CardHeader>
                 </Card>
               ))}
             </div>
@@ -300,17 +317,21 @@ export default function Home() {
             <div className="pillar-grid">
               {pillars.map(({ key, title, tagline, items, icon: Icon }, index) => (
                 <Card className={`pillar-card pillar-${key}`} key={key}>
-                  <div className="pillar-topline">
-                    <span>0{index + 1} / 03</span>
-                    <Icon aria-hidden="true" />
-                  </div>
-                  <h3>{title}</h3>
-                  <p className="pillar-tagline">{tagline}</p>
-                  <ul>
-                    {items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                  <CardHeader className="pillar-header">
+                    <div className="pillar-topline">
+                      <span>0{index + 1} / 03</span>
+                      <Icon aria-hidden="true" />
+                    </div>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription className="pillar-tagline">{tagline}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pillar-content">
+                    <ul>
+                      {items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
                   <span className="pillar-watermark">
                     <Icon aria-hidden="true" />
                   </span>

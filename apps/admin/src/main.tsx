@@ -1,5 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { Alert, AlertDescription } from "@healthspan/ui/alert";
+import { Badge } from "@healthspan/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@healthspan/ui/card";
+import { Info } from "lucide-react";
 import "./styles.css";
 
 const plannedModules = ["Users and organizations", "Community moderation", "Audit and security"];
@@ -16,10 +20,10 @@ function AdminApp() {
             <small>ADMINISTRATION</small>
           </span>
         </a>
-        <div className="sidebar-status">
-          <span />
+        <Badge className="sidebar-status" variant="outline">
+          <span className="sidebar-status-dot" aria-hidden="true" />
           FOUNDATION
-        </div>
+        </Badge>
         <p className="sidebar-note">
           Administrative access and permissions will be enforced by the API, not this interface.
         </p>
@@ -27,7 +31,9 @@ function AdminApp() {
       <section className="admin-main">
         <header className="admin-topbar">
           <span>Platform administration</span>
-          <span className="admin-environment">LOCAL FOUNDATION</span>
+          <Badge className="admin-environment" variant="outline">
+            LOCAL FOUNDATION
+          </Badge>
         </header>
         <div className="admin-content">
           <p className="admin-eyebrow">OPERATIONS &amp; GOVERNANCE</p>
@@ -36,21 +42,25 @@ function AdminApp() {
             This separate Admin application is the starting point for platform oversight,
             moderation, and auditable operations.
           </p>
-          <div className="admin-notice">
-            <span aria-hidden="true">ⓘ</span>
-            <p>
+          <Alert className="admin-notice">
+            <Info aria-hidden="true" />
+            <AlertDescription>
               No administrative actions are available. Authentication, role checks, audit logging,
               and API integration must be implemented before this interface can manage platform
               data.
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
           <div className="module-grid">
             {plannedModules.map((module, index) => (
-              <article className="module-card" key={module}>
-                <span>0{index + 1}</span>
-                <h2>{module}</h2>
-                <p>Planned foundation · Not connected to live platform data</p>
-              </article>
+              <Card className="module-card" key={module}>
+                <CardHeader className="module-card-header">
+                  <Badge variant="outline">0{index + 1}</Badge>
+                  <CardTitle>{module}</CardTitle>
+                </CardHeader>
+                <CardContent className="module-card-content">
+                  <p>Planned foundation · Not connected to live platform data</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

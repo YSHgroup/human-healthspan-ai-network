@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@healthspan/ui/badge";
+import { Alert, AlertDescription } from "@healthspan/ui/alert";
 import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@healthspan/ui/card";
 
@@ -77,26 +78,25 @@ export default function ResearcherHome() {
           </p>
         </div>
 
-        <Card className="mt-9 border-emerald-900/10 bg-emerald-50/70 shadow-none">
-          <CardContent className="flex items-start gap-4 pt-6">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-800 shadow-sm">
-              <ShieldCheck className="size-5" aria-hidden="true" />
-            </span>
-            <div>
-              <Badge className="mb-2" variant="success">
-                Permission boundary
-              </Badge>
-              <p className="max-w-4xl text-sm leading-6 text-emerald-950/80">
-                Access to a portal never grants access to restricted research. Membership,
-                organization, and project permissions must be explicitly verified by the backend.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <Alert className="mt-9 flex items-start gap-4 border-emerald-900/10 bg-emerald-50/70 p-6">
+          <ShieldCheck className="mt-1 size-5 shrink-0 text-emerald-800" aria-hidden="true" />
+          <AlertDescription className="pl-0 text-emerald-950/80">
+            <Badge className="mb-2" variant="success">
+              Permission boundary
+            </Badge>
+            <p className="max-w-4xl text-sm leading-6">
+              Access to a portal never grants access to restricted research. Membership,
+              organization, and project permissions must be explicitly verified by the backend.
+            </p>
+          </AlertDescription>
+        </Alert>
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {foundations.map(({ title, description, icon: Icon }, index) => (
-            <Card className="group min-h-56 border-slate-200 bg-white transition hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/5" key={title}>
+            <Card
+              className="group min-h-56 border-slate-200 bg-white transition hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/5"
+              key={title}
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Badge variant="outline">0{index + 1}</Badge>

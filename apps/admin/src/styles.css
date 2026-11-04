@@ -1,4 +1,8 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @import "../../../packages/design-tokens/src/tokens.css";
+@source "../../../packages/ui/src";
 
 :root {
   font-family: var(--healthspan-font-sans);
@@ -69,18 +73,24 @@ a {
 
 .sidebar-status {
   display: flex;
+  width: fit-content;
   align-items: center;
   gap: 8px;
   margin-top: 66px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #a6bdc9;
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.17em;
 }
 
-.sidebar-status span {
+.sidebar-status-dot {
   width: 6px;
   height: 6px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: #27c8a4;
   box-shadow: 0 0 0 4px rgba(39, 200, 164, 0.12);
@@ -165,12 +175,16 @@ a {
   color: #a48024;
 }
 
-.admin-notice > span {
-  font-size: 15px;
+.admin-notice > svg {
+  position: static;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: #a48024;
 }
 
-.admin-notice p {
-  margin: 0;
+.admin-notice [data-slot="alert-description"] {
+  padding-left: 0;
   color: #776b49;
   font-size: 10px;
   line-height: 1.7;
@@ -184,28 +198,38 @@ a {
 }
 
 .module-card {
+  gap: 0;
   min-height: 153px;
-  padding: 18px;
+  padding: 0;
   border: 1px solid #e1e9ed;
   border-radius: 5px;
   background: white;
 }
 
-.module-card > span {
+.module-card-header {
+  gap: 0;
+  padding: 18px;
+}
+
+.module-card-header > [data-slot="badge"] {
   color: #0eaa84;
   font-size: 8px;
   font-weight: 750;
   letter-spacing: 0.15em;
 }
 
-.module-card h2 {
+.module-card [data-slot="card-title"] {
   margin: 22px 0 9px;
   font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   font-size: 18px;
   font-weight: 500;
 }
 
-.module-card p {
+.module-card-content {
+  padding: 0 18px 18px;
+}
+
+.module-card-content p {
   margin: 0;
   color: #8394a0;
   font-size: 9px;

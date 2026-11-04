@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, Bookmark, HeartPulse, LockKeyhole, Sparkles } from "lucide-react";
 
 import { Badge } from "@healthspan/ui/badge";
+import { Alert, AlertDescription } from "@healthspan/ui/alert";
 import { Button } from "@healthspan/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
 
@@ -72,7 +73,9 @@ export default function PersonalHome() {
             <Badge className="w-fit" variant="outline">
               EXAMPLE ONLY
             </Badge>
-            <CardTitle className="mt-2 font-serif text-2xl font-medium">Start with what you care about.</CardTitle>
+            <CardTitle className="mt-2 font-serif text-2xl font-medium">
+              Start with what you care about.
+            </CardTitle>
             <CardDescription>
               These sample interests demonstrate a future personalized experience. Nothing here is
               saved to a profile.
@@ -90,13 +93,13 @@ export default function PersonalHome() {
                 </Badge>
               ))}
             </div>
-            <div className="mt-7 flex items-start gap-3 rounded-xl border border-emerald-900/10 bg-emerald-50/70 p-4">
+            <Alert className="mt-7 flex items-start gap-3 rounded-xl border-emerald-900/10 bg-emerald-50/70 p-4">
               <LockKeyhole className="mt-0.5 size-4 shrink-0 text-emerald-800" aria-hidden="true" />
-              <p className="text-xs leading-5 text-emerald-950/75">
+              <AlertDescription className="pl-0 text-xs leading-5 text-emerald-950/75">
                 Health records, sharing controls, and AI personalization are not implemented in this
                 foundation.
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
             <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <HeartPulse className="size-4 text-emerald-700" aria-hidden="true" />
               Private by default. Shared only with your permission.
