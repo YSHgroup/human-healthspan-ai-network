@@ -1,8 +1,16 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "../../../packages/design-tokens/src/tokens.css";
 @source "../../../packages/ui/src";
+
+:root {
+  --font-healthspan-sans: "DM Sans", sans-serif;
+  --font-healthspan-display: "DM Serif Display", Georgia, serif;
+  --healthspan-font-sans: var(--font-healthspan-sans);
+  --healthspan-font-display: var(--font-healthspan-display);
+}
 
 :root {
   font-family: var(--healthspan-font-sans);
