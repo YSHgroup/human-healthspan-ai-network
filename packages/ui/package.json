@@ -11,6 +11,7 @@
     "./badge": "./src/badge.tsx",
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
+    "./communication": "./src/communication.tsx",
     "./command": "./src/command.tsx",
     "./composites": "./src/composites.tsx",
     "./dialog": "./src/dialog.tsx",

@@ -16,6 +16,7 @@ export {
   VerificationBadge,
 } from "./composites";
 export { Button, buttonVariants } from "./button";
+export { AIChatPanel, AuthPanel, MessagingPanel } from "./communication";
 export {
   Card,
   CardAction,
