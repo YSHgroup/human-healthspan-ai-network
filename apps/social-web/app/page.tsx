@@ -129,12 +129,20 @@ export default function Home() {
         links={navigation}
         themeToggle={<ThemeToggle />}
         actions={
-          <a
-            href="#portals"
-            className="hidden min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:inline-flex"
-          >
-            Find your space <ArrowUpRight aria-hidden="true" className="size-4" />
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/messages"
+              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              Messages
+            </a>
+            <a
+              href="/ai"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              AI <ArrowUpRight aria-hidden="true" className="ml-1 size-4" />
+            </a>
+          </div>
         }
       />
 
@@ -422,8 +430,8 @@ export default function Home() {
             <Reveal delay={0.08} className="mt-7">
               <EmptyState
                 icon={Network}
-                title="The network is taking shape"
-                description="This public page describes the foundation. Member accounts, research tools, and personal records are not available here."
+                title="Start with a shared account"
+                description="Sign in to exchange text messages or try the General Platform AI. Research access remains explicitly gated."
               />
             </Reveal>
           </PageShell>
