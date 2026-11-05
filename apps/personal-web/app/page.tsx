@@ -43,12 +43,20 @@ export default function PersonalHome() {
         links={sections}
         themeToggle={<ThemeToggle />}
         actions={
-          <a
-            href={socialPortalUrl}
-            className="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:inline-flex"
-          >
-            Community <Sparkles aria-hidden="true" className="size-4" />
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/messages"
+              className="inline-flex min-h-11 items-center rounded-full border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+            >
+              Messages
+            </a>
+            <a
+              href={socialPortalUrl}
+              className="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:inline-flex"
+            >
+              Community <Sparkles aria-hidden="true" className="size-4" />
+            </a>
+          </div>
         }
       />
       <main id="overview">
