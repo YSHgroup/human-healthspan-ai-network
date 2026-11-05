@@ -31,6 +31,10 @@
   --ring: oklch(0.62 0.12 215);
   --surface-raised: oklch(0.975 0.014 210);
   --surface-sunken: oklch(0.955 0.015 220);
+  --chat-user-message: var(--primary);
+  --chat-user-foreground: var(--primary-foreground);
+  --chat-assistant-message: var(--surface-raised);
+  --chat-assistant-foreground: var(--foreground);
   --hero-start: oklch(0.28 0.07 242);
   --hero-end: oklch(0.36 0.095 218);
   --hero-foreground: oklch(0.98 0.008 220);
@@ -197,6 +201,10 @@
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
   --color-danger-muted: var(--danger-muted);
+  --color-chat-user-message: var(--chat-user-message);
+  --color-chat-user-foreground: var(--chat-user-foreground);
+  --color-chat-assistant-message: var(--chat-assistant-message);
+  --color-chat-assistant-foreground: var(--chat-assistant-foreground);
   --color-destructive: var(--danger);
   --color-border: var(--border);
   --color-input: var(--input);
