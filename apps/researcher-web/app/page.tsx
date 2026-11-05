@@ -71,7 +71,17 @@ export default function ResearcherHome() {
         homeHref="#overview"
         links={workspaceLinks}
         themeToggle={<ThemeToggle />}
-        actions={<ResearcherCommandPalette />}
+        actions={
+          <div className="flex items-center gap-2">
+            <a
+              href="/ai"
+              className="inline-flex min-h-11 items-center rounded-full border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+            >
+              Scientist prototype
+            </a>
+            <ResearcherCommandPalette />
+          </div>
+        }
       />
       <main id="workspace-main">
         <PageShell wide className="grid gap-8 xl:grid-cols-[15rem_minmax(0,1fr)]">
