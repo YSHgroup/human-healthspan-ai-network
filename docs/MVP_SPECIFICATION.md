@@ -27,6 +27,15 @@ The MVP must demonstrate this progression without compromising privacy, scientif
 
 Sources: Product Blueprint, Sections 1, 2 and 12; Development Roadmap, Milestone 4.
 
+### Current repository status (not a launch certification)
+
+The checkout contains early development slices for shared cookie identity, direct/group text
+messaging, a configurable General AI gateway, a gated prompt-only Scientist prototype and
+consent-aware AI interaction records. These do not satisfy the full MVP objectives above:
+community workflows, verified research approval, source-backed AI, launch security/privacy
+review and production operations remain incomplete. The legacy application's source and data are
+not present here, so feature parity has not been established.
+
 ---
 
 ## 2. MVP objectives and validation hypotheses

@@ -1,7 +1,8 @@
 # AI Architecture
 
-**Status: boundaries only.** `ai/healthspan_ai` defines module boundaries. No model provider,
-retrieval workflow or AI endpoint is implemented.
+**Status: thin development slice.** `ai/healthspan_ai` now has an OpenAI-compatible chat-completions
+gateway and separate General and Scientist prompt workflows. Provider access is disabled until
+explicitly configured; retrieval, evaluation and production governance are not implemented.
 
 ## Three separated environments
 
@@ -22,9 +23,19 @@ interfaces, and external providers receive only data approved for that provider 
 agents, tools, policies) - `knowledge` (ingestion, parsing, indexing, embeddings, retrieval,
 provenance) - `training` - `evaluation` - `governance` - `monitoring` - `shared` (contracts).
 
+## Implemented slice and boundaries
+
+- The API calls AI only through `healthspan_ai.gateway` and `healthspan_ai.shared`.
+- `AI_PROVIDER=openai-compatible` sends chat-completions requests to `AI_BASE_URL` using server-only `AI_API_KEY` and `AI_MODEL`. `AI_PROVIDER=disabled` is the default and returns an explicit error.
+- General Platform AI receives a public/general-knowledge system instruction and the current chat history only. No private platform data is retrieved.
+- The Scientist route requires `SCIENTIST_ENABLED=true`, an authenticated user, a verified email and an explicit researcher-approval timestamp. Registration grants neither state. No corpus, project file, retrieval tool or AI admin grant workflow is connected.
+- Chat history is held in the browser for the current page and sent with each request; it is not persisted as a conversation by default.
+- Operational AI interaction metadata is stored. Prompt and response content are retained only with a current affirmative AI-learning consent. Revocation deletes retained content, while metadata remains. `training_eligible` stays false.
+- The API returns no verified source entries. Provider-generated citations are not independently validated.
+
 ## Rules
 
-- Retrieval and tool execution inherit the requesting user's real rights at call time.
+- Any future retrieval and tool execution must inherit the requesting user's real rights at call time.
 - Outputs preserve citations, provenance, uncertainty and model version. Hypotheses are proposals.
 - The API reaches AI only through `healthspan_ai.gateway` and `healthspan_ai.shared`.
 - AI code never imports the API. Long-running AI work runs as background jobs.
@@ -33,5 +44,5 @@ provenance) - `training` - `evaluation` - `governance` - `monitoring` - `shared`
 
 ## Where each part lands
 
-General AI and the restricted Private AI Scientist prototype arrive as thin slices in M4; the
-Scientist is deepened in M6 to M8; Organization AI arrives in M9 (see the roadmap).
+The current implementation is a prompt-only prototype. Retrieval and research workflows remain
+planned for M4/M6; Organization AI remains planned for M9 (see the roadmap).

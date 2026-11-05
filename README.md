@@ -37,7 +37,7 @@ references/         Original product source documents and legacy reference
 
 ## Getting started
 
-Requirements: Node.js 20+, npm 10+ or pnpm 9, Python 3.10+, and Docker Compose (for local infrastructure).
+Requirements: Node.js 20+, npm 10+ or pnpm 9, Python 3.10+. Docker Compose is optional when using the default local SQLite database.
 
 ```bash
 cp .env.example .env
@@ -45,7 +45,8 @@ npm install            # or: pnpm install
 npm run dev:social     # or: pnpm dev:social
 ```
 
-The single root `.env` is read by the Next.js portals and by Admin (only `VITE_*` values reach the browser).
+The root `.env` is read by the Next.js portals, Admin and the API/Alembic. Only `VITE_*` values
+reach the Admin browser bundle; secrets remain server-side.
 
 The Social Portal is available at [http://localhost:3000](http://localhost:3000). The Social, Personal, and Researcher portals are configured with shadcn/ui, Tailwind CSS v4, and shared UI primitives. The original logo and emblem live under `public/brand`; app scripts sync them into each app's generated public directory before development and builds.
 
@@ -57,16 +58,33 @@ npm run dev:researcher   # http://localhost:3002
 npm run dev:admin        # http://localhost:3003
 ```
 
-Start local dependencies with `docker compose up -d` (or `npm run infra:up`). The API can be started separately after installing its Python dependencies:
+All app origins are `localhost`; no custom domain is required. Start the API separately after installing its Python dependencies. On Windows:
 
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -e "api[dev]"
-uvicorn app.main:app --app-dir api --reload --port 8000
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e "api[dev]" -e ai
 ```
 
-The API currently exposes only a basic health check. Authentication, persistence, community workflows, AI behavior, and administrative operations are planned work and must not be inferred from the portal scaffolds.
+In PowerShell, add the venv Python to the current terminal's `PATH` before the npm API scripts:
+
+```powershell
+$env:PATH = "$PWD\.venv\Scripts;$env:PATH"
+npm.cmd run db:migrate
+npm.cmd run dev:api
+```
+
+Run the API command in a separate terminal from the frontend commands. For macOS/Linux, substitute
+`python3 -m venv .venv`, `.venv/bin/python -m pip ...`, and activate the venv
+(`source .venv/bin/activate`) before `npm run db:migrate` and `npm run dev:api`.
+The API uses SQLite by default. To use PostgreSQL, start it with `docker compose up -d postgres`
+or provide an external server, then set `DATABASE_URL` in the root `.env` before running
+`npm run db:migrate`. Redis is not required by the current API slice.
+
+Implemented API scope is shared registration/session, direct and group text messaging, General AI
+chat, a restricted prompt-only Scientist prototype and opt-in AI-learning content retention.
+Email verification, account recovery, researcher approval workflow, AI retrieval/training,
+community workflows and admin operations are not implemented. See [API documentation](./docs/API.md)
+and [M1 inventory](./docs/MIGRATION_PLAN.md) for the exact contract and known legacy-source gap.
 
 ## Project checks
 

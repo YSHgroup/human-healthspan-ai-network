@@ -1,15 +1,22 @@
 # AI Training Strategy
 
-**Status: policy direction only.** Nothing is trained and no training data is collected.
+**Status: policy direction plus consent-aware logging infrastructure.** Nothing is trained and no
+dataset, corpus or training pipeline consumes application data.
 
 ## Path
 
 1. Use existing base models through the gateway. Never train a large foundation model from scratch.
 2. Build curated scientific knowledge, permission-aware retrieval and source citation (M4 to M6).
 3. Establish evaluation benchmarks and expert review before broadening tasks (M6).
-4. Collect authorized feedback and validated outcomes with provenance and rights (M6 to M8).
-5. Fine-tune only for specific task behavior, and only when evaluation shows retrieval is not enough.
-6. Use retrieval for current, permissioned knowledge and fine-tuning for behavior.
+4. The current slice records operational interaction metadata. It retains prompt/response content
+   only when a member affirmatively opts in to versioned, revocable AI-learning consent.
+5. Collect authorized feedback and validated outcomes with provenance and rights (M6 to M8).
+6. Fine-tune only for specific task behavior, and only when evaluation shows retrieval is not enough.
+7. Use retrieval for current, permissioned knowledge and fine-tuning for behavior.
+
+The consented content remains pending review and is not automatically eligible for training.
+Revocation clears previously retained prompt and response content. No automated export, evaluation
+set construction, or training job exists.
 
 ## Go or no-go for training (M8)
 

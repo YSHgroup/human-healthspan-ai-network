@@ -11,6 +11,13 @@
 
 > Documentation rule (from the architecture): a planned feature must not be documented as implemented. Update the status column only after the milestone gate has passed.
 
+**Implementation note:** Shared identity/session and database foundations, text-only
+messaging, and initial General AI/Scientist chat slices are present in this checkout ahead of
+their full milestone gates. This does not mark M2, M4, or M6 complete: production identity,
+researcher approval workflows, retrieval, launch hardening and the remaining milestone criteria
+are still outstanding. The separate legacy MVP is not available in this repository for parity
+verification.
+
 ---
 
 # 1. How to Read This Roadmap

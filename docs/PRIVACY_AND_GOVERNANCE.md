@@ -1,8 +1,8 @@
 # Privacy and Governance
 
-**Status: principles and requirements.** Consent, retention and review workflows are planned.
-Legal and regulatory scope (health, genetic, research-ethics and cross-border rules per
-jurisdiction) is an open decision needed by M1 and M4.
+**Status: principles plus limited AI-learning consent capture.** Health-data consent, retention
+and review workflows remain planned. Geographic availability is approved without geoblocking;
+applicable legal and regulatory review remains required before public launch.
 
 ## Principles
 
@@ -28,6 +28,13 @@ governance enforces permission-aware retrieval, provenance, organization isolati
 limitation, training-data permissions, evaluation and monitoring. Scientific oversight
 (molecular biology, genetics, medicine, aging, AI, statistics, epidemiology, bioethics)
 is established as the research ecosystem matures (M6).
+
+The development AI endpoint records metadata for each attempt. Prompt and response content is not
+stored unless the member affirmatively opts in to the versioned AI-learning consent. Members may
+revoke consent; revocation clears previously retained content. Retained content is not
+training-eligible, and no training/export workflow consumes it. The external AI provider still
+receives the current prompt history when configured; learning consent is separate from provider
+processing and does not opt users out of that request processing.
 
 ## Premium and monetization
 

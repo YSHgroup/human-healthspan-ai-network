@@ -1,7 +1,8 @@
 # Security
 
-**Status: requirements.** Authentication, authorization and audit are planned (M2 onward). The
-controls listed under "In place" are the only ones implemented.
+**Status: development foundations.** Shared identity/session, API-origin checks and messaging
+authorization are implemented for local development. The requirements below remain necessary
+before public production launch.
 
 ## In place
 
@@ -9,14 +10,17 @@ controls listed under "In place" are the only ones implemented.
 - `X-Request-ID` and baseline security headers on API responses.
 - Security headers on the three Next.js portals; private portals and Admin are not indexable.
 - API client sends credentials for cookie sessions; tests forbid browser-stored tokens.
+- Registration hashes passwords with scrypt; session cookies are HttpOnly, SameSite=Lax, host-only, and Secure in production; only a session-token digest is stored.
+- Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
+- Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
 - Architecture tests enforce: no direct database access from frontends, no cross-application imports.
 - `.env.example` holds placeholders only; secrets never enter the repository.
 
 ## Required before the MVP launch (M4)
 
-- Registration, email verification, login, logout, password recovery, secure sessions, MFA support.
+- Email verification, password recovery, MFA support, rate limiting and operational abuse controls.
 - RBAC and ABAC with least privilege at organization, project, resource and administrative level.
-- Shared identity across portals: trusted origins, token lifecycle and refresh, logout propagation,
+- Shared identity across portals: token lifecycle and refresh, logout propagation,
   CSRF protection, cookie security, redirect validation. No long-lived tokens in browser storage.
 - Authorization on every API, object, file, dataset, AI retrieval and administrative action.
 - Audit logs for sensitive access, sharing, exports, AI retrieval, model actions and admin changes.

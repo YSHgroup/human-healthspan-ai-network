@@ -3,8 +3,9 @@
 Concise overview and key decisions. The complete specification is
 [SYSTEM_DEVELOPMENT_ARCHITECTURE.md](./SYSTEM_DEVELOPMENT_ARCHITECTURE.md).
 
-> Status rule: a planned capability is never documented as implemented. This repository is a
-> foundation; see [Last_Change.md](./Last_Change.md) for what exists today.
+> Status rule: a planned capability is never documented as implemented. The checkout now includes
+> a limited identity, messaging and AI prototype slice; see [Last_Change.md](./Last_Change.md)
+> and [API.md](./API.md) for exact scope and limitations.
 
 ## Source documents and precedence
 
@@ -23,14 +24,14 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 
 | Area | Location | Technology | Status |
 |---|---|---|---|
-| Social Portal | `apps/social-web` | Next.js + TypeScript | Landing page only |
-| Personal Portal | `apps/personal-web` | Next.js + TypeScript | Foundation page only |
-| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Foundation page only |
+| Social Portal | `apps/social-web` | Next.js + TypeScript | Landing page, text messaging and General AI prototype |
+| Personal Portal | `apps/personal-web` | Next.js + TypeScript | Foundation page and shared text messaging |
+| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Foundation page and gated Scientist prototype |
 | Admin Application | `apps/admin` | React + Vite + TypeScript | Foundation page only |
-| Backend API | `api/` | Python + FastAPI modular monolith | `/healthz` and empty versioned routers |
-| AI platform | `ai/` | Python | Package boundaries only |
+| Backend API | `api/` | Python + FastAPI modular monolith | Health/readiness, shared cookie identity, text messaging and AI prototype endpoints |
+| AI platform | `ai/` | Python | OpenAI-compatible provider gateway and prompt-only General/Scientist workflows; provider disabled by default |
 | Shared packages | `packages/` | TypeScript | Skeletons; shared types and UI primitives |
-| Infrastructure | `docker-compose.yml`, `infra/` | Docker | PostgreSQL and Redis for local development |
+| Infrastructure | `docker-compose.yml`, `infra/` | Docker | PostgreSQL and Redis available; local API defaults to SQLite |
 
 ## Key decisions
 
@@ -46,6 +47,8 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 - **Health data is private by default** and never becomes research or training data silently.
 - **Incremental migration.** The existing MVP stays the source of working behavior until each
   replacement is verified ([MIGRATION_PLAN.md](./MIGRATION_PLAN.md)).
+- **Inventory limitation.** The separately stored legacy MVP is not in this checkout. Current
+  route, data and behavior inventory covers only files present here; no legacy parity is claimed.
 
 ## Enforcement
 

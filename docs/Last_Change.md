@@ -1,43 +1,50 @@
-# Overall progress implemented
+# Last Change
 
-## APPS
+## Completed
 
-- Independent Next.js foundations for Social, Personal and Researcher portals; React + Vite foundation for Admin.
-- Redesigned all four portal visual layers with a shared shadcn/ui and Tailwind CSS v4 system, responsive shells, light/dark themes, accessible status badges, and reduced-motion-aware animation.
-- Expanded `@healthspan/ui` with Base UI-backed shadcn primitives and reusable composites; added `motion`, `cmdk`, `sonner`, and `next-themes` for motion, command search, toasts, and Next.js theme handling.
-- Added semantic palette, typography, radius, shadow, and spacing tokens, plus Social, Personal, Researcher, and Admin accent variations.
-- Social Portal now has a public landing page; Personal and Researcher are clearly labeled foundations, and Admin remains a planned operations foundation.
-- Personal and Researcher portals and Admin are never indexable (`robots` metadata, `robots.ts`, `noindex`); only the Social Portal is public.
-- All portals send baseline security headers; Admin reads only `VITE_*` values from the root `.env`.
-- Feature directories follow the architecture (`features/`, `services/`, `components/`, `tests/`) and are empty placeholders.
+- Recorded the approved M1 audience, geographic-availability and MVP-boundary decisions in
+  `docs/DECISIONS.md`; public eligibility is open across topics and regions, while research spaces
+  remain permission-gated. Legal review remains necessary and is not replaced by an acknowledgment.
+- Implemented local shared registration/session and Alembic persistence, direct/group text
+  messaging, General AI and a gated prompt-only Scientist prototype, and consent-aware AI
+  interaction records. The API defaults to SQLite and supports PostgreSQL by `DATABASE_URL`.
+- Added API and AI tests for identity/session behavior, participant authorization, consent
+  revocation, provider configuration, AI access gates and existing API foundation behavior.
+- Added shared communication UI and connected Social, Personal and Researcher pages. Separate
+  commits were made for design tokens, shared UI and each modified portal.
+- Completed the repository-local M1 inventory in `docs/MIGRATION_PLAN.md`, documented route and
+  data-model status, and clarified missing functionality across architecture, API, security,
+  privacy, deployment and AI documentation.
+- Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
+  lockfile; local package ranges remain `"*"`.
 
-## API
+## Known gaps and conflicts
 
-- FastAPI application with `/healthz`, versioned empty routers (`/api/v1/user/{social,personal,researcher}`, `/api/v1/admin`), environment-driven CORS and request-id and security-header middleware.
-- Domain packages for all 21 architecture domains (planned, no behavior).
+- The separate legacy MVP is not in this checkout. The architecture describes legacy features and
+  migration preservation requirements, but routes, models, migrations and behavior cannot be
+  independently verified or characterized until that source is supplied.
+- Initial identity, messaging and AI slices are implemented ahead of their roadmap gates. This
+  does not mean M2/M4/M6 or production launch criteria are complete.
+- Email verification/recovery, researcher approval workflow, rate limiting, production audit and
+  hardening, AI retrieval/source validation, training and administration are not implemented.
+- Docker/PostgreSQL and external AI provider operation have not been verified in this environment.
+  The local browser configuration remains `localhost:3000`–`3003`; the API uses port `8000`.
 
-## AI SYSTEM
+## Verification
 
-- Separate Python package with all architecture modules, including `organization`, `orchestration`, `training`, `governance`, `monitoring` and `shared`. No AI workflow or provider integration is implemented.
+- Python: architecture/API/AI suites passed, 38 tests total; Pylance found no syntax errors in the
+  Alembic dotenv update.
+- Frontend: 10 workspace typechecks and all 5 frontend unit tests passed; the architecture script
+  passed 20 tests.
+- Production build: all 4 application builds passed.
+- Package managers: `npm ci` passed; `pnpm install --frozen-lockfile` passed with an isolated
+  store. The default pnpm store encountered Windows `EBUSY` rename errors. npm reported 11 audit
+  findings (2 low, 6 moderate, 1 high, 2 critical); no automated dependency changes were applied.
+- Not verified: production deployment, live PostgreSQL/Docker, real AI provider, actual configured
+  `.env` migration target and external legacy-MVP parity.
 
-## Shared platform
+## Next step
 
-- pnpm workspaces, Turborepo (`build`, `dev`, `lint`, `typecheck`, `test`), `.npmrc`, npm and pnpm both supported (local packages use `*` ranges, npm `workspaces` added), root `.env` loaded by the portals.
-- `@healthspan/shared-types` now carries the blueprint's evidence classes, visibility levels, portal states, AI environments, organization roles and premium features.
-- `@healthspan/api-client` sends credentials for cookie sessions; unit tests added for it and `@healthspan/validation` (Vitest).
-- `docker-compose.yml` moved to the repository root; `infra/` has one folder per concern.
-- `tests/architecture` enforces AGENT_RULE and architecture rules (structure, application independence, no direct DB access from frontends, no browser-stored tokens, private portals not indexable, API-to-AI interface limits, AI environment separation).
-- Added `ARCHITECTURE.md`, `API.md`, `DATA_MODEL.md`, `AI_ARCHITECTURE.md`, `AI_TRAINING_STRATEGY.md`, `SECURITY.md`, `PRIVACY_AND_GOVERNANCE.md`, `MIGRATION_PLAN.md`, `DEPLOYMENT.md`; expanded `AGENT_RULE.md` with the architecture's mandatory rules; roadmap M1 marked in progress.
-
-## Last Change
-
-Recorded the owner-approved M1 audience, geographic-availability and MVP-boundary decisions in `docs/DECISIONS.md`, and aligned the roadmap and MVP specification. The public launch is open across topics and regions, while research access remains permission-gated. Applicable legal and regulatory review remains a launch prerequisite; an onboarding acknowledgment does not replace it.
-
-Previous implementation verification: `npm install`, workspace typecheck, serial workspace build, JavaScript unit tests, and API tests passed. The root lint and architecture checks still report existing repository issues: formatting in `packages/shared-types/src/index.ts`, and nested app lockfiles that conflict with the current architecture test. These were left unchanged to preserve the requested lockfile strategy. The architecture suite otherwise passed 19 tests; the API suite passed 6 tests. The current documentation-only update was checked for whitespace errors and against the source documents.
-
-## What is the next step?
-
-1. Complete the M1 inventory of the existing MVP in `MIGRATION_PLAN.md` and add characterization tests.
-2. Complete the applicable legal and regulatory review, then write the PRD and prioritized MVP backlog from the approved M1 decisions.
-3. Resolve the existing lint and architecture-check failures without changing the npm/pnpm lockfile strategy.
-4. Add ESLint and Playwright to the tooling, then start shared identity (M2). Do not expose health records or private research until consent, authorization, and audit controls exist.
+Obtain the separately stored legacy source and characterize its actual routes/data before claiming
+parity. Complete the email-verification/researcher-approval workflow, security/privacy review,
+source-backed AI work and the required launch gates before any public release.

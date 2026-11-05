@@ -83,6 +83,18 @@ The architecture defines the target organization of the project. It does not req
 
 Existing functionality must be mapped to the new architecture before it is moved, replaced or removed.
 
+### 1.3 Current checkout verification
+
+The legacy application and its database are stored outside this checkout. The components listed
+above describe the architecture's preservation requirement; their source, behavior, data and
+migrations could not be inspected here, so no migration parity is claimed.
+
+The current checkout has an initial Alembic schema for shared identity/sessions, text messaging
+and AI interaction-consent records. It also has a provider gateway and prompt-only General AI and
+restricted Scientist prototypes. These are development slices, not a passed production or MVP
+launch gate. See `docs/MIGRATION_PLAN.md`, `docs/API.md` and `docs/Last_Change.md` for the
+verified inventory and limitations. Do not invent legacy users or records to fill this gap.
+
 ---
 
 # 2. Overall System Architecture
