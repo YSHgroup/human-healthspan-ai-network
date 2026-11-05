@@ -9,7 +9,11 @@ description = "FastAPI backend foundation for the Human Healthspan Scientific AI
 requires-python = ">=3.10"
 dependencies = [
   "fastapi>=0.115,<1.0",
-  "uvicorn[standard]>=0.30,<1.0",
+  "sqlalchemy>=2.0,<3.0",
+  "alembic>=1.14,<2.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "python-dotenv>=1.0,<2.0",
+  "uvicorn>=0.30,<1.0",
 ]
 
 [project.optional-dependencies]

@@ -6,8 +6,20 @@ client = TestClient(app)
 
 
 def test_only_operational_endpoints_are_exposed() -> None:
-    """Planned product routes must not exist until they are implemented and documented."""
-    assert set(app.openapi()["paths"]) == {"/healthz"}
+    """Only implemented and documented workflows appear in OpenAPI."""
+    assert set(app.openapi()["paths"]) == {
+        "/healthz",
+        "/readyz",
+        "/api/v1/user/auth/register",
+        "/api/v1/user/auth/login",
+        "/api/v1/user/auth/logout",
+        "/api/v1/user/auth/me",
+        "/api/v1/user/auth/ai-learning-consent",
+        "/api/v1/user/social/messages/conversations",
+        "/api/v1/user/social/messages/conversations/{conversation_id}/messages",
+        "/api/v1/user/social/ai/chat",
+        "/api/v1/user/researcher/ai/chat",
+    }
 
 
 def test_responses_carry_request_id_and_security_headers() -> None:

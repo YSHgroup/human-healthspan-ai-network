@@ -1,5 +1,8 @@
-"""Social Portal routes (planned, M2): feed, posts, comments, reactions, communities, discussions, events, invitations, notifications, connections."""
+"""Social Portal API routes."""
 
 from fastapi import APIRouter
 
+from app.api.v1.user.social.messaging import router as messaging_router
+
 router = APIRouter(prefix="/social", tags=["user-social"])
+router.include_router(messaging_router)

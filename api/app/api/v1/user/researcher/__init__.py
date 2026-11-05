@@ -1,4 +1,4 @@
-"""Researcher Portal routes (planned, M3): research, evidence, literature, projects, tasks, reports, organizations, workspace, organization-ai."""
+"""Researcher Portal API routes."""
 
 from fastapi import APIRouter
 

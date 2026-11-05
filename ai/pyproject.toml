@@ -7,7 +7,9 @@ name = "healthspan-ai"
 version = "0.1.0"
 description = "Separate AI platform foundation for the Human Healthspan Scientific AI Network"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+  "httpx>=0.27,<1.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -18,6 +18,7 @@ def install_middleware(app: FastAPI) -> None:
     @app.middleware("http")
     async def request_context(request: Request, call_next) -> Response:  # type: ignore[no-untyped-def]
         request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+        request.state.request_id = request_id
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         for header, value in SECURITY_HEADERS.items():

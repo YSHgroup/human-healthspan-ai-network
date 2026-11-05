@@ -1,1 +1,1 @@
-"""Shared FastAPI dependencies (authentication and authorization arrive with M2)."""
+"""Shared FastAPI dependencies."""
