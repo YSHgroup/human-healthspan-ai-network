@@ -31,13 +31,13 @@
 
 ## Last Change
 
-Redesigned the Social, Personal, Researcher, and Admin visual layers around shared tokens and components. The portals now share typography, theme controls, responsive navigation, and consistent visual language while retaining their separate app boundaries. Private portals remain non-indexable, no browser token storage was added, and all disconnected or planned functionality remains labeled honestly.
+Recorded the owner-approved M1 audience, geographic-availability and MVP-boundary decisions in `docs/DECISIONS.md`, and aligned the roadmap and MVP specification. The public launch is open across topics and regions, while research access remains permission-gated. Applicable legal and regulatory review remains a launch prerequisite; an onboarding acknowledgment does not replace it.
 
-Verification: `npm install`, workspace typecheck, serial workspace build, JavaScript unit tests, and API tests passed. The root lint and architecture checks still report existing repository issues: formatting in `packages/shared-types/src/index.ts`, and nested app lockfiles that conflict with the current architecture test. These were left unchanged to preserve the requested lockfile strategy. The architecture suite otherwise passed 19 tests; the API suite passed 6 tests.
+Previous implementation verification: `npm install`, workspace typecheck, serial workspace build, JavaScript unit tests, and API tests passed. The root lint and architecture checks still report existing repository issues: formatting in `packages/shared-types/src/index.ts`, and nested app lockfiles that conflict with the current architecture test. These were left unchanged to preserve the requested lockfile strategy. The architecture suite otherwise passed 19 tests; the API suite passed 6 tests. The current documentation-only update was checked for whitespace errors and against the source documents.
 
 ## What is the next step?
 
 1. Complete the M1 inventory of the existing MVP in `MIGRATION_PLAN.md` and add characterization tests.
-2. Resolve the MVP-blocking open decisions (audience, MVP boundary, regulatory scope) and write the PRD.
+2. Complete the applicable legal and regulatory review, then write the PRD and prioritized MVP backlog from the approved M1 decisions.
 3. Resolve the existing lint and architecture-check failures without changing the npm/pnpm lockfile strategy.
 4. Add ESLint and Playwright to the tooling, then start shared identity (M2). Do not expose health records or private research until consent, authorization, and audit controls exist.

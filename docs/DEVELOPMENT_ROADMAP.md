@@ -7,7 +7,7 @@
 - Consolidated Master Blueprint, Version 1.0 (product phases 0 to 8, MVP scope, risks, success measures, open decisions)
 - System Development Architecture, Version 1.0 (target repository, technology decisions, migration strategy, engineering phases 1 to 8)
 
-**Scope:** From the existing MVP, through the first controlled MVP launch, to final completion of the full platform.
+**Scope:** From the existing MVP, through the first public MVP launch, to final completion of the full platform.
 
 > Documentation rule (from the architecture): a planned feature must not be documented as implemented. Update the status column only after the milestone gate has passed.
 
@@ -60,7 +60,7 @@ Where the two documents ordered work differently, this roadmap made the followin
 | **M1** | Foundation and inventory | Everything mapped, tooling and decisions in place | 0 | 1 | M |
 | **M2** | Social and Personal portals | Two independent Next.js portals on shared identity | 1 | 2, 3 | L |
 | **M3** | Researcher portal and Admin | Third portal, organizations, React + Vite admin | 2 | 4, 5 | L |
-| **M4** | **MVP launch** | Hardened first controlled release with AI thin slices | 3, 4 (thin) | 6, 7 (initial), 8 (initial) | L |
+| **M4** | **MVP launch** | Hardened public release with AI thin slices; research access remains permission-gated | 3, 4 (thin) | 6, 7 (initial), 8 (initial) | L |
 | **M5** | Platform AI, health records, premium | General AI matures, health records v1, payments | 3 (depth) | 7 (part), Section 13 | L |
 | **M6** | Private AI Scientist foundation | Secure scientific corpus, evaluation, expert review | 4 | 7 (part) | XL |
 | **M7** | Scientific knowledge layer | Evidence registry, entities, publications | 5 | 4, 7 (part) | L |
@@ -128,7 +128,7 @@ Current working features (social, research, AI gateway and retrieval foundations
 | Packages | Create skeletons for `ui`, `design-tokens`, `api-client`, `auth-client`, `shared-types`, `validation`, `shared-config` and `testing`. |
 | Documentation | Create the `docs/` set and the root `AGENT_RULE.md` with the mandatory rules. Write `MIGRATION_PLAN.md`. |
 | Product artifacts | Complete the blueprint's eight next artifacts: PRD, portal and access specification, system architecture, domain model and ERD, API specification, three-component AI architecture, security, privacy and scientific governance, MVP backlog. |
-| Decisions | Resolve the MVP-blocking open decisions listed in Section 16. |
+| Decisions | Record the owner-approved M1 decisions in `DECISIONS.md`; carry forward the remaining open decisions in Section 16. |
 
 ## 4.2 Deliverables
 
@@ -183,7 +183,7 @@ Private content must never become indexable because pages are server-rendered. T
 | Activity | Activity history linking to original resources |
 | Health foundations | Data model, private-by-default rule, consent records and access auditing only. No broad health-record feature surface yet. |
 
-Messaging is described in the architecture as a shared backend capability. Confirm in the PRD whether a basic text-messaging foundation belongs in the MVP.
+Basic direct and group text messaging is included in M4. Rich audio, video, media and resource-sharing capabilities follow in M5.
 
 ## 5.4 Backend (continuous track)
 
@@ -253,10 +253,10 @@ The Admin API must stay compatible during the front-end migration.
 
 # 7. Milestone 4: MVP Launch
 
-**Goal:** Ship the hardened first controlled release that matches the blueprint's MVP scope.
+**Goal:** Ship the hardened public release that matches the approved M1 MVP boundary and the blueprint's MVP scope. Social and Personal access is open to the general public; research resources remain permission-gated.
 **Maps to:** Blueprint Phases 3 and 4 as thin slices, architecture Phases 6 and 7 (initial) and 8 (initial). **Size:** L.
 
-## 7.1 MVP scope (from the blueprint)
+## 7.1 MVP scope (blueprint scope aligned with approved M1 decisions)
 
 | Area | MVP scope |
 |---|---|
@@ -265,6 +265,7 @@ The Admin API must stay compatible during the front-end migration.
 | Researcher portal | Community discovery, applications and invitations, researcher profiles, basic project workspace, role-based access |
 | Organizations | Basic profiles and controlled membership |
 | Events | Create, discover, register and discuss basic events |
+| Messaging | Basic direct and group text messaging; richer media capabilities are deferred to M5 |
 | General Platform AI | Public and common knowledge Q&A, approved web search, external model integration, source display |
 | Private AI Scientist | Restricted prototype for approved research users: curated literature, private RAG, citations, a small set of research workflows |
 | Governance | Core RBAC, audit logs, consent foundations, data separation, moderation and reporting |
@@ -278,7 +279,7 @@ The Admin API must stay compatible during the front-end migration.
 | AI | Move the existing gateway and retrieval into `ai/gateway` and `ai/knowledge` behind stable internal interfaces. Build the General AI Q&A with source display and the restricted Private AI Scientist prototype. Keep the AI environments logically separate. |
 | Governance | Permission-aware retrieval, AI permission tests, usage and cost monitoring, consent foundations |
 | Hardening | Security assessment, privacy assessment, performance testing, backup and restore drills, monitoring and alerting, deployment automation, operational runbooks, incident response |
-| Launch | Choose the launch community and beta cohort; prepare moderation staffing and support |
+| Launch | Open Social and Personal access to the general public without a single designated launch community or geography gate; prepare moderation staffing and support. Seeded communities or opt-in early cohorts may support onboarding but must not restrict eligibility. |
 
 ## 7.3 End-to-end test suite
 
@@ -322,7 +323,7 @@ The ten flows listed in the architecture must pass before launch (the ones that 
 | Premium and payments | Switch on the entitlement system: create organization, create event, organization contributor badges, organization AI (as it becomes available). Payments, refunds and cancellations. |
 | Badges | Centralized badge and certification service with organization-tied contributor badges |
 
-**Gate:** The privacy and legal review of health-data handling is complete for the launch jurisdictions. Unauthorized health-data access tests and share-link tests pass. Pricing decision is made. The entitlement checks are enforced by the backend only.
+**Gate:** The privacy and legal review of health-data handling is complete for all applicable jurisdictions in which the public service is available. Unauthorized health-data access tests and share-link tests pass. Pricing decision is made. The entitlement checks are enforced by the backend only.
 
 ---
 
@@ -463,15 +464,19 @@ Measures are from blueprint Section 16. Targets must be set during M1 and M4 usi
 
 ---
 
-# 16. Open Decisions and When They Are Needed
+# 16. Decisions and When They Are Needed
 
-From blueprint Section 17. "Needed by" is the latest milestone entry at which the decision must be made.
+The owner-approved M1 decisions are recorded in `DECISIONS.md`. The blueprint originally listed the
+audience, launch community, geographic and MVP scope as open decisions; those product choices are
+now resolved as shown below. Legal and regulatory review remains a launch prerequisite and is not
+replaced by the onboarding acknowledgment.
 
 | Decision | Needed by |
 |---|---|
-| Target initial audience and launch community | M1 |
-| Precise MVP boundary (including whether messaging is in) | M1 |
-| Geographic and regulatory scope | M1 |
+| Target audience and launch community — decided: general public, no single launch community | Decided in M1 |
+| MVP boundary, including basic text messaging — decided: see `DECISIONS.md` D3 and M4 scope | Decided in M1 |
+| Geographic availability — decided: no regional restrictions or geoblocking | Decided in M1 |
+| Applicable legal and regulatory review for public availability | Before M4 launch |
 | Exact membership and professional verification criteria | M2 |
 | Community moderation and publication rules | M2 |
 | Organization onboarding and tenant model | M3 |
@@ -491,7 +496,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | Risk | Primary response | Milestone focus |
 |---|---|---|
 | Scope too broad | Hold the MVP boundary; phase everything else | M1, M4 |
-| Cold start and low engagement | Focused launch community, expert content, events | M4, M5 |
+| Cold start and low engagement | Seeded communities across topics, expert content, events and optional non-exclusive cohorts | M4, M5 |
 | Medical or scientific misinformation | Evidence classification, source display, moderation, expert review | M4 to M7 |
 | AI hallucination | RAG, citations, evaluation, human review for consequential output | M4 to M8 |
 | Confidential research leakage | Separate AI environments, private indexes, audit, provider controls | M4, M6, M9 |

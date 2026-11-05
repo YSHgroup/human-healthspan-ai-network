@@ -3,7 +3,7 @@
 
 <text color="secondary" size="sm">Product specification · Version 1.0 · November 2026 · Derived from the three project source documents</text>
 
-<badge color="success">Proposed MVP baseline</badge> <badge color="info">M4 controlled launch</badge>
+<badge color="success">Proposed MVP baseline</badge> <badge color="info">M4 public launch</badge>
 
 ## 1. Product definition
 
@@ -59,9 +59,7 @@ The initial product supports five user groups.
 
 Organizations are also supported as platform entities, with basic profiles and controlled membership.
 
-**Recommended launch approach:** Begin with one focused research community and a deliberately selected beta cohort rather than opening the entire platform to everyone immediately.
-
-This is consistent with the roadmap's cold-start mitigation strategy.
+**Approved M1 launch decision (D1):** Open the Social and Personal Portals to the general public across the stated topic areas, with no single designated launch community or invite-only public cohort. Researcher Portal spaces remain gated by verification and permissions. Seeded communities or opt-in early cohorts may support onboarding but must not restrict eligibility.
 
 ---
 
@@ -131,6 +129,7 @@ The platform consists of three independent user-facing portals and one administr
 | Communities | Discover and join communities |
 | Search | Search members, topics and communities |
 | Events | Create, discover, register and discuss basic events |
+| Messaging | Basic direct and group text messaging |
 | Reporting | Report inappropriate content |
 
 **Initial topic categories**
@@ -614,7 +613,7 @@ This is a release-critical part of the MVP, not a later enhancement.
 - Provide uncertainty and limitations.
 - Apply moderation and review procedures to consequential scientific content.
 
-The project does not yet have a completed regulatory assessment. The applicable jurisdictions and legal requirements must be established before launch.
+The approved geographic scope has no regional restriction or geoblocking. The project does not yet have a completed regulatory assessment: applicable legal requirements must be reviewed and met before launch. The onboarding acknowledgment of legal obligations is not a substitute for that review or for platform compliance.
 
 ---
 
@@ -625,7 +624,7 @@ The source documents define important operational principles but do not establis
 | Area | MVP requirement |
 |---|---|
 | Reliability | Production monitoring and alerting |
-| Performance | Responsive portal and API interactions under the agreed beta load |
+| Performance | Responsive portal and API interactions under the agreed launch load |
 | Scalability | Modular backend with independent frontend deployment |
 | Maintainability | Clear domain boundaries and shared packages |
 | Accessibility | Accessible navigation, forms and core workflows |
@@ -778,9 +777,9 @@ The platform should measure meaningful scientific and community contribution.
 
 The following are suggested starting targets, not targets specified in the source documents.
 
-| Metric | Suggested beta target |
+| Metric | Suggested initial launch target |
 |---|---:|
-| Invited beta members | 100 |
+| Registered members in the initial measurement period | 100 |
 | Activated members | 60% |
 | Members returning within 30 days | 30% |
 | Active research communities | 1–3 |
@@ -789,7 +788,7 @@ The following are suggested starting targets, not targets specified in the sourc
 | Research AI pilot users | 5 |
 | Critical permission incidents | 0 |
 
-These numbers should be revised after selecting the initial audience and launch community.
+These are planning targets, not audience, community or geographic eligibility limits. Revise them using M1 baselines before M4.
 
 ---
 
@@ -829,7 +828,7 @@ The uploaded Development Roadmap provides a more detailed sequence than the orig
       Implement research communities, organizations, projects, tasks, permissions and administration.
     </list-item>
     <list-item>
-      **M4 — Controlled MVP launch**
+      **M4 — Public MVP launch**
 
       <badge color="success">MVP release</badge>
 
@@ -872,16 +871,18 @@ The roadmap assigns M4 a relative size of Large and M6, M8, M9 and M10 substanti
 
 <FileCite ref_id="turn1file6"/>
 
-## 16. Decisions required before development is finalized
+## 16. M1 decisions and remaining decisions
 
-The source documents explicitly identify open decisions. These should be resolved rather than silently assumed.
+The owner-approved audience, geographic-availability and MVP-boundary decisions are recorded in
+`DECISIONS.md`. The remaining decisions below should be resolved by their applicable milestones.
 
 | Decision | Required outcome |
 |---|---|
-| Initial audience | Define the first user segment |
-| Launch community | Select the first scientific community |
-| Messaging | Decide whether basic text messaging belongs in MVP |
-| Geographic scope | Identify initial launch jurisdictions |
+| Initial audience | **Decided:** General public across the stated healthspan and related topics |
+| Launch community | **Decided:** No single designated launch community |
+| MVP boundary | **Decided:** M4 scope in the Development Roadmap; basic direct and group text messaging is included |
+| Geographic availability | **Decided:** No regional restriction or geoblocking; filters are personal preferences |
+| Legal and regulatory review | Complete the applicable review before launch; an onboarding acknowledgment does not satisfy this requirement |
 | Research membership | Define admission and approval criteria |
 | Verification | Define professional verification requirements |
 | Moderation | Establish content and publication policies |
@@ -891,18 +892,16 @@ The source documents explicitly identify open decisions. These should be resolve
 | Data ownership | Define ownership, licensing and IP policies |
 | Premium model | Decide whether and when to monetize |
 
-### My recommended product decisions
+### Remaining product recommendations
 
-These are recommendations, not existing approved decisions in the source documents.
+These are recommendations, not additional owner-approved decisions.
 
-1. Start with one healthspan/longevity-focused research community.
-2. Make the General Portal freely accessible for the initial beta.
-3. Keep research access application-based.
-4. Defer messaging beyond basic discussion and collaboration unless the beta requires it.
-5. Do not collect personal health records in the initial MVP.
-6. Start Private AI Scientist with a small curated literature collection.
-7. Use existing AI models and build proprietary value through retrieval, workflows, scientific knowledge and evaluation.
-8. Avoid premium payments until real product value is demonstrated.
+1. Keep research access application-based.
+2. Defer rich audio, video and media messaging beyond basic text messaging.
+3. Do not collect personal health records in the initial MVP.
+4. Start Private AI Scientist with a small curated literature collection.
+5. Use existing AI models and build proprietary value through retrieval, workflows, scientific knowledge and evaluation.
+6. Avoid premium payments until real product value is demonstrated.
 
 ---
 
