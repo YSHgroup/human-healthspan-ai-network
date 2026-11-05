@@ -201,12 +201,29 @@ def test_ai_environments_are_logically_separated() -> None:
 
 # --------------------------------------------------------------------------- API
 def test_api_does_not_expose_unplanned_product_routes() -> None:
-    """Planned features must not be presented as implemented (AGENT_RULE)."""
+    """Every implemented write route has explicit documentation."""
+    route_prefixes = {
+        "auth.py": "/api/v1/user/auth",
+        "messaging.py": "/api/v1/user/social/messages",
+        "ai_chat.py": "/api/v1/user",
+    }
+    route_pattern = re.compile(r'@router\.(post|put|patch|delete)\(\s*"([^"]+)"')
+    routes: set[tuple[str, str]] = set()
     for path in _files(ROOT / "api/app/api", (".py",)):
         source = path.read_text(encoding="utf-8")
-        assert not re.search(r"@(router|app)\.(post|put|patch|delete)\(", source), (
-            f"{path.relative_to(ROOT)} defines a write endpoint without tests and documentation"
+        matches = list(route_pattern.finditer(source))
+        if not matches:
+            continue
+        prefix = route_prefixes.get(path.name)
+        assert prefix is not None, f"unreviewed write routes in {path.relative_to(ROOT)}"
+        routes.update(
+            (match.group(1).upper(), f"{prefix}{match.group(2)}") for match in matches
         )
+
+    api_doc = (ROOT / "docs" / "API.md").read_text(encoding="utf-8")
+    for method, route in routes:
+        assert f"| {method} | `{route}` |" in api_doc, f"undocumented API route: {method} {route}"
+    assert routes, "expected the authenticated MVP write routes to be documented"
 
 
 def test_env_example_has_no_real_secrets() -> None:

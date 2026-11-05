@@ -5,6 +5,12 @@ __pycache__/
 .mypy_cache/
 .env
 node_modules/
+apps/*/package-lock.json
+apps/*/pnpm-lock.yaml
+apps/*/yarn.lock
+packages/*/package-lock.json
+packages/*/pnpm-lock.yaml
+packages/*/yarn.lock
 .turbo/
 .next/
 dist/
