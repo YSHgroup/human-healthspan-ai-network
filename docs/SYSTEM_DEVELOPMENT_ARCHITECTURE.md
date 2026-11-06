@@ -85,17 +85,14 @@ Existing functionality must be mapped to the new architecture before it is moved
 
 ### 1.3 Current checkout verification
 
-The v0.4 legacy application source, tests and migration files are available in
-`references/human-healthspan-ai-network-mvp-v0.4.zip` and are inventoried in
-`docs/MIGRATION_PLAN.md`. The production database and its data are not included. The current
-checkout's implementation and first Alembic schema have not been reconciled with the archived
-six-revision schema; no migration or runtime parity is claimed.
+The owner retired the separate legacy MVP archive as a migration source. The current checkout is
+the implementation baseline; no legacy API, schema, data, or behavior parity is promised.
 
 The current checkout has an initial Alembic schema for shared identity/sessions, text messaging
 and AI interaction-consent records. It also has a provider gateway and prompt-only General AI and
 restricted Scientist prototypes. These are development slices, not a passed production or MVP
 launch gate. See `docs/MIGRATION_PLAN.md`, `docs/API.md` and `docs/Last_Change.md` for the
-verified inventory and limitations. Do not invent legacy users or records to fill this gap.
+current route/model map and implementation limitations.
 
 ---
 

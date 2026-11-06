@@ -15,8 +15,8 @@
 messaging, and initial General AI/Scientist chat slices are present in this checkout ahead of
 their full milestone gates. This does not mark M2, M4, or M6 complete: production identity,
 researcher approval workflows, retrieval, launch hardening and the remaining milestone criteria
-are still outstanding. The v0.4 source archive has been inventoried, but the live database and
-runtime compatibility have not been verified.
+are still outstanding. The owner retired the separate legacy MVP as a migration source; M1 maps
+the current checkout and does not require legacy compatibility.
 
 ---
 
@@ -130,7 +130,7 @@ Current working features (social, research, AI gateway and retrieval foundations
 | Area | Work |
 |---|---|
 | Inventory | List all existing frontend routes, API endpoints, domain models, services, tests and Docker configuration. Assign each feature to a target portal and API domain. |
-| Safety net | Add characterization tests for existing behavior before anything moves. Establish CI running the existing tests. |
+| Safety net | Add characterization tests for current behavior before changes. Establish CI running the current repository tests. |
 | Tooling | Introduce pnpm workspaces and Turborepo, ESLint, Prettier, Vitest and Playwright alongside the existing setup. Keep the Python toolchain separate. |
 | Packages | Create skeletons for `ui`, `design-tokens`, `api-client`, `auth-client`, `shared-types`, `validation`, `shared-config` and `testing`. |
 | Documentation | Create the `docs/` set and the root `AGENT_RULE.md` with the mandatory rules. Write `MIGRATION_PLAN.md`. |
@@ -139,15 +139,15 @@ Current working features (social, research, AI gateway and retrieval foundations
 
 ## 4.2 Deliverables
 
-- Existing feature inventory and API compatibility plan.
+- Current feature inventory and route/model target map.
 - Repository migration plan and target workspace structure.
 - Approved PRD, MVP backlog and threat model.
 - `AGENT_RULE.md` committed at the repository root.
 
 ## 4.3 Exit gate
 
-- Every existing route, endpoint and model is mapped to a target location.
-- CI is green on the unchanged MVP.
+- Every current route, endpoint and model is mapped to a target location; legacy parity is explicitly out of scope.
+- CI is green on the current repository baseline.
 - The MVP-blocking decisions are recorded.
 - The backlog for M2 and M3 is estimated and approved.
 
@@ -195,17 +195,17 @@ Basic direct and group text messaging is included in M4. Rich audio, video, medi
 ## 5.4 Backend (continuous track)
 
 - Add the new route areas under `/api/v1/user/social/` and `/api/v1/user/personal/`.
-- Keep existing endpoints working through compatibility adapters.
+- Preserve current endpoints as features are extended; legacy compatibility adapters are out of scope.
 - Place new logic in the target domain modules, not in the route handlers.
 
 ## 5.5 Migration method
 
-Follow the architecture's order: create the new application, migrate routes and features, test against the characterization tests, then move on. Retire `apps/web` only after all three portals are verified (M3).
+Follow the architecture's order: build each portal feature, test it against current API contracts and milestone acceptance criteria, then move on. Retire or repurpose current applications only after their replacements are verified.
 
 ## 5.6 Exit gate
 
 - Register once and sign in to both portals with the same account.
-- All migrated features pass the M1 characterization tests.
+- All delivered features pass their current-contract regression and milestone acceptance tests.
 - Both portals build and deploy independently.
 - Private content is verified as not indexable; cross-user access attempts are denied.
 - Accessibility and routing tests pass for both portals.
@@ -484,9 +484,10 @@ replaced by the onboarding acknowledgment.
 | MVP boundary, including basic text messaging — decided: see `DECISIONS.md` D3 and M4 scope | Decided in M1 |
 | Geographic availability — decided: no regional restrictions or geoblocking | Decided in M1 |
 | Applicable legal and regulatory review for public availability | Before M4 launch |
-| Exact membership and professional verification criteria | M2 |
-| Community moderation and publication rules | M2 |
-| Organization onboarding and tenant model | M3 |
+| Restricted research-community membership workflow | M2; policy principle decided in `DECISIONS.md` D4 |
+| Community moderation/reporting and appeals workflow | M2; policy decided in `DECISIONS.md` D5 |
+| Activity-based Contributor/Research Contributor badge criteria | M2; principle decided in `DECISIONS.md` D6 |
+| Organization onboarding and tenant model | M3; workflow and creation entitlements decided in `DECISIONS.md` D7; checkout remains M5 |
 | AI provider and deployment choices | M4 |
 | Personal health and genomic data boundaries | M4 (policy), M5 (features) |
 | Data ownership, licensing and IP policy | M4 |
@@ -530,7 +531,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | Milestone | Status |
 |---|---|
 | M0 Existing MVP baseline | Existing |
-| M1 Foundation and inventory | In progress (tooling, package skeletons, `docs/` set, `AGENT_RULE.md` and architecture tests exist; the feature inventory, PRD, backlog and decisions are open) |
+| M1 Foundation and inventory | In progress (current route/model map and approved product decisions exist; CI setup and estimated M2/M3 backlog approval remain open) |
 | M2 Social and Personal portals | Planned |
 | M3 Researcher portal and Admin | Planned |
 | M4 MVP launch | Planned |

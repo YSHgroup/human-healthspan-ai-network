@@ -33,10 +33,9 @@ Cross-cutting behavior already in place:
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
 `/api/v1/admin` are mounted. Beyond the identity, messaging and AI endpoints above, product workflows remain unimplemented.
 
-The archived v0.4 API has additional identity, social, research, health, organization, event,
-moderation, admin and AI routes. Those legacy contracts and their current migration status are
-inventoried in `MIGRATION_PLAN.md`; this route list describes the current implementation, not a
-backwards-compatible replacement for v0.4.
+The owner retired the separate legacy MVP as a migration source. This route list describes the
+current API contract; backward compatibility with the removed legacy implementation is not
+provided.
 
 ## Deliberate limitations
 

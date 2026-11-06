@@ -45,11 +45,9 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 - **Three separated AI environments.** General Platform AI, Private AI Scientist and
   Organization-Specialized AI have separate data boundaries and never import one another.
 - **Health data is private by default** and never becomes research or training data silently.
-- **Incremental migration.** The existing MVP stays the source of working behavior until each
-  replacement is verified ([MIGRATION_PLAN.md](./MIGRATION_PLAN.md)).
-- **Legacy baseline.** The v0.4 MVP source is archived under `references/` and inventoried in
-  `MIGRATION_PLAN.md`. Production database state is not included, and the current implementation
-  does not claim legacy API, schema or behavior parity.
+- **Incremental delivery.** Existing current-checkout behavior is preserved and tested as new
+  features are added ([MIGRATION_PLAN.md](./MIGRATION_PLAN.md)). The owner retired the separate
+  legacy MVP as a migration source; no legacy API, schema, data, or behavior parity is promised.
 
 ## Enforcement
 

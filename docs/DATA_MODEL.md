@@ -1,10 +1,9 @@
 # Data Model
 
-**Status: initial development schema, not reconciled with legacy.** The current Alembic migration
-file `0001_identity_messaging_ai_learning.py` (revision ID `0001_core`) creates identity, session,
-text-messaging, AI-learning-consent and AI-interaction tables. The v0.4 archive contains a
-separate 49-table schema and six-revision Alembic history, inventoried in `MIGRATION_PLAN.md`.
-The current revision does not upgrade or migrate that schema.
+**Status: initial development schema.** The current Alembic migration file
+`0001_identity_messaging_ai_learning.py` (revision ID `0001_core`) creates identity, session,
+text-messaging, AI-learning-consent and AI-interaction tables. The owner retired the separate
+legacy MVP as a migration source; no legacy schema or data migration is promised.
 
 ## Data domains
 
@@ -44,6 +43,6 @@ ProvenanceRecord, AIConversation, AIRun, ModelVersion, Evaluation, AuditLog, Pol
 - Organization data is isolated per tenant; resource permissions are checked on every access.
 - Health records are private by default and separate from research data.
 - Work history is auditable; corrections use amendments, subject to legal deletion and retention rules.
-- Existing MVP models and migrations are preserved and extended, never replaced without a verified migration.
+- Current models and migrations are extended with reviewed, tested migrations.
 - AI metadata (environment, provider/model, character counts, latency and outcome) is recorded; content retention requires affirmative user consent. Revocation clears retained prompt/answer content. No training process consumes these records.
 - `researcher_approved_at` and `email_verified_at` are null on registration; no self-selected or synthetic researcher accounts are created.

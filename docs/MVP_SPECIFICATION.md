@@ -33,8 +33,8 @@ The checkout contains early development slices for shared cookie identity, direc
 messaging, a configurable General AI gateway, a gated prompt-only Scientist prototype and
 consent-aware AI interaction records. These do not satisfy the full MVP objectives above:
 community workflows, verified research approval, source-backed AI, launch security/privacy
-review and production operations remain incomplete. The v0.4 legacy source is archived and
-inventoried in `MIGRATION_PLAN.md`; production data and feature parity have not been verified.
+review and production operations remain incomplete. The owner retired the separate legacy MVP as
+a migration source; this specification describes the current target scope, not legacy parity.
 
 ---
 
