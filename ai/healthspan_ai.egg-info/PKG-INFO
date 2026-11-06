@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: healthspan-ai
+Version: 0.1.0
+Summary: Separate AI platform foundation for the Human Healthspan Scientific AI Network
+Requires-Python: >=3.10
+Requires-Dist: httpx<1.0,>=0.27

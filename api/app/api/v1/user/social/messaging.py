@@ -1,14 +1,16 @@
 """Authenticated direct and group text messaging."""
 
+import hmac
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
-
-from app.api.dependencies.identity import CurrentUser, require_trusted_origin
+from app.api.dependencies.identity import CurrentUser, require_trusted_origin, token_digest
+from app.config import get_settings
+from app.domains.messaging.realtime import message_connections
 from app.infrastructure.database import get_db
-from app.models import Conversation, ConversationParticipant, Message, User
+from app.models import Conversation, ConversationParticipant, Message, User, UserSession
 from app.schemas.messaging import (
     ConversationCreate,
     ConversationResponse,
@@ -18,6 +20,7 @@ from app.schemas.messaging import (
 )
 
 router = APIRouter(prefix="/messages", tags=["messaging"])
+settings = get_settings()
 
 
 def participant_ids(db: Session, conversation_id: str) -> set[str]:
@@ -125,12 +128,57 @@ def list_messages(
     ]
 
 
+@router.websocket("/conversations/{conversation_id}/ws")
+async def message_stream(
+    websocket: WebSocket,
+    conversation_id: str,
+    db: Session = Depends(get_db),
+) -> None:
+    origin = websocket.headers.get("origin")
+    if origin is None or not any(
+        hmac.compare_digest(origin.rstrip("/"), allowed) for allowed in settings.cors_origins
+    ):
+        await websocket.close(code=4403, reason="Untrusted request origin")
+        return
+
+    await websocket.accept()
+    session_token = websocket.cookies.get(settings.session_cookie_name)
+    if not session_token:
+        await websocket.close(code=4401, reason="Authentication required")
+        return
+
+    now = datetime.now(timezone.utc)
+    user_session = db.scalar(
+        select(UserSession).where(
+            UserSession.token_hash == token_digest(session_token),
+            UserSession.revoked_at.is_(None),
+            UserSession.expires_at > now,
+        )
+    )
+    user = db.get(User, user_session.user_id) if user_session else None
+    if user is None:
+        await websocket.close(code=4401, reason="Session is invalid or expired")
+        return
+    if user.id not in participant_ids(db, conversation_id):
+        await websocket.close(code=4404, reason="Conversation not found")
+        return
+
+    await message_connections.connect(conversation_id, websocket)
+    try:
+        while True:
+            event = await websocket.receive()
+            if event["type"] == "websocket.disconnect":
+                break
+    finally:
+        await message_connections.disconnect(conversation_id, websocket)
+
+
 @router.post(
     "/conversations/{conversation_id}/messages",
     response_model=MessageResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def send_message(
+async def send_message(
     conversation_id: str,
     body: MessageCreate,
     request: Request,
@@ -151,7 +199,7 @@ def send_message(
     db.add(message)
     db.commit()
     db.refresh(message)
-    return MessageResponse(
+    response = MessageResponse(
         id=message.id,
         conversation_id=message.conversation_id,
         sender_id=message.sender_id,
@@ -159,3 +207,8 @@ def send_message(
         body=message.body,
         created_at=message.created_at,
     )
+    await message_connections.broadcast(
+        conversation_id,
+        response.model_dump(mode="json"),
+    )
+    return response

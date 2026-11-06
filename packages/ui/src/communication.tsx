@@ -53,6 +53,29 @@ interface Message {
   created_at: string;
 }
 
+function mergeMessages(current: Message[], incoming: Message[]): Message[] {
+  const messages = new Map(current.map((message) => [message.id, message]));
+  for (const message of incoming) messages.set(message.id, message);
+  return [...messages.values()].sort(
+    (first, second) =>
+      Date.parse(first.created_at) - Date.parse(second.created_at) ||
+      first.id.localeCompare(second.id),
+  );
+}
+
+function isMessage(value: unknown): value is Message {
+  if (typeof value !== "object" || value === null) return false;
+  const message = value as Record<string, unknown>;
+  return (
+    typeof message.id === "string" &&
+    typeof message.conversation_id === "string" &&
+    typeof message.sender_id === "string" &&
+    typeof message.sender_display_name === "string" &&
+    typeof message.body === "string" &&
+    typeof message.created_at === "string"
+  );
+}
+
 interface ChatTurn {
   role: "user" | "assistant";
   content: string;
@@ -336,6 +359,72 @@ export function MessagingPanel({ apiBaseUrl }: { apiBaseUrl: string }) {
   }, [apiBaseUrl, selectedId]);
 
   useEffect(() => {
+    if (!user || !selectedId) return;
+
+    let disposed = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryDelay = 1000;
+    let socket: WebSocket | undefined;
+    const websocketBaseUrl = apiBaseUrl.replace(/^http/, "ws").replace(/\/+$/, "");
+    const path = `/api/v1/user/social/messages/conversations/${encodeURIComponent(selectedId)}/ws`;
+
+    function connect() {
+      if (disposed) return;
+      socket = new WebSocket(`${websocketBaseUrl}${path}`);
+      socket.onopen = () => {
+        retryDelay = 1000;
+        void apiRequest<Message[]>(
+          apiBaseUrl,
+          `/api/v1/user/social/messages/conversations/${encodeURIComponent(selectedId)}/messages`,
+        )
+          .then((items) => {
+            setMessages((current) => mergeMessages(current, items));
+          })
+          .catch((reason: unknown) => {
+            setError(reason instanceof Error ? reason.message : "Unable to refresh messages");
+          });
+      };
+      socket.onmessage = (event: MessageEvent<string>) => {
+        let message: unknown;
+        try {
+          message = JSON.parse(event.data);
+        } catch {
+          setError("Received an invalid real-time message.");
+          return;
+        }
+        if (!isMessage(message) || message.conversation_id !== selectedId) {
+          setError("Received an invalid real-time message.");
+          return;
+        }
+        setMessages((current) => mergeMessages(current, [message]));
+      };
+      socket.onclose = (event) => {
+        if (disposed) return;
+        if (event.code === 4401) {
+          setUser(null);
+          setError("Your session expired. Sign in again to continue messaging.");
+          return;
+        }
+        if (event.code === 4403 || event.code === 4404) {
+          setError(event.reason || "Unable to access this conversation.");
+          return;
+        }
+        setError("Real-time messaging disconnected. Reconnecting…");
+        retryTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 15000);
+      };
+      socket.onerror = () => socket?.close();
+    }
+
+    connect();
+    return () => {
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      socket?.close();
+    };
+  }, [apiBaseUrl, selectedId, user]);
+
+  useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
@@ -370,17 +459,13 @@ export function MessagingPanel({ apiBaseUrl }: { apiBaseUrl: string }) {
     setBusy(true);
     setError("");
     try {
-      await apiRequest<Message>(
+      const sent = await apiRequest<Message>(
         apiBaseUrl,
         `/api/v1/user/social/messages/conversations/${encodeURIComponent(selectedId)}/messages`,
         { method: "POST", body: JSON.stringify({ body: draft.trim() }) },
       );
+      setMessages((current) => mergeMessages(current, [sent]));
       setDraft("");
-      const updated = await apiRequest<Message[]>(
-        apiBaseUrl,
-        `/api/v1/user/social/messages/conversations/${encodeURIComponent(selectedId)}/messages`,
-      );
-      setMessages(updated);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to send message");
     } finally {

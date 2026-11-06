@@ -17,6 +17,7 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | POST | `/api/v1/user/social/messages/conversations` | Create a direct or group conversation by registered participant emails. |
 | GET | `/api/v1/user/social/messages/conversations/{conversation_id}/messages` | List text messages for a participant. |
 | POST | `/api/v1/user/social/messages/conversations/{conversation_id}/messages` | Send a text-only message; attachments are rejected. |
+| WebSocket | `/api/v1/user/social/messages/conversations/{conversation_id}/ws` | Receive new messages for an authenticated conversation participant in real time. |
 | POST | `/api/v1/user/social/ai/chat` | General Platform AI chat via the configured provider gateway. |
 | POST | `/api/v1/user/researcher/ai/chat` | Restricted Scientist prompt-only prototype; requires verified and approved researcher records and `SCIENTIST_ENABLED=true`. |
 
@@ -45,6 +46,7 @@ backwards-compatible replacement for v0.4.
 - AI sources are returned as an empty list. The prompt requests non-fabricated citations, but provider output is not independently verified.
 - AI interaction metadata is recorded. Prompt/answer content is stored only after affirmative AI-learning consent; revocation clears previously retained content. No training or export job is implemented.
 - Direct/group messaging stores text only; attachments, audio and video are not part of this MVP slice.
+- Message WebSockets validate the request origin, session cookie and conversation membership. Delivery is in-process; run one API worker for local MVP real-time messaging. Persisted messages remain available through the REST history endpoint after a disconnect.
 
 ## Target organization (planned)
 
