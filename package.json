@@ -29,7 +29,7 @@
     "clean": "node -e \"for (const d of ['node_modules','.turbo']) require('fs').rmSync(d,{recursive:true,force:true})\"",
     "test:web": "turbo test",
     "test:architecture": "python -m pytest tests/architecture -q",
-    "test": "turbo test && python -m pytest tests/architecture -q && python -m pytest tests/api tests/ai -q",
+    "test": "turbo test && python -m pytest tests/architecture tests/api tests/ai tests/migration -q",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down"
   },
