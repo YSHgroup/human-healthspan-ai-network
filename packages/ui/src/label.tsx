@@ -1,11 +1,10 @@
-import { Field } from "@base-ui/react/field";
 import type { ComponentProps } from "react";
 
 import { cn } from "./utils";
 
-function Label({ className, ...props }: ComponentProps<typeof Field.Label>) {
+function Label({ className, ...props }: ComponentProps<"label">) {
   return (
-    <Field.Label
+    <label
       data-slot="label"
       className={cn(
         "text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-60",
