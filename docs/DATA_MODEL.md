@@ -1,9 +1,10 @@
 # Data Model
 
-**Status: initial development schema.** The Alembic migration file
-`0001_identity_messaging_ai_learning.py` (revision ID `0001_core`) creates identity, session,
-text-messaging, AI-learning-consent and AI-interaction tables. This is not a migration of the
-separately stored legacy MVP; no legacy schema or migration files were available in this checkout.
+**Status: initial development schema, not reconciled with legacy.** The current Alembic migration
+file `0001_identity_messaging_ai_learning.py` (revision ID `0001_core`) creates identity, session,
+text-messaging, AI-learning-consent and AI-interaction tables. The v0.4 archive contains a
+separate 49-table schema and six-revision Alembic history, inventoried in `MIGRATION_PLAN.md`.
+The current revision does not upgrade or migrate that schema.
 
 ## Data domains
 

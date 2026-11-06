@@ -84,9 +84,12 @@ Implemented API scope is shared registration/session, direct and group text mess
 chat, a restricted prompt-only Scientist prototype and opt-in AI-learning content retention.
 Email verification, account recovery, researcher approval workflow, AI retrieval/training,
 community workflows and admin operations are not implemented. See [API documentation](./docs/API.md)
-and [M1 inventory](./docs/MIGRATION_PLAN.md) for the exact contract and known legacy-source gap.
+and [M1 inventory](./docs/MIGRATION_PLAN.md) for the exact contract and legacy compatibility gaps.
 
 ## Project checks
+
+Python-backed checks require the project virtual environment to be active (on Windows PowerShell,
+add `"$PWD\.venv\Scripts"` to `PATH`; on macOS/Linux, run `source .venv/bin/activate`).
 
 ```bash
 npm run build
@@ -100,6 +103,6 @@ npm run test:architecture     # AGENT_RULE and architecture checks (standard lib
 
 Precedence when documents disagree: the idea blueprint, then the architecture, then the roadmap.
 
-Start with [the architecture overview](./docs/ARCHITECTURE.md), then read [the system architecture](./docs/SYSTEM_DEVELOPMENT_ARCHITECTURE.md), [MVP specification](./docs/MVP_SPECIFICATION.md), and [development roadmap](./docs/DEVELOPMENT_ROADMAP.md) before extending the project. The references directory contains the original blueprint, white paper, and an older project archive. The archive is a source for selected visual assets and context only; it is not the implementation template for this project.
+Start with [the architecture overview](./docs/ARCHITECTURE.md), then read [the system architecture](./docs/SYSTEM_DEVELOPMENT_ARCHITECTURE.md), [MVP specification](./docs/MVP_SPECIFICATION.md), and [development roadmap](./docs/DEVELOPMENT_ROADMAP.md) before extending the project. The references directory contains the original blueprint, white paper, and the v0.4 legacy MVP archive. Consult [the migration inventory](./docs/MIGRATION_PLAN.md) before replacing any archived behavior or schema.
 
 > pnpm works the same way (`pnpm install`, `pnpm dev:social`, ...). If Corepack is enabled and blocks npm because of the `packageManager` field, run `corepack disable` or set `COREPACK_ENABLE_STRICT=0`.

@@ -47,8 +47,9 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 - **Health data is private by default** and never becomes research or training data silently.
 - **Incremental migration.** The existing MVP stays the source of working behavior until each
   replacement is verified ([MIGRATION_PLAN.md](./MIGRATION_PLAN.md)).
-- **Inventory limitation.** The separately stored legacy MVP is not in this checkout. Current
-  route, data and behavior inventory covers only files present here; no legacy parity is claimed.
+- **Legacy baseline.** The v0.4 MVP source is archived under `references/` and inventoried in
+  `MIGRATION_PLAN.md`. Production database state is not included, and the current implementation
+  does not claim legacy API, schema or behavior parity.
 
 ## Enforcement
 

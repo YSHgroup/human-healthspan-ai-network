@@ -15,8 +15,8 @@
 messaging, and initial General AI/Scientist chat slices are present in this checkout ahead of
 their full milestone gates. This does not mark M2, M4, or M6 complete: production identity,
 researcher approval workflows, retrieval, launch hardening and the remaining milestone criteria
-are still outstanding. The separate legacy MVP is not available in this repository for parity
-verification.
+are still outstanding. The v0.4 source archive has been inventoried, but the live database and
+runtime compatibility have not been verified.
 
 ---
 

@@ -17,12 +17,20 @@
   privacy, deployment and AI documentation.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
   lockfile; local package ranges remain `"*"`.
+- Completed the M1 source inventory for the supplied v0.4 archive and added archive-bound tests
+  for its API route declarations, all 49 ORM tables, six-revision Alembic chain and 37 archived
+  behavioral test cases.
 
 ## Known gaps and conflicts
 
-- The separate legacy MVP is not in this checkout. The architecture describes legacy features and
-  migration preservation requirements, but routes, models, migrations and behavior cannot be
-  independently verified or characterized until that source is supplied.
+- The v0.4 archive is inventoried and its API behavior suite passes, but the live production
+  database and its applied migration revision are not in the archive and remain unverified. The
+  current `0001_core` migration is not compatible with the legacy six-revision history; do not
+  use it to upgrade a legacy database.
+- Legacy identity includes verified-email, password-reset and rotating-token workflows absent from
+  the current API. Legacy AI has permission-scoped retrieval and tests for metadata-only run
+  monitoring; current opt-in content retention and prompt-only responses differ and need review
+  before any production migration.
 - Initial identity, messaging and AI slices are implemented ahead of their roadmap gates. This
   does not mean M2/M4/M6 or production launch criteria are complete.
 - Email verification/recovery, researcher approval workflow, rate limiting, production audit and
@@ -32,8 +40,11 @@
 
 ## Verification
 
-- Python: architecture/API/AI suites passed, 38 tests total; Pylance found no syntax errors in the
-  Alembic dotenv update.
+- Python: architecture/API/AI/migration suites passed, 42 tests total; Pylance found no syntax
+  errors in the Alembic dotenv update.
+- Legacy baseline: 37 archived API/platform behavior tests passed from a safe temporary extraction;
+  new archive-contract tests pin its routes, 49 tables and six-migration history.
+- `npm test` and `pnpm test` each passed: 5 frontend unit tests and 42 Python tests.
 - Frontend: 10 workspace typechecks and all 5 frontend unit tests passed; the architecture script
   passed 20 tests.
 - Production build: all 4 application builds passed.
@@ -41,10 +52,11 @@
   store. The default pnpm store encountered Windows `EBUSY` rename errors. npm reported 11 audit
   findings (2 low, 6 moderate, 1 high, 2 critical); no automated dependency changes were applied.
 - Not verified: production deployment, live PostgreSQL/Docker, real AI provider, actual configured
-  `.env` migration target and external legacy-MVP parity.
+  `.env` migration target and deployed legacy-system parity.
 
 ## Next step
 
-Obtain the separately stored legacy source and characterize its actual routes/data before claiming
-parity. Complete the email-verification/researcher-approval workflow, security/privacy review,
-source-backed AI work and the required launch gates before any public release.
+Inspect the deployed database's actual Alembic revision and data, then design and rehearse a
+compatibility/data migration before connecting the current API to it. Complete the
+email-verification/researcher-approval workflow, security/privacy review, source-backed AI work
+and required launch gates before any public release.

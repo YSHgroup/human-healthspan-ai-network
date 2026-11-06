@@ -32,6 +32,11 @@ Cross-cutting behavior already in place:
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
 `/api/v1/admin` are mounted. Beyond the identity, messaging and AI endpoints above, product workflows remain unimplemented.
 
+The archived v0.4 API has additional identity, social, research, health, organization, event,
+moderation, admin and AI routes. Those legacy contracts and their current migration status are
+inventoried in `MIGRATION_PLAN.md`; this route list describes the current implementation, not a
+backwards-compatible replacement for v0.4.
+
 ## Deliberate limitations
 
 - Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and administrative identity workflows are not implemented. Do not expose this development slice as a production identity service.
