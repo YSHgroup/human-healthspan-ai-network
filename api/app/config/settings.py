@@ -25,12 +25,20 @@ def _split(value: str | None) -> tuple[str, ...]:
     return tuple(item.strip().rstrip("/") for item in value.split(",") if item.strip())
 
 
+def _positive_int(name: str, default: str) -> int:
+    value = int(os.environ.get(name, default))
+    if value < 1:
+        raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     app_env: str
     cors_origins: tuple[str, ...]
     database_url: str
     session_ttl_days: int
+    session_max_lifetime_days: int
     session_cookie_name: str
     ai_provider: str
     ai_api_key: str | None
@@ -46,7 +54,8 @@ def get_settings() -> Settings:
         app_env=os.environ.get("APP_ENV", "development"),
         cors_origins=_split(os.environ.get("API_CORS_ORIGINS")),
         database_url=os.environ.get("DATABASE_URL", "sqlite:///./healthspan.db"),
-        session_ttl_days=int(os.environ.get("SESSION_TTL_DAYS", "30")),
+        session_ttl_days=_positive_int("SESSION_TTL_DAYS", "14"),
+        session_max_lifetime_days=_positive_int("SESSION_MAX_LIFETIME_DAYS", "60"),
         session_cookie_name=os.environ.get("SESSION_COOKIE_NAME", "healthspan_session"),
         ai_provider=os.environ.get("AI_PROVIDER", "disabled").strip().lower(),
         ai_api_key=os.environ.get("AI_API_KEY") or None,
