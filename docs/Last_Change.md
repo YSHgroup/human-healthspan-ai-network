@@ -15,6 +15,9 @@
   `docs/MIGRATION_PLAN.md`.
 - Recorded owner-approved M2 community access/moderation and contribution-badge principles, and
   M3 organization onboarding/creation-entitlement policy in `docs/DECISIONS.md`.
+- Estimated and recorded the owner-approved M2/M3 backlog in `docs/DEVELOPMENT_ROADMAP.md`.
+- Began M2 shared-identity hardening: state-changing browser-auth routes now reject missing or
+  untrusted Origin headers; regression tests cover registration and consent mutation.
 - Retired the separate legacy MVP as a source of truth at the owner's direction. Removed its ZIP
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
@@ -22,8 +25,8 @@
 
 ## Remaining M1 and product gaps
 
-- M1 remains in progress until CI is established and green on the current repository baseline and
-  the estimated M2/M3 backlog is approved.
+- M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
+  update until after M4. The estimated M2/M3 backlog is now approved.
 - Account verification/recovery, researcher application and approval workflows, admin
   authentication and operations, community workflows, source-backed AI, launch security/privacy
   review, production audit, and production hardening remain unimplemented.
@@ -41,7 +44,11 @@
   `websockets` runtime dependency.
 - Production deployment, live AI provider operation, and production security/privacy readiness are
   not certified.
+- The focused identity API tests could not run in this environment: Python has no `pytest`, `pip`,
+  or `venv` support, and installing system venv support was denied by environment permissions.
+  Python syntax compilation and `git diff --check` passed.
 
 ## Next step
 
-Approve the estimated M2/M3 backlog and establish CI on the current repository baseline.
+Continue shared identity hardening, including session lifecycle and redirect protections, before
+building the Social and Personal feature workstreams.

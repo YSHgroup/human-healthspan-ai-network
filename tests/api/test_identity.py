@@ -96,6 +96,26 @@ def test_browser_mutations_reject_untrusted_origins(api_client: TestClient) -> N
     assert response.json()["code"] == "forbidden"
 
 
+def test_browser_mutations_reject_missing_origins(api_client: TestClient) -> None:
+    registration = api_client.post(
+        "/api/v1/user/auth/register",
+        json={
+            "email": "person@example.test",
+            "display_name": "Member",
+            "password": "a-secure-test-password",
+        },
+    )
+    assert registration.status_code == 403
+
+    register(api_client, "person@example.test", "Member")
+    consent = api_client.put(
+        "/api/v1/user/auth/ai-learning-consent",
+        json={"allowed": True},
+    )
+    assert consent.status_code == 403
+    assert api_client.get("/api/v1/user/auth/me").json()["ai_learning_consent"] is False
+
+
 def test_ai_learning_consent_is_opt_in_and_revocable(api_client: TestClient) -> None:
     user_id = register(api_client, "person@example.test", "Member")
     assert api_client.get("/api/v1/user/auth/me").json()["ai_learning_consent"] is False

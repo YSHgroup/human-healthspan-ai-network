@@ -210,6 +210,24 @@ Follow the architecture's order: build each portal feature, test it against curr
 - Private content is verified as not indexable; cross-user access attempts are denied.
 - Accessibility and routing tests pass for both portals.
 
+## 5.7 Approved backlog estimate
+
+Owner-approved relative sizing for planning; estimates are not person-days and workstream sizes
+are not additive. Existing shared registration/session, basic messaging, and portal foundations
+are counted as completed baseline work. Re-estimate if implementation reveals material complexity.
+
+| Work package | Size |
+|---|---|
+| Shared identity hardening | L |
+| Social community core: feed, posts/questions, comments/reactions, topics, communities, membership, reporting and moderation hooks | L |
+| Social discovery, events, notifications and SEO | M |
+| Personal profile, preferences, saved/followed content, dashboard, professional profile and activity | M |
+| Private-by-default health foundations, consent and access auditing | M |
+| Cross-portal integration, independent builds/deployments, accessibility and acceptance tests | L |
+
+**Milestone estimate:** L, consistent with the roadmap overview. Identity is the prerequisite;
+Social and Personal feature work can then proceed in parallel, followed by cross-portal acceptance.
+
 ---
 
 # 6. Milestone 3: Researcher Portal and Admin
@@ -255,6 +273,21 @@ The Admin API must stay compatible during the front-end migration.
 - Cross-organization access attempts are denied in tests.
 - The new admin passes parity tests for every previous admin workflow.
 - The original `apps/web` and old admin can be retired or repurposed.
+
+## 6.5 Approved backlog estimate
+
+Owner-approved relative sizing for planning; estimates are not person-days and workstream sizes
+are not additive. Re-estimate if implementation reveals material complexity.
+
+| Work package | Size |
+|---|---|
+| Researcher entry, applications/invitations, profiles and collaboration workspace | L |
+| Organizations, invite-based roles, tenant isolation and pre-M5 entitlements | L |
+| Admin authentication and user, organization, community, event, moderation, entitlement, audit and security workflows | L |
+| Integration, API compatibility, cross-organization denial and acceptance/parity tests | L |
+
+**Milestone estimate:** L, consistent with the roadmap overview. Researcher and Admin tracks may
+overlap where their API and authorization contracts permit; tenant isolation is an acceptance gate.
 
 ---
 

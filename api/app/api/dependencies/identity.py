@@ -24,7 +24,7 @@ def token_digest(token: str) -> str:
 
 def require_trusted_origin(request: Request) -> None:
     origin = request.headers.get("origin")
-    if origin is not None and not any(
+    if origin is None or not any(
         hmac.compare_digest(origin.rstrip("/"), allowed) for allowed in settings.cors_origins
     ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Untrusted request origin")
