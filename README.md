@@ -76,6 +76,9 @@ npm.cmd run dev:api
 Run the API command in a separate terminal from the frontend commands. For macOS/Linux, substitute
 `python3 -m venv .venv`, `.venv/bin/python -m pip ...`, and activate the venv
 (`source .venv/bin/activate`) before `npm run db:migrate` and `npm run dev:api`.
+On Debian/Ubuntu, if venv creation fails because `ensurepip` is missing, install the venv package
+matching the selected interpreter (for example, `sudo apt install python3.14-venv` for Python 3.14)
+and rerun the venv creation command.
 The API uses SQLite by default. To use PostgreSQL, start it with `docker compose up -d postgres`
 or provide an external server, then set `DATABASE_URL` in the root `.env` before running
 `npm run db:migrate`. Redis is not required by the current API slice.
