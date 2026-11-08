@@ -1,10 +1,6 @@
-from datetime import datetime, timedelta, timezone
-
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.api.v1.user.auth import COOKIE_LIFETIME, MAX_SESSION_LIFETIME
-from app.config import get_settings
 from app.models import AIConsent, AIInteraction, User, UserSession
 
 
@@ -85,76 +81,6 @@ def test_logout_revokes_the_session(api_client: TestClient) -> None:
     assert api_client.get("/api/v1/user/auth/me").status_code == 401
 
 
-def test_refresh_rotates_session_token_and_extends_idle_expiry(api_client: TestClient) -> None:
-    register(api_client, "person@example.test", "Member")
-    original_token = api_client.cookies.get(get_settings().session_cookie_name)
-    with api_client.app.state.test_session_factory() as db:
-        user_session = db.scalar(select(UserSession))
-        original_created_at = user_session.created_at
-        original_token_hash = user_session.token_hash
-        user_session.expires_at = datetime.now(timezone.utc) + timedelta(days=1)
-        original_expiration = user_session.expires_at
-        db.commit()
-
-    response = api_client.post(
-        "/api/v1/user/auth/refresh",
-        headers={"Origin": "http://localhost:3001"},
-    )
-
-    assert response.status_code == 200
-    refreshed_token = api_client.cookies.get(get_settings().session_cookie_name)
-    assert refreshed_token != original_token
-    assert response.json()["email"] == "person@example.test"
-    assert api_client.get("/api/v1/user/auth/me").status_code == 200
-
-    with api_client.app.state.test_session_factory() as db:
-        user_session = db.scalar(select(UserSession))
-        assert user_session.token_hash != original_token_hash
-        assert user_session.created_at == original_created_at
-        refreshed_expiration = user_session.expires_at
-        if refreshed_expiration.tzinfo is None:
-            refreshed_expiration = refreshed_expiration.replace(tzinfo=timezone.utc)
-        assert refreshed_expiration > original_expiration
-
-    api_client.cookies.set(get_settings().session_cookie_name, original_token)
-    assert api_client.get("/api/v1/user/auth/me").status_code == 401
-    api_client.cookies.set(get_settings().session_cookie_name, refreshed_token)
-
-
-def test_refresh_requires_an_authenticated_session(api_client: TestClient) -> None:
-    response = api_client.post(
-        "/api/v1/user/auth/refresh",
-        headers={"Origin": "http://localhost:3001"},
-    )
-    assert response.status_code == 401
-
-
-def test_refresh_respects_absolute_session_lifetime(api_client: TestClient) -> None:
-    register(api_client, "person@example.test", "Member")
-    now = datetime.now(timezone.utc)
-    created_at = now - MAX_SESSION_LIFETIME + timedelta(days=1)
-
-    with api_client.app.state.test_session_factory() as db:
-        user_session = db.scalar(select(UserSession))
-        user_session.created_at = created_at
-        user_session.expires_at = now + COOKIE_LIFETIME
-        db.commit()
-
-    response = api_client.post(
-        "/api/v1/user/auth/refresh",
-        headers={"Origin": "http://localhost:3001"},
-    )
-
-    assert response.status_code == 200
-    with api_client.app.state.test_session_factory() as db:
-        user_session = db.scalar(select(UserSession))
-        expires_at = user_session.expires_at
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        assert expires_at <= created_at + MAX_SESSION_LIFETIME
-        assert expires_at > now
-
-
 def test_browser_mutations_reject_untrusted_origins(api_client: TestClient) -> None:
     response = api_client.post(
         "/api/v1/user/auth/register",
@@ -182,9 +108,6 @@ def test_browser_mutations_reject_missing_origins(api_client: TestClient) -> Non
     assert registration.status_code == 403
 
     register(api_client, "person@example.test", "Member")
-    refresh = api_client.post("/api/v1/user/auth/refresh")
-    assert refresh.status_code == 403
-
     consent = api_client.put(
         "/api/v1/user/auth/ai-learning-consent",
         json={"allowed": True},

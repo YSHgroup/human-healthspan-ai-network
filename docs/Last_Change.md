@@ -18,8 +18,6 @@
 - Estimated and recorded the owner-approved M2/M3 backlog in `docs/DEVELOPMENT_ROADMAP.md`.
 - Began M2 shared-identity hardening: state-changing browser-auth routes now reject missing or
   untrusted Origin headers; regression tests cover registration and consent mutation.
-- Added M2 shared-session refresh with opaque-token rotation, a 14-day idle expiry and 60-day
-  absolute lifetime cap; documented configuration and added refresh regression tests.
 - Retired the separate legacy MVP as a source of truth at the owner's direction. Removed its ZIP
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
@@ -52,5 +50,5 @@
 
 ## Next step
 
-Wire refresh into the shared browser-auth lifecycle and implement cross-portal logout propagation
-and redirect validation before building the Social and Personal feature workstreams.
+Continue shared identity hardening, including session lifecycle and redirect protections, before
+building the Social and Personal feature workstreams.

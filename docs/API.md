@@ -10,7 +10,6 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | GET | `/readyz` | Executes `SELECT 1` against the configured database. |
 | POST | `/api/v1/user/auth/register` | Register a member and issue an HttpOnly session cookie. Email verification is not implemented. |
 | POST | `/api/v1/user/auth/login` | Verify a password and issue a new session cookie. |
-| POST | `/api/v1/user/auth/refresh` | Rotate the current session token and extend its idle expiry, up to the absolute lifetime cap. |
 | POST | `/api/v1/user/auth/logout` | Revoke the current session and clear the cookie. |
 | GET | `/api/v1/user/auth/me` | Return the authenticated member and current AI-learning consent state. |
 | PUT | `/api/v1/user/auth/ai-learning-consent` | Record versioned, revocable opt-in/out for retaining AI prompt/response content for review. |
@@ -26,9 +25,8 @@ Cross-cutting behavior already in place:
 
 - CORS allows only the origins in `API_CORS_ORIGINS`, with credentials (session cookies). The local default is ports 3000–3003 on `localhost`; no custom domain is needed.
 - Every response carries `X-Request-ID` and baseline security headers.
-- Browser write requests require an `Origin` header matching the trusted-origin list.
+- Browser write requests with an `Origin` header are checked against the trusted-origin list.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
-- Sessions expire after 14 days of inactivity and have a 60-day absolute lifetime by default. Refresh rotates the token and extends the idle expiry without extending the absolute lifetime; configure `SESSION_TTL_DAYS` and `SESSION_MAX_LIFETIME_DAYS` as needed.
 - The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
 - AI provider credentials remain server-side. The default provider is disabled and returns an explicit 503 until configured.
 
@@ -41,7 +39,7 @@ provided.
 
 ## Deliberate limitations
 
-- Account registration does not verify email; password recovery, MFA, refresh rate limiting and administrative identity workflows are not implemented. Do not expose this development slice as a production identity service.
+- Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and administrative identity workflows are not implemented. Do not expose this development slice as a production identity service.
 - Researcher approval is never assigned during registration. No researcher approval or admin grant endpoint is implemented.
 - The Scientist prototype has no literature retrieval, project context, document access, citations or scientific tools. It explicitly tells the model not to claim these capabilities.
 - AI sources are returned as an empty list. The prompt requests non-fabricated citations, but provider output is not independently verified.

@@ -8,7 +8,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,6 @@ from app.schemas.identity import AILearningConsentRequest, LoginRequest, Registe
 router = APIRouter(prefix="/auth", tags=["identity"])
 settings = get_settings()
 COOKIE_LIFETIME = timedelta(days=settings.session_ttl_days)
-MAX_SESSION_LIFETIME = timedelta(days=settings.session_max_lifetime_days)
 CONSENT_VERSION = "v1"
 PASSWORD_SCRYPT_N = 2**14
 
@@ -66,37 +65,26 @@ def user_response(db: Session, user: User) -> UserResponse:
     )
 
 
-def session_expiration(created_at: datetime, now: datetime) -> datetime:
-    if created_at.tzinfo is None:
-        created_at = created_at.replace(tzinfo=timezone.utc)
-    return min(now + COOKIE_LIFETIME, created_at + MAX_SESSION_LIFETIME)
-
-
-def set_session_cookie(response: Response, token: str, expires_at: datetime, now: datetime) -> None:
-    response.set_cookie(
-        key=settings.session_cookie_name,
-        value=token,
-        max_age=max(1, int((expires_at - now).total_seconds())),
-        httponly=True,
-        secure=settings.app_env == "production",
-        samesite="lax",
-        path="/",
-    )
-
-
 def create_session(db: Session, user: User, response: Response) -> None:
     token = secrets.token_urlsafe(48)
     now = datetime.now(timezone.utc)
-    expires_at = session_expiration(now, now)
     db.add(
         UserSession(
             user_id=user.id,
             token_hash=token_digest(token),
             created_at=now,
-            expires_at=expires_at,
+            expires_at=now + COOKIE_LIFETIME,
         )
     )
-    set_session_cookie(response, token, expires_at, now)
+    response.set_cookie(
+        key=settings.session_cookie_name,
+        value=token,
+        max_age=int(COOKIE_LIFETIME.total_seconds()),
+        httponly=True,
+        secure=settings.app_env == "production",
+        samesite="lax",
+        path="/",
+    )
 
 
 def normalize_email(email: str) -> str:
@@ -143,55 +131,6 @@ def login(
         raise HTTPException(status_code=401, detail="Email or password is incorrect")
     create_session(db, user, response)
     db.commit()
-    return user_response(db, user)
-
-
-@router.post("/refresh", response_model=UserResponse)
-def refresh_session(
-    request: Request,
-    response: Response,
-    user: CurrentUser,
-    db: Session = Depends(get_db),
-) -> UserResponse:
-    require_trusted_origin(request)
-    token = request.cookies.get(settings.session_cookie_name)
-    if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
-
-    now = datetime.now(timezone.utc)
-    current_hash = token_digest(token)
-    user_session = db.scalar(
-        select(UserSession).where(
-            UserSession.token_hash == current_hash,
-            UserSession.user_id == user.id,
-            UserSession.revoked_at.is_(None),
-            UserSession.expires_at > now,
-        )
-    )
-    if user_session is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session is invalid or expired")
-
-    expires_at = session_expiration(user_session.created_at, now)
-    if expires_at <= now:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session has reached its maximum lifetime")
-
-    refreshed_token = secrets.token_urlsafe(48)
-    result = db.execute(
-        update(UserSession)
-        .where(
-            UserSession.id == user_session.id,
-            UserSession.token_hash == current_hash,
-            UserSession.revoked_at.is_(None),
-            UserSession.expires_at > now,
-        )
-        .values(token_hash=token_digest(refreshed_token), expires_at=expires_at)
-    )
-    if result.rowcount != 1:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session is invalid or expired")
-    db.commit()
-
-    set_session_cookie(response, refreshed_token, expires_at, now)
     return user_response(db, user)
 
 
