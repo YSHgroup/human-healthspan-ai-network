@@ -80,16 +80,17 @@ npm.cmd run dev:api
 
 ### Ubuntu (Docker only)
 
-Docker Compose runs every project component in containers: all four portals use Node.js 24; the API
-uses Python 3.14; and PostgreSQL and Redis run as supporting services. From the repository root,
-build and start the full stack:
+Docker Compose runs every project component in containers: all four portals use Node.js 24 and the
+repository-pinned pnpm version; the API uses Python 3.14; and PostgreSQL and Redis run as supporting
+services. From the repository root, build and start the full stack:
 
 ```bash
 docker compose up --build
 ```
 
-Compose installs JavaScript dependencies in a Node.js container before starting the portals. The
-API image installs its Python dependencies and runs database migrations before starting the API.
+Compose installs JavaScript dependencies with the repository's pinned pnpm version in a Node.js
+container before starting the portals. The API image installs its Python dependencies and runs
+database migrations before starting the API.
 Open the services at:
 
 - Social Portal: [http://localhost:3000](http://localhost:3000)
