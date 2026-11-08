@@ -13,6 +13,9 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | POST | `/api/v1/user/auth/logout` | Revoke the current session and clear the cookie. |
 | GET | `/api/v1/user/auth/me` | Return the authenticated member and current AI-learning consent state. |
 | PUT | `/api/v1/user/auth/ai-learning-consent` | Record versioned, revocable opt-in/out for retaining AI prompt/response content for review. |
+| GET | `/api/v1/user/social/feed` | List recent public discussions and questions. |
+| POST | `/api/v1/user/social/posts` | Publish an authenticated public discussion or question. |
+| POST | `/api/v1/user/social/posts/{post_id}/reports` | Submit one pending moderation report per member/post. |
 | GET | `/api/v1/user/social/messages/conversations` | List conversations for the authenticated participant. |
 | POST | `/api/v1/user/social/messages/conversations` | Create a direct or group conversation by registered participant emails. |
 | GET | `/api/v1/user/social/messages/conversations/{conversation_id}/messages` | List text messages for a participant. |
@@ -26,12 +29,14 @@ Cross-cutting behavior already in place:
 - CORS allows only the origins in `API_CORS_ORIGINS`, with credentials (session cookies). The local default is ports 3000–3003 on `localhost`; no custom domain is needed.
 - Every response carries `X-Request-ID` and baseline security headers.
 - Browser write requests with an `Origin` header are checked against the trusted-origin list.
+- Social feed content is public. Posting and reporting require an authenticated session and a trusted `Origin`; reports are queued for later moderation review.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
 - The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
 - AI provider credentials remain server-side. The default provider is disabled and returns an explicit 503 until configured.
 
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
-`/api/v1/admin` are mounted. Beyond the identity, messaging and AI endpoints above, product workflows remain unimplemented.
+`/api/v1/admin` are mounted. Community membership, comments, reactions, topic/discussion
+management, and moderator review actions remain unimplemented.
 
 The owner retired the separate legacy MVP as a migration source. This route list describes the
 current API contract; backward compatibility with the removed legacy implementation is not

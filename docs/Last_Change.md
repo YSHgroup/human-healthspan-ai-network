@@ -18,6 +18,8 @@
 - Estimated and recorded the owner-approved M2/M3 backlog in `docs/DEVELOPMENT_ROADMAP.md`.
 - Began M2 shared-identity hardening: state-changing browser-auth routes now reject missing or
   untrusted Origin headers; regression tests cover registration and consent mutation.
+- Started M2 Social Portal core with a public question/discussion feed, authenticated posting, and
+  one-pending-report-per-member reporting; added database migration and API authorization tests.
 - Retired the separate legacy MVP as a source of truth at the owner's direction. Removed its ZIP
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
@@ -28,8 +30,9 @@
 - M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
   update until after M4. The estimated M2/M3 backlog is now approved.
 - Account verification/recovery, researcher application and approval workflows, admin
-  authentication and operations, community workflows, source-backed AI, launch security/privacy
-  review, production audit, and production hardening remain unimplemented.
+  authentication and operations, community membership, comments/reactions, moderator review,
+  source-backed AI, launch security/privacy review, production audit, and production hardening
+  remain unimplemented.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -44,11 +47,12 @@
   `websockets` runtime dependency.
 - Production deployment, live AI provider operation, and production security/privacy readiness are
   not certified.
-- The focused identity API tests could not run in this environment: Python has no `pytest`, `pip`,
-  or `venv` support, and installing system venv support was denied by environment permissions.
-  Python syntax compilation and `git diff --check` passed.
+- The README's `python -m pip install -e "api[dev]" -e ai` setup succeeded in the configured
+  Python 3.14 environment. The API tests passed (24 tests), and the combined architecture, API,
+  and AI suites passed (46 tests). `npm test` could not run because npm is unavailable in this
+  environment; this change does not modify frontend code.
 
 ## Next step
 
-Continue shared identity hardening, including session lifecycle and redirect protections, before
-building the Social and Personal feature workstreams.
+Continue the Social Portal with community membership and moderation workflows, then connect the
+public feed to the Social web experience.

@@ -28,6 +28,9 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `POST /api/v1/user/auth/logout` | Revoke the current session | Shared identity |
 | `GET /api/v1/user/auth/me` | Read current member and consent state | Shared identity |
 | `PUT /api/v1/user/auth/ai-learning-consent` | Record or revoke AI-learning content consent | AI governance |
+| `GET /api/v1/user/social/feed` | List recent public questions and discussions | M2 Social Portal |
+| `POST /api/v1/user/social/posts` | Publish an authenticated public question or discussion | M2 Social Portal |
+| `POST /api/v1/user/social/posts/{post_id}/reports` | Submit a pending report for another member's post | M2 moderation hooks |
 | `GET /api/v1/user/social/messages/conversations` | List a member's conversations | Messaging; shared by Social and Personal |
 | `POST /api/v1/user/social/messages/conversations` | Create direct/group text conversation | Messaging; shared by Social and Personal |
 | `GET /api/v1/user/social/messages/conversations/{conversation_id}/messages` | Read authorized text history | Messaging |
@@ -46,14 +49,17 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `Conversation` / `conversations` | Messaging | Conversation ownership and persisted text-message thread |
 | `ConversationParticipant` / `conversation_participants` | Messaging | Membership is required for history and WebSocket access |
 | `Message` / `messages` | Messaging | Text only; no attachment/audio/video support |
+| `SocialPost` / `social_posts` | Social | Public questions/discussions; comments, reactions and community association remain planned |
+| `SocialPostReport` / `social_post_reports` | Social/moderation | One pending report per member/post; moderator review actions remain planned |
 | `AIConsent` / `ai_learning_consents` | AI governance | Versioned and revocable opt-in |
 | `AIInteraction` / `ai_interactions` | AI governance/operations | Usage metadata; content retention is consent-gated |
 
 ## M2 and M3 work not present in the current checkout
 
-The roadmap assigns Social/Personal community and profile workflows to M2, and Researcher/Admin,
-organizations, membership, moderation, entitlements, and audit workflows to M3. Implementation
-must add route-to-domain and model-to-domain entries here as those features are approved and built.
+The roadmap assigns remaining Social/Personal community membership, comments/reactions, profile,
+and personalization workflows to M2, and Researcher/Admin, organizations, advanced moderation,
+entitlements, and audit workflows to M3. Implementation must add route-to-domain and model-to-domain
+entries here as those features are approved and built.
 
 Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md). Organization entitlement
 timing remains open. See [API.md](./API.md) for the implemented endpoint contract and

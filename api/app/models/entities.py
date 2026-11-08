@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -87,6 +87,36 @@ class Message(Base):
 
     conversation: Mapped[Conversation] = relationship(back_populates="messages")
     sender: Mapped[User] = relationship()
+
+
+class SocialPost(Base):
+    __tablename__ = "social_posts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    author_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+    author: Mapped[User] = relationship()
+    reports: Mapped[list[SocialPostReport]] = relationship(back_populates="post", cascade="all, delete-orphan")
+
+
+class SocialPostReport(Base):
+    __tablename__ = "social_post_reports"
+    __table_args__ = (
+        UniqueConstraint("reporter_id", "post_id", name="uq_social_post_reports_reporter_post"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    post_id: Mapped[str] = mapped_column(ForeignKey("social_posts.id", ondelete="CASCADE"), index=True)
+    reporter_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    reason: Mapped[str] = mapped_column(String(500))
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    post: Mapped[SocialPost] = relationship(back_populates="reports")
+    reporter: Mapped[User] = relationship()
 
 
 class AIConsent(Base):

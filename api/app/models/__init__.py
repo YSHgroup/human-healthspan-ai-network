@@ -8,6 +8,8 @@ from app.models.entities import (
     Conversation,
     ConversationParticipant,
     Message,
+    SocialPost,
+    SocialPostReport,
     User,
     UserSession,
 )
@@ -19,6 +21,8 @@ __all__ = [
     "Conversation",
     "ConversationParticipant",
     "Message",
+    "SocialPost",
+    "SocialPostReport",
     "User",
     "UserSession",
 ]
