@@ -206,6 +206,7 @@ def test_api_does_not_expose_unplanned_product_routes() -> None:
         "auth.py": "/api/v1/user/auth",
         "messaging.py": "/api/v1/user/social/messages",
         "feed.py": "/api/v1/user/social",
+        "communities.py": "/api/v1/user/social",
         "ai_chat.py": "/api/v1/user",
     }
     route_pattern = re.compile(r'@router\.(post|put|patch|delete)\(\s*"([^"]+)"')

@@ -11,6 +11,7 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 |---|---|---|
 | `/` | `apps/social-web` | M2 Social Portal: public discovery and community entry |
 | `/feed` | `apps/social-web` | M2 Social Portal: public questions/discussions, authenticated posting and report submission |
+| `/communities` | `apps/social-web` | M2 Social Portal: community requests, membership, discussions, comments, reactions, and moderator review |
 | `/messages` | `apps/social-web` | Shared text-messaging UI in `packages/ui`; backed by the messaging domain |
 | `/ai` | `apps/social-web` | General Platform AI; later M4/M5 scope deepens sources and production safeguards |
 | `/` | `apps/personal-web` | M2 Personal Portal: member profile, preferences, and saved/personal activity |
@@ -31,7 +32,13 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `PUT /api/v1/user/auth/ai-learning-consent` | Record or revoke AI-learning content consent | AI governance |
 | `GET /api/v1/user/social/feed` | List recent public questions and discussions | M2 Social Portal |
 | `POST /api/v1/user/social/posts` | Publish an authenticated public question or discussion | M2 Social Portal |
-| `POST /api/v1/user/social/posts/{post_id}/reports` | Submit a pending report for another member's post | M2 moderation hooks |
+| `/api/v1/user/social/communities*` | List communities, request creation, join/apply, and review restricted membership | M2 Social Portal |
+| `/api/v1/user/social/communities/{community_id}/posts` | List/publish community posts with membership checks | M2 Social Portal |
+| `/api/v1/user/social/posts/{post_id}/comments` | List/publish comments on accessible posts | M2 Social Portal |
+| `/api/v1/user/social/posts/{post_id}/reactions` | Read, set, or remove a member's reaction | M2 Social Portal |
+| `/api/v1/user/social/posts/{post_id}/reports`, `/api/v1/user/social/comments/{comment_id}/reports` | Submit moderation reports | M2 safety |
+| `/api/v1/user/social/communities/{community_id}/moderation/*` | Moderator report review, actions, and appeals | M2 safety |
+| `/api/v1/user/social/me/moderation/*` | List a member's actions and submit appeals | M2 safety |
 | `GET /api/v1/user/social/messages/conversations` | List a member's conversations | Messaging; shared by Social and Personal |
 | `POST /api/v1/user/social/messages/conversations` | Create direct/group text conversation | Messaging; shared by Social and Personal |
 | `GET /api/v1/user/social/messages/conversations/{conversation_id}/messages` | Read authorized text history | Messaging |
@@ -50,17 +57,25 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `Conversation` / `conversations` | Messaging | Conversation ownership and persisted text-message thread |
 | `ConversationParticipant` / `conversation_participants` | Messaging | Membership is required for history and WebSocket access |
 | `Message` / `messages` | Messaging | Text only; no attachment/audio/video support |
-| `SocialPost` / `social_posts` | Social | Public questions/discussions; comments, reactions and community association remain planned |
-| `SocialPostReport` / `social_post_reports` | Social/moderation | One pending report per member/post; moderator review actions remain planned |
+| `Community` / `communities` | Social | Open/restricted access, rules, and creator |
+| `CommunityMembership` / `community_memberships` | Social | Per-community role and pending/active/rejected membership |
+| `CommunityCreationRequest` / `community_creation_requests` | Social/admin | Free requests; approval is not yet available through Admin |
+| `SocialPost` / `social_posts` | Social | Public or community-scoped questions/discussions with moderation state |
+| `SocialPostComment` / `social_post_comments` | Social | Text comments with moderation state |
+| `SocialPostReaction` / `social_post_reactions` | Social | One reaction per member per post |
+| `SocialPostReport` / `social_post_reports` | Social/moderation | One report per member and post/comment; queues are community-scoped |
+| `ModerationAction` / `moderation_actions` | Social/moderation | Auditable hide/remove/warn/suspend/escalate/dismiss action and appeal state |
+| `CommunityPostingSuspension` / `community_posting_suspensions` | Social/moderation | Time-bounded community posting restriction |
+| `ModerationAppeal` / `moderation_appeals` | Social/moderation | One appeal per action, with moderator decision |
 | `AIConsent` / `ai_learning_consents` | AI governance | Versioned and revocable opt-in |
 | `AIInteraction` / `ai_interactions` | AI governance/operations | Usage metadata; content retention is consent-gated |
 
 ## M2 and M3 work not present in the current checkout
 
-The roadmap assigns remaining Social/Personal community membership, comments/reactions, profile,
-and personalization workflows to M2, and Researcher/Admin, organizations, advanced moderation,
-entitlements, and audit workflows to M3. Implementation must add route-to-domain and model-to-domain
-entries here as those features are approved and built.
+The Social community membership, comments/reactions, and community-scoped moderation APIs are now
+implemented in M2. Community creation approval, escalations, global-content moderation, and the
+Admin review surface remain open; the remaining Personal profile/personalization work is also M2.
+Researcher/Admin and organization workflows remain M3.
 
 Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md). Organization entitlement
 timing remains open. See [API.md](./API.md) for the implemented endpoint contract and

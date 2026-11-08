@@ -15,7 +15,26 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | PUT | `/api/v1/user/auth/ai-learning-consent` | Record versioned, revocable opt-in/out for retaining AI prompt/response content for review. |
 | GET | `/api/v1/user/social/feed` | List recent public discussions and questions. |
 | POST | `/api/v1/user/social/posts` | Publish an authenticated public discussion or question. |
+| GET | `/api/v1/user/social/communities` | List communities and the current member's access status. |
+| POST | `/api/v1/user/social/communities/requests` | Submit a free community creation request for platform review. |
+| POST | `/api/v1/user/social/communities/{community_id}/join` | Join an open community or apply to a restricted one. |
+| GET | `/api/v1/user/social/communities/{community_id}/memberships/pending` | List applications for a community moderator. |
+| POST | `/api/v1/user/social/communities/{community_id}/memberships/{membership_id}/decision` | Approve or reject a restricted-community application. |
+| GET | `/api/v1/user/social/communities/{community_id}/posts` | List published discussions in an accessible community. |
+| POST | `/api/v1/user/social/communities/{community_id}/posts` | Publish to a community as an active member. |
+| GET | `/api/v1/user/social/posts/{post_id}/comments` | List published comments when the member can access the post. |
+| POST | `/api/v1/user/social/posts/{post_id}/comments` | Comment on an accessible post. |
+| GET | `/api/v1/user/social/posts/{post_id}/reactions` | Read reaction count and the current member's reaction. |
+| PUT | `/api/v1/user/social/posts/{post_id}/reactions` | Set or change the current member's reaction. |
+| DELETE | `/api/v1/user/social/posts/{post_id}/reactions` | Remove the current member's reaction. |
 | POST | `/api/v1/user/social/posts/{post_id}/reports` | Submit one pending moderation report per member/post. |
+| POST | `/api/v1/user/social/comments/{comment_id}/reports` | Submit one pending moderation report per member/comment. |
+| GET | `/api/v1/user/social/communities/{community_id}/moderation/reports` | List pending reports for an authorized community moderator. |
+| POST | `/api/v1/user/social/communities/{community_id}/moderation/reports/{report_id}/actions` | Hide/remove content, warn, suspend posting temporarily, escalate, or dismiss a report. |
+| GET | `/api/v1/user/social/me/moderation/actions` | List moderation actions against the current member. |
+| POST | `/api/v1/user/social/me/moderation/actions/{action_id}/appeals` | Appeal an eligible warning, hide, removal, or suspension. |
+| GET | `/api/v1/user/social/communities/{community_id}/moderation/appeals` | List pending appeals for an authorized community moderator. |
+| POST | `/api/v1/user/social/communities/{community_id}/moderation/appeals/{appeal_id}/decision` | Uphold or overturn a member's appeal. |
 | GET | `/api/v1/user/social/messages/conversations` | List conversations for the authenticated participant. |
 | POST | `/api/v1/user/social/messages/conversations` | Create a direct or group conversation by registered participant emails. |
 | GET | `/api/v1/user/social/messages/conversations/{conversation_id}/messages` | List text messages for a participant. |
@@ -30,13 +49,18 @@ Cross-cutting behavior already in place:
 - Every response carries `X-Request-ID` and baseline security headers.
 - Browser write requests with an `Origin` header are checked against the trusted-origin list.
 - Social feed content is public. Posting and reporting require an authenticated session and a trusted `Origin`; reports are queued for later moderation review.
+- Community membership is scoped to each community. Open communities admit registered members directly; restricted communities require moderator approval. Restricted-community posts/comments/reactions are available only to active members.
+- Community moderation is enforced by active owner/moderator membership. Actions are recorded; posting suspensions are time-limited, and appeals can overturn actions and restore hidden content or posting access.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
 - The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
 - AI provider credentials remain server-side. The default provider is disabled and returns an explicit 503 until configured.
 
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
-`/api/v1/admin` are mounted. Community membership, comments, reactions, topic/discussion
-management, and moderator review actions remain unimplemented.
+`/api/v1/admin` are mounted. The admin router is still only a namespace: platform staff cannot
+approve community-creation requests or review escalations in this slice. Communities and their
+initial owner/moderator membership must currently be provisioned by trusted operations. Topics,
+comment reactions, warnings/appeals notifications, and a platform-wide moderation queue are also
+not implemented.
 
 The owner retired the separate legacy MVP as a migration source. This route list describes the
 current API contract; backward compatibility with the removed legacy implementation is not
@@ -51,6 +75,7 @@ provided.
 - AI interaction metadata is recorded. Prompt/answer content is stored only after affirmative AI-learning consent; revocation clears previously retained content. No training or export job is implemented.
 - Direct/group messaging stores text only; attachments, audio and video are not part of this MVP slice.
 - Message WebSockets validate the request origin, session cookie and conversation membership. Delivery is in-process; run one API worker for local MVP real-time messaging. Persisted messages remain available through the REST history endpoint after a disconnect.
+- Escalated reports are recorded as escalated but are not yet visible in an Admin queue. Reports against global posts/comments without a community likewise have no moderator queue until Admin moderation is implemented. Do not treat these APIs as production moderation coverage.
 
 ## Target organization (planned)
 

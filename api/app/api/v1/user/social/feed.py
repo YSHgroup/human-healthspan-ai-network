@@ -4,15 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.identity import CurrentUser, require_trusted_origin
-from app.domains.social.content import (
-    BlankPostError,
-    BlankReportReasonError,
-    DuplicatePostReportError,
-    PostUnavailableForReportError,
-    list_public_feed,
-    publish_post,
-    report_post as create_post_report,
+from app.domains.social.communities import (
+    CommunityAccessDenied,
+    ContentNotFound,
+    ContentUnavailable,
+    DuplicateContentReport,
+    submit_content_report,
 )
+from app.domains.social.content import BlankPostError, list_public_feed, publish_post
 from app.infrastructure.database import get_db
 from app.models import SocialPost
 from app.schemas.social import (
@@ -73,13 +72,15 @@ def report_post(
 ) -> SocialPostReportResponse:
     require_trusted_origin(request)
     try:
-        report = create_post_report(db, user, post_id, body.reason)
-    except PostUnavailableForReportError as exc:
-        raise HTTPException(status_code=404, detail="Post not found") from exc
-    except BlankReportReasonError as exc:
-        raise HTTPException(status_code=422, detail="Report reason cannot be blank") from exc
-    except DuplicatePostReportError as exc:
+        report = submit_content_report(db, user, body.reason, post_id=post_id)
+    except DuplicateContentReport as exc:
         raise HTTPException(status_code=409, detail="You have already reported this post") from exc
+    except ContentNotFound as exc:
+        raise HTTPException(status_code=404, detail="Post not found") from exc
+    except ContentUnavailable as exc:
+        raise HTTPException(status_code=422, detail="Report reason cannot be blank") from exc
+    except CommunityAccessDenied as exc:
+        raise HTTPException(status_code=403, detail="You cannot report this content") from exc
     return SocialPostReportResponse(
         id=report.id,
         post_id=report.post_id,
