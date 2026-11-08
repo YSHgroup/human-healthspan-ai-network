@@ -4,7 +4,7 @@ x-node-app: &node-app
   init: true
   volumes:
     - .:/workspace
-    - node-modules:/workspace/node_modules
+    - pnpm-node-modules:/workspace/node_modules
   depends_on:
     frontend-deps:
       condition: service_completed_successfully
@@ -16,32 +16,35 @@ services:
   frontend-deps:
     image: node:24-bookworm
     working_dir: /workspace
-    command: npm ci
+    command:
+      - sh
+      - -c
+      - corepack enable && pnpm install --frozen-lockfile
     volumes:
       - .:/workspace
-      - node-modules:/workspace/node_modules
+      - pnpm-node-modules:/workspace/node_modules
 
   social-web:
     <<: *node-app
-    command: npm run dev:social
+    command: sh -c "corepack enable && pnpm run dev:social"
     ports:
       - "3000:3000"
 
   personal-web:
     <<: *node-app
-    command: npm run dev:personal
+    command: sh -c "corepack enable && pnpm run dev:personal"
     ports:
       - "3001:3001"
 
   researcher-web:
     <<: *node-app
-    command: npm run dev:researcher
+    command: sh -c "corepack enable && pnpm run dev:researcher"
     ports:
       - "3002:3002"
 
   admin:
     <<: *node-app
-    command: npm run dev:admin
+    command: sh -c "corepack enable && pnpm run dev:admin"
     ports:
       - "3003:3003"
     environment:
@@ -103,6 +106,6 @@ services:
       retries: 10
 
 volumes:
-  node-modules:
+  pnpm-node-modules:
   healthspan-postgres:
   healthspan-redis:
