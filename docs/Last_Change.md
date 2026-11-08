@@ -25,6 +25,18 @@
 - Connected the feed API to the Social Portal at `/feed`, added homepage/navigation links, and
   exposed the public feed page in the sitemap so the slice can be tested from the browser.
 - Added README steps to test feed publishing and reporting with separate browser profiles.
+- Implemented M2 community membership, restricted-community applications, community posts,
+  comments, reactions, content reports, moderator actions, time-bounded posting suspensions, and
+  appeals, with API tests and a reversible migration.
+- Connected those workflows to the Social Portal at `/communities`, including community requests,
+  membership review, discussions, reports, moderation queues, and appeal flows. Linked the page
+  from the landing page and Social Portal navigation.
+- Added pending-appeal review to the moderator API/UI, and aligned the model and migration indexes
+  so Alembic metadata checks pass.
+- Updated the API inventory, setup instructions, and testing limitations.
+- Fixed the local Compose database mismatch that caused `/feed` and community creation requests to
+  fail: the persisted PostgreSQL database was still at `0002_social_feed` while the code expected
+  `0003_social_communities`. Applied the additive migration without dropping existing data.
 - Retired the separate legacy MVP as a source of truth at the owner's direction. Removed its ZIP
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
@@ -35,9 +47,9 @@
 - M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
   update until after M4. The estimated M2/M3 backlog is now approved.
 - Account verification/recovery, researcher application and approval workflows, admin
-  authentication and operations, community membership, comments/reactions, moderator review,
-  source-backed AI, launch security/privacy review, production audit, and production hardening
-  remain unimplemented.
+  authentication and operations, platform approval/provisioning for communities, escalated and
+  global-content moderation queues, source-backed AI, launch security/privacy review, production
+  audit, and production hardening remain unimplemented.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -45,8 +57,8 @@
 
 ## Verification
 
-- `git diff --check` passed for the Docker environment and documentation changes. Docker Compose
-  could not be run in this environment because the Docker CLI is unavailable.
+- `git diff --check` passed. Docker Compose could not be run in this environment because the
+  Docker daemon is inaccessible.
 - `npm test` and `pnpm test`: each passed with 5 frontend tests and 40 Python
   architecture/API/AI tests.
 - All Social, Personal, and Researcher app TypeScript checks passed after the shared UI changes.
@@ -55,12 +67,17 @@
 - Production deployment, live AI provider operation, and production security/privacy readiness are
   not certified.
 - The README's `python -m pip install -e "api[dev]" -e ai` setup succeeded in the configured
-  Python 3.14 environment. The API tests passed (24 tests), and the combined architecture, API,
-  and AI suites passed (46 tests) for the feed API slice. Frontend typecheck/build could not be run
-  because Node.js/npm are unavailable in this environment; Docker is installed but its daemon is
-  inaccessible. Architecture checks passed (20 tests) for the browser route and sitemap changes.
+  Python 3.14 environment. The architecture, API, and AI suites passed (52 tests). A fresh SQLite
+  database upgraded to head, passed `alembic check`, downgraded to `0002_social_feed`, and upgraded
+  again. The Compose PostgreSQL database was confirmed at `0003_social_communities`; the live feed
+  returned 200 with `Access-Control-Allow-Origin`, community creation returned the expected
+  authenticated 401 with CORS headers, and CORS preflight succeeded. Changed Python files passed
+  `compileall`, and the frontend editor diagnostics reported no problems in the new page and
+  component. Frontend typecheck, lint, build, and browser validation could not be run because
+  Node.js/npm are unavailable; Docker CLI access is restricted in this environment.
 
 ## Next step
 
-Continue the Social Portal with community membership, comments/reactions, and moderator review;
-connect those workflows after their API behavior is implemented and tested.
+Implement platform-side community approval/provisioning and a global moderation queue so requested
+communities can be activated and global or escalated reports can be reviewed. CI remains deferred
+until after M4 per the owner's direction.
