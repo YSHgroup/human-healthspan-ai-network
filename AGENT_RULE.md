@@ -50,6 +50,9 @@ These rules apply to contributors and coding agents working in this repository.
 
 ## Tooling
 
+- Use Node.js >= 24 and Python => 3.14 for development.
+- On Windows, use the tools installed in the host operating system.
+- On Ubuntu, run project development tools and commands only in Docker; do not use host-installed Node.js or Python, or create a host virtual environment for this project.
 - JavaScript tooling works with npm or pnpm. Local packages are linked with a plain `*` range (never the pnpm-only `workspace:` protocol). Keep lockfiles at the repository root only and do not use yarn. Keep the Python toolchain separate.
 - Run `npm run test:architecture` (or the pnpm equivalent) before finishing; it enforces the rules above.
 
