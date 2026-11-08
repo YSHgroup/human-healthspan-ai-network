@@ -37,16 +37,25 @@ references/         Original product source documents and legacy reference
 
 ## Getting started
 
-Requirements: Node.js 20+, npm 10+ or pnpm 9, Python 3.10+. Docker Compose is optional when using the default local SQLite database.
+Use Node.js 24 and Python 3.14. On Windows, install and run them on the host. On Ubuntu, install
+Docker Engine and the Compose plugin, and run all project tooling in Docker rather than installing
+Node.js or Python on the host.
 
 ```bash
 cp .env.example .env
-npm install            # or: pnpm install
-npm run dev:social     # or: pnpm dev:social
 ```
 
 The root `.env` is read by the Next.js portals, Admin and the API/Alembic. Only `VITE_*` values
 reach the Admin browser bundle; secrets remain server-side.
+
+### Windows
+
+Install dependencies and start the Social Portal from the repository root:
+
+```powershell
+npm install
+npm run dev:social
+```
 
 The Social Portal is available at [http://localhost:3000](http://localhost:3000). The Social, Personal, and Researcher portals are configured with shadcn/ui, Tailwind CSS v4, and shared UI primitives. The original logo and emblem live under `public/brand`; app scripts sync them into each app's generated public directory before development and builds.
 
@@ -58,30 +67,49 @@ npm run dev:researcher   # http://localhost:3002
 npm run dev:admin        # http://localhost:3003
 ```
 
-All app origins are `localhost`; no custom domain is required. Start the API separately after installing its Python dependencies. On Windows:
+All app origins are `localhost`; no custom domain is required. To start the API, use a second
+PowerShell terminal:
 
 ```powershell
-py -3 -m venv .venv
+py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e "api[dev]" -e ai
-```
-
-In PowerShell, add the venv Python to the current terminal's `PATH` before the npm API scripts:
-
-```powershell
 $env:PATH = "$PWD\.venv\Scripts;$env:PATH"
 npm.cmd run db:migrate
 npm.cmd run dev:api
 ```
 
-Run the API command in a separate terminal from the frontend commands. For macOS/Linux, substitute
-`python3 -m venv .venv`, `.venv/bin/python -m pip ...`, and activate the venv
-(`source .venv/bin/activate`) before `npm run db:migrate` and `npm run dev:api`.
-On Debian/Ubuntu, if venv creation fails because `ensurepip` is missing, install the venv package
-matching the selected interpreter (for example, `sudo apt install python3.14-venv` for Python 3.14)
-and rerun the venv creation command.
-The API uses SQLite by default. To use PostgreSQL, start it with `docker compose up -d postgres`
-or provide an external server, then set `DATABASE_URL` in the root `.env` before running
-`npm run db:migrate`. Redis is not required by the current API slice.
+### Ubuntu (Docker only)
+
+Docker Compose runs every project component in containers: all four portals use Node.js 24; the API
+uses Python 3.14; and PostgreSQL and Redis run as supporting services. From the repository root,
+build and start the full stack:
+
+```bash
+docker compose up --build
+```
+
+Compose installs JavaScript dependencies in a Node.js container before starting the portals. The
+API image installs its Python dependencies and runs database migrations before starting the API.
+Open the services at:
+
+- Social Portal: [http://localhost:3000](http://localhost:3000)
+- Personal Portal: [http://localhost:3001](http://localhost:3001)
+- Researcher Portal: [http://localhost:3002](http://localhost:3002)
+- Admin: [http://localhost:3003](http://localhost:3003)
+- API: [http://localhost:8000](http://localhost:8000)
+
+Run the stack in the background with `docker compose up --build -d`. Follow its logs with
+`docker compose logs -f`; stop the containers with `docker compose down`. PostgreSQL data is kept
+in a named volume when containers stop. To delete the database and Redis data as well, use
+`docker compose down --volumes`.
+
+Run project commands inside the appropriate service containers, for example:
+
+```bash
+docker compose exec social-web npm run build
+docker compose exec api python -m pytest tests/api -q
+docker compose exec api python -m alembic -c api/alembic.ini upgrade head
+```
 
 Implemented API scope is shared registration/session, direct and group text messaging, General AI
 chat, a restricted prompt-only Scientist prototype and opt-in AI-learning content retention.
@@ -91,15 +119,25 @@ and the [implementation inventory](./docs/MIGRATION_PLAN.md) for the current rou
 
 ## Project checks
 
-Python-backed checks require the project virtual environment to be active (on Windows PowerShell,
-add `"$PWD\.venv\Scripts"` to `PATH`; on macOS/Linux, run `source .venv/bin/activate`).
+On Windows, run checks with the project dependencies installed on the host:
 
-```bash
+```powershell
 npm run build
 npm run lint
 npm run typecheck
 npm test                      # web unit tests, architecture rules, API tests
 npm run test:architecture     # AGENT_RULE and architecture checks (standard library only)
+```
+
+On Ubuntu, start the stack with `docker compose up --build -d`, then run checks in the matching
+containers. `npm test` combines both toolchains, so run the suites separately:
+
+```bash
+docker compose exec social-web npm run build
+docker compose exec social-web npm run lint
+docker compose exec social-web npm run typecheck
+docker compose exec social-web npm run test:web
+docker compose exec api python -m pytest tests/architecture tests/api tests/ai tests/migration -q
 ```
 
 ## Source of truth

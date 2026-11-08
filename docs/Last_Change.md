@@ -2,6 +2,8 @@
 
 ## Completed
 
+- Added an Ubuntu Docker Compose development stack for all four portals, the Python 3.14 API,
+  PostgreSQL and Redis. Updated the setup guide and pinned the Node.js engine to major version 24.
 - Recorded the owner-approved M1 audience, geographic-availability, and MVP-boundary decisions in
   `docs/DECISIONS.md`.
 - Implemented local shared registration/session and Alembic persistence, direct/group text
@@ -40,6 +42,8 @@
 
 ## Verification
 
+- `git diff --check` passed for the Docker environment and documentation changes. Docker Compose
+  could not be run in this environment because the Docker CLI is unavailable.
 - `npm test` and `pnpm test`: each passed with 5 frontend tests and 40 Python
   architecture/API/AI tests.
 - All Social, Personal, and Researcher app TypeScript checks passed after the shared UI changes.

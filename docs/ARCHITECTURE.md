@@ -31,7 +31,7 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 | Backend API | `api/` | Python + FastAPI modular monolith | Health/readiness, shared cookie identity, text messaging and AI prototype endpoints |
 | AI platform | `ai/` | Python | OpenAI-compatible provider gateway and prompt-only General/Scientist workflows; provider disabled by default |
 | Shared packages | `packages/` | TypeScript | Skeletons; shared types and UI primitives |
-| Infrastructure | `docker-compose.yml`, `infra/` | Docker | PostgreSQL and Redis available; local API defaults to SQLite |
+| Infrastructure | `docker-compose.yml`, `Dockerfile.api`, `infra/` | Docker Compose | Full local stack uses Node.js 24, Python 3.14, PostgreSQL and Redis; API defaults to SQLite outside Compose |
 
 ## Key decisions
 

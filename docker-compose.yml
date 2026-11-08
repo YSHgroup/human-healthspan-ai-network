@@ -1,4 +1,79 @@
+x-node-app: &node-app
+  image: node:24-bookworm
+  working_dir: /workspace
+  init: true
+  volumes:
+    - .:/workspace
+    - node-modules:/workspace/node_modules
+  depends_on:
+    frontend-deps:
+      condition: service_completed_successfully
+  environment:
+    NEXT_TELEMETRY_DISABLED: "1"
+    NEXT_PUBLIC_API_URL: http://localhost:8000
+
 services:
+  frontend-deps:
+    image: node:24-bookworm
+    working_dir: /workspace
+    command: npm ci
+    volumes:
+      - .:/workspace
+      - node-modules:/workspace/node_modules
+
+  social-web:
+    <<: *node-app
+    command: npm run dev:social
+    ports:
+      - "3000:3000"
+
+  personal-web:
+    <<: *node-app
+    command: npm run dev:personal
+    ports:
+      - "3001:3001"
+
+  researcher-web:
+    <<: *node-app
+    command: npm run dev:researcher
+    ports:
+      - "3002:3002"
+
+  admin:
+    <<: *node-app
+    command: npm run dev:admin
+    ports:
+      - "3003:3003"
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    working_dir: /workspace
+    init: true
+    command:
+      - sh
+      - -c
+      - python -m alembic -c api/alembic.ini upgrade head && python -m uvicorn app.main:app --app-dir api --host 0.0.0.0 --reload --port 8000
+    env_file:
+      - .env
+    environment:
+      APP_ENV: development
+      API_CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-healthspan}:${POSTGRES_PASSWORD:-healthspan_dev}@postgres:5432/${POSTGRES_DB:-healthspan}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -28,5 +103,6 @@ services:
       retries: 10
 
 volumes:
+  node-modules:
   healthspan-postgres:
   healthspan-redis:

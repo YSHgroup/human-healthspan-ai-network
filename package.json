@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=24 <25"
   },
   "scripts": {
     "dev": "turbo dev",
@@ -30,8 +30,8 @@
     "test:web": "turbo test",
     "test:architecture": "python -m pytest tests/architecture -q",
     "test": "turbo test && python -m pytest tests/architecture tests/api tests/ai tests/migration -q",
-    "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down"
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose stop postgres redis"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
