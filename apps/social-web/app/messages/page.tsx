@@ -17,7 +17,11 @@ export default function MessagesPage() {
         eyebrow="Social Portal · Text only"
         homeHref="/"
         themeToggle={<ThemeToggle />}
-        links={[{ label: "Community", href: "/" }, { label: "General AI", href: "/ai" }]}
+        links={[
+          { label: "Community feed", href: "/feed" },
+          { label: "Home", href: "/" },
+          { label: "General AI", href: "/ai" },
+        ]}
       />
       <main>
         <PageShell className="max-w-5xl">

@@ -131,6 +131,12 @@ export default function Home() {
         actions={
           <div className="flex items-center gap-2">
             <a
+              href="/feed"
+              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              Community feed
+            </a>
+            <a
               href="/messages"
               className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
             >
@@ -431,7 +437,7 @@ export default function Home() {
               <EmptyState
                 icon={Network}
                 title="Start with a shared account"
-                description="Sign in to exchange text messages or try the General Platform AI. Research access remains explicitly gated."
+                description="Browse public discussions, sign in to post, exchange text messages, or try the General Platform AI. Research access remains explicitly gated."
               />
             </Reveal>
           </PageShell>

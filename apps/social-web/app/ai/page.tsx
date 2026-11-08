@@ -17,7 +17,11 @@ export default function GeneralAIPage() {
         eyebrow="General knowledge · Source-conscious"
         homeHref="/"
         themeToggle={<ThemeToggle />}
-        links={[{ label: "Community", href: "/" }, { label: "Messages", href: "/messages" }]}
+        links={[
+          { label: "Community feed", href: "/feed" },
+          { label: "Home", href: "/" },
+          { label: "Messages", href: "/messages" },
+        ]}
       />
       <main>
         <PageShell className="max-w-4xl">

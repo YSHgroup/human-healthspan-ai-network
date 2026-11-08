@@ -22,6 +22,9 @@
   untrusted Origin headers; regression tests cover registration and consent mutation.
 - Started M2 Social Portal core with a public question/discussion feed, authenticated posting, and
   one-pending-report-per-member reporting; added database migration and API authorization tests.
+- Connected the feed API to the Social Portal at `/feed`, added homepage/navigation links, and
+  exposed the public feed page in the sitemap so the slice can be tested from the browser.
+- Added README steps to test feed publishing and reporting with separate browser profiles.
 - Retired the separate legacy MVP as a source of truth at the owner's direction. Removed its ZIP
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
@@ -53,10 +56,11 @@
   not certified.
 - The README's `python -m pip install -e "api[dev]" -e ai` setup succeeded in the configured
   Python 3.14 environment. The API tests passed (24 tests), and the combined architecture, API,
-  and AI suites passed (46 tests). `npm test` could not run because npm is unavailable in this
-  environment; this change does not modify frontend code.
+  and AI suites passed (46 tests) for the feed API slice. Frontend typecheck/build could not be run
+  because Node.js/npm are unavailable in this environment; Docker is installed but its daemon is
+  inaccessible. Architecture checks passed (20 tests) for the browser route and sitemap changes.
 
 ## Next step
 
-Continue the Social Portal with community membership and moderation workflows, then connect the
-public feed to the Social web experience.
+Continue the Social Portal with community membership, comments/reactions, and moderator review;
+connect those workflows after their API behavior is implemented and tested.

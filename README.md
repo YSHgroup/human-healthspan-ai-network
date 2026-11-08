@@ -99,6 +99,13 @@ Open the services at:
 - Admin: [http://localhost:3003](http://localhost:3003)
 - API: [http://localhost:8000](http://localhost:8000)
 
+To try the currently implemented Social Portal features, open
+[http://localhost:3000/feed](http://localhost:3000/feed), create an account or sign in, and
+publish a public question or discussion. Use a second browser profile with another account to
+submit a report on that post. API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
+Other community features such as membership, comments, reactions, and moderator review are not
+implemented yet.
+
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with
 `docker compose logs -f`; stop the containers with `docker compose down`. PostgreSQL data is kept
 in a named volume when containers stop. To delete the database and Redis data as well, use

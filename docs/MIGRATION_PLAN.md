@@ -10,6 +10,7 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | Current route | Application | Target area |
 |---|---|---|
 | `/` | `apps/social-web` | M2 Social Portal: public discovery and community entry |
+| `/feed` | `apps/social-web` | M2 Social Portal: public questions/discussions, authenticated posting and report submission |
 | `/messages` | `apps/social-web` | Shared text-messaging UI in `packages/ui`; backed by the messaging domain |
 | `/ai` | `apps/social-web` | General Platform AI; later M4/M5 scope deepens sources and production safeguards |
 | `/` | `apps/personal-web` | M2 Personal Portal: member profile, preferences, and saved/personal activity |

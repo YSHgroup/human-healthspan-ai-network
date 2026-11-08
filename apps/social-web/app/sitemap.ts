@@ -9,5 +9,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 1,
     },
+    {
+      url: `${siteUrl}/feed`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
   ];
 }
