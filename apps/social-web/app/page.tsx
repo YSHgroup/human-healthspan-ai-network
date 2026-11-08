@@ -131,6 +131,12 @@ export default function Home() {
         actions={
           <div className="flex items-center gap-2">
             <a
+              href="/communities"
+              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              Communities
+            </a>
+            <a
               href="/feed"
               className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
             >

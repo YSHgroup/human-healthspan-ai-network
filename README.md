@@ -99,12 +99,12 @@ Open the services at:
 - Admin: [http://localhost:3003](http://localhost:3003)
 - API: [http://localhost:8000](http://localhost:8000)
 
-To try the currently implemented Social Portal features, open
-[http://localhost:3000/feed](http://localhost:3000/feed), create an account or sign in, and
-publish a public question or discussion. Use a second browser profile with another account to
-submit a report on that post. API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
-Other community features such as membership, comments, reactions, and moderator review are not
-implemented yet.
+To try the Social Portal, open [http://localhost:3000/feed](http://localhost:3000/feed) to publish
+a public question or discussion, or open [http://localhost:3000/communities](http://localhost:3000/communities)
+to request a community or use membership, community discussions, comments, reactions, reports,
+moderation, and appeals. Community creation requests and initial moderator assignments still need
+platform-side provisioning; an empty directory is expected until a community is provisioned.
+API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with
 `docker compose logs -f`; stop the containers with `docker compose down`. PostgreSQL data is kept
@@ -120,9 +120,10 @@ docker compose exec api python -m alembic -c api/alembic.ini upgrade head
 ```
 
 Implemented API scope is shared registration/session, direct and group text messaging, General AI
-chat, a restricted prompt-only Scientist prototype and opt-in AI-learning content retention.
-Email verification, account recovery, researcher approval workflow, AI retrieval/training,
-community workflows and admin operations are not implemented. See [API documentation](./docs/API.md)
+chat, a restricted prompt-only Scientist prototype, opt-in AI-learning content retention, and
+Social Portal communities with membership, discussions, comments, reactions, moderation, and
+appeals. Email verification, account recovery, researcher approval workflow, AI retrieval/training,
+and platform-level community approvals/moderation are not implemented. See [API documentation](./docs/API.md)
 and the [implementation inventory](./docs/MIGRATION_PLAN.md) for the current route and model map.
 
 ## Project checks

@@ -18,6 +18,7 @@ export default function MessagesPage() {
         homeHref="/"
         themeToggle={<ThemeToggle />}
         links={[
+          { label: "Communities", href: "/communities" },
           { label: "Community feed", href: "/feed" },
           { label: "Home", href: "/" },
           { label: "General AI", href: "/ai" },

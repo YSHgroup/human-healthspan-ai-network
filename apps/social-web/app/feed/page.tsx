@@ -20,6 +20,7 @@ export default function SocialFeedPage() {
         homeHref="/"
         themeToggle={<ThemeToggle />}
         links={[
+          { label: "Communities", href: "/communities" },
           { label: "Home", href: "/" },
           { label: "Messages", href: "/messages" },
           { label: "General AI", href: "/ai" },
