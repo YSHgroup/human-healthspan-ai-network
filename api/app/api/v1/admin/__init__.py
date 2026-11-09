@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
+from app.api.v1.admin.research import router as research_admin_router
 from app.api.dependencies.identity import PlatformAdmin, require_trusted_origin
 from app.domains.admin.workflows import (
     CommunityRequestAlreadyReviewed,
@@ -33,6 +34,7 @@ from app.schemas.social import ModerationActionResponse
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+router.include_router(research_admin_router)
 
 
 def report_response(report: SocialPostReport) -> PlatformModerationReportResponse:

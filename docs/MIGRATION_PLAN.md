@@ -16,9 +16,9 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `/ai` | `apps/social-web` | General Platform AI; later M4/M5 scope deepens sources and production safeguards |
 | `/` | `apps/personal-web` | M2 Personal Portal: member profile, preferences, and saved/personal activity |
 | `/messages` | `apps/personal-web` | Shared text-messaging UI and messaging domain |
-| `/` | `apps/researcher-web` | M3 Researcher Portal: applications, profiles, and research-community entry |
+| `/` | `apps/researcher-web` | M3 researcher access/profile, organization, project, task, text-document, and event workflows |
 | `/ai` | `apps/researcher-web` | Restricted Private AI Scientist prototype; research workspace and retrieval are later work |
-| Admin operations | `apps/admin` | Verified allowlisted platform admins can approve communities and review global/escalated reports and global-action appeals |
+| Admin operations | `apps/admin` | Verified allowlisted platform admins can review researcher applications and organizations, grant development entitlements, manage community moderation, oversee events, and inspect the M3 audit subset |
 
 ## Current API routes
 
@@ -48,7 +48,11 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `WebSocket /api/v1/user/social/messages/conversations/{conversation_id}/ws` | Deliver new messages to connected participants | Messaging real-time delivery |
 | `POST /api/v1/user/social/ai/chat` | General AI chat through the provider gateway | General Platform AI |
 | `POST /api/v1/user/researcher/ai/chat` | Access-gated Scientist prompt prototype | Researcher AI; retrieval/workspaces remain M3/M6 work |
-| `/api/v1/admin/*` | Router namespace only; no functional admin endpoints | M3 Admin API |
+| `/api/v1/user/researcher/applications*`, `/profile*`, `/profiles` | Researcher application, private profile editing, and opt-in public discovery | M3 researcher |
+| `/api/v1/user/researcher/organizations*` | Free organization requests, memberships, email-bound invitations, and membership review | M3 organizations |
+| `/api/v1/user/researcher/projects*` | Tenant/project-scoped projects, collaborators, tasks, text documents, and activity | M3 research workspace |
+| `/api/v1/user/researcher/events*` | Create, discover, and register for research events | M3 events |
+| `/api/v1/admin/*` | Community/moderation, researcher, organization, entitlement, event, and limited audit workflows | M3 Admin API |
 
 ## Current persisted models
 
@@ -71,14 +75,24 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `ModerationAppeal` / `moderation_appeals` | Social/moderation | One appeal per action, with moderator decision |
 | `AIConsent` / `ai_learning_consents` | AI governance | Versioned and revocable opt-in |
 | `AIInteraction` / `ai_interactions` | AI governance/operations | Usage metadata; content retention is consent-gated |
+| `ResearcherApplication` / `researcher_applications` | Researcher | One application per account; public profile discovery is opt-in |
+| `Organization*` / `organizations`, `organization_creation_requests`, `organization_memberships`, `organization_invitations` | Organization | Admin-verified tenant; invitations bind to and require acceptance by the target email |
+| `Entitlement` / `entitlements` | Subscriptions | Admin-granted `organization_create` development entitlement; no payment workflow |
+| `ResearchProject*`, `ResearchTask`, `ResearchDocument`, `ResearchActivity` | Research | Project and tenant membership checks; text documents only; project activities are append-only |
+| `ResearchEvent*` / `research_events`, `research_event_registrations` | Events | Published events, organization-scoped visibility, one registration per user |
+| `AdminAuditEvent` / `admin_audit_events` | Admin/audit | Limited audit trail for M3 administrative decisions |
 
-## M2 and M3 work not present in the current checkout
+## M2 and M3 implementation status
 
 The Social community membership, comments/reactions, and community-scoped moderation APIs are
 implemented in M2. Platform community approval/provisioning and global/escalated moderation are
-implemented; the remaining Personal profile/personalization work is also M2.
-Researcher/Admin and organization workflows remain M3.
+implemented. M3 now includes a gated researcher application/profile path, organization requests
+and invite-based membership, tenant-scoped project/task/text-document APIs, research events, a
+pre-M5 entitlement foundation, and matching Admin workflows. Binary document storage, automated
+email verification, full audit/security search, advanced organization administration, and AI
+retrieval remain later or out-of-scope work. The separate retired legacy admin implementation is
+not a parity source.
 
-Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md). Organization entitlement
-timing remains open. See [API.md](./API.md) for the implemented endpoint contract and
+Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md), including the
+organization entitlement timing. See [API.md](./API.md) for the implemented endpoint contract and
 [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) for milestone scope and exit gates.

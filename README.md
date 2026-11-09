@@ -103,10 +103,13 @@ To try the Social Portal, open [http://localhost:3000/feed](http://localhost:300
 a public question or discussion, or open [http://localhost:3000/communities](http://localhost:3000/communities)
 to request a community or use membership, community discussions, comments, reactions, reports,
 moderation, and appeals. Platform administrators can review community requests and global or
-escalated reports at [http://localhost:3003](http://localhost:3003). Configure
-`PLATFORM_ADMIN_EMAILS` with verified staff accounts in `.env`; email verification is not
-self-service in this development slice, so administrator accounts must be provisioned through a
-trusted process. The Admin app uses the shared authenticated session.
+escalated reports at [http://localhost:3003](http://localhost:3003). The Researcher Portal at
+[http://localhost:3002](http://localhost:3002) supports researcher applications, opt-in researcher
+profiles, organization requests/invitations, scoped projects, tasks, text documents, and research
+events. Configure `PLATFORM_ADMIN_EMAILS` with staff accounts in `.env`; the first administrator
+must be provisioned and verified through a trusted process. The Admin app then uses the shared
+authenticated session to record account verification, review researcher applications and
+organizations, grant pre-M5 organization entitlements, and review events and audit entries.
 API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with
@@ -125,9 +128,12 @@ docker compose exec api python -m alembic -c api/alembic.ini upgrade head
 Implemented API scope is shared registration/session, direct and group text messaging, General AI
 chat, a restricted prompt-only Scientist prototype, opt-in AI-learning content retention, and
 Social Portal communities with membership, discussions, comments, reactions, moderation, and
-appeals; platform community approval/provisioning and global/escalated report moderation. Email
-verification, account recovery, researcher approval workflow, AI retrieval/training, and general
-admin audit search are not implemented. See [API documentation](./docs/API.md)
+appeals; platform community approval/provisioning and global/escalated report moderation; gated
+researcher admission; verified organization provisioning with admin-granted development
+entitlements; organization invitations; project/task/text-document access controls; research
+events; and a limited M3 admin audit trail. Automated email verification, account recovery, binary
+document uploads, AI retrieval/training, and general admin audit search are not implemented. See
+[API documentation](./docs/API.md)
 and the [implementation inventory](./docs/MIGRATION_PLAN.md) for the current route and model map.
 
 ## Project checks

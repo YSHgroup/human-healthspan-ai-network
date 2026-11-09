@@ -26,9 +26,9 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 |---|---|---|---|
 | Social Portal | `apps/social-web` | Next.js + TypeScript | Landing page, text messaging and General AI prototype |
 | Personal Portal | `apps/personal-web` | Next.js + TypeScript | Foundation page and shared text messaging |
-| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Foundation page and gated Scientist prototype |
-| Admin Application | `apps/admin` | React + Vite + TypeScript | Foundation page only |
-| Backend API | `api/` | Python + FastAPI modular monolith | Health/readiness, shared cookie identity, text messaging and AI prototype endpoints |
+| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Researcher applications/profiles, organizations, scoped projects/tasks/text documents, and research events; Scientist prototype |
+| Admin Application | `apps/admin` | React + Vite + TypeScript | Community moderation plus researcher admission, organization verification/entitlements, event oversight, and limited audit |
+| Backend API | `api/` | Python + FastAPI modular monolith | Shared identity, social/messaging, researcher/organization collaboration, admin workflows, and AI prototype endpoints |
 | AI platform | `ai/` | Python | OpenAI-compatible provider gateway and prompt-only General/Scientist workflows; provider disabled by default |
 | Shared packages | `packages/` | TypeScript | Skeletons; shared types and UI primitives |
 | Infrastructure | `docker-compose.yml`, `Dockerfile.api`, `infra/` | Docker Compose | Full local stack uses Node.js 24, Python 3.14, PostgreSQL and Redis; API defaults to SQLite outside Compose |

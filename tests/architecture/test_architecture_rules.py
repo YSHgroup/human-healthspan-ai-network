@@ -209,6 +209,10 @@ def test_api_does_not_expose_unplanned_product_routes() -> None:
         "communities.py": "/api/v1/user/social",
         "ai_chat.py": "/api/v1/user",
     }
+    path_prefixes = {
+        ROOT / "api/app/api/v1/admin/research.py": "/api/v1/admin",
+        ROOT / "api/app/api/v1/user/researcher/__init__.py": "/api/v1/user/researcher",
+    }
     route_pattern = re.compile(r'@router\.(post|put|patch|delete)\(\s*"([^"]+)"')
     routes: set[tuple[str, str]] = set()
     for path in _files(ROOT / "api/app/api", (".py",)):
@@ -216,10 +220,11 @@ def test_api_does_not_expose_unplanned_product_routes() -> None:
         matches = list(route_pattern.finditer(source))
         if not matches:
             continue
-        prefix = (
+        prefix = path_prefixes.get(
+            path,
             "/api/v1/admin"
             if path == ROOT / "api/app/api/v1/admin/__init__.py"
-            else route_prefixes.get(path.name)
+            else route_prefixes.get(path.name),
         )
         assert prefix is not None, f"unreviewed write routes in {path.relative_to(ROOT)}"
         routes.update(

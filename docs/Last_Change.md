@@ -47,13 +47,25 @@
   and archive-only characterization test; no legacy parity is promised.
 - Removed nested app npm lockfiles to enforce the root-only lockfile rule and added the root pnpm
   lockfile; local package ranges remain `"*"`.
+- Implemented the M3 Researcher Portal and backend foundation: verified researcher applications
+  and opt-in profiles, verified organization requests, email-bound invitations and roles,
+  admin-granted pre-M5 organization entitlements, tenant-scoped projects, collaborators, tasks,
+  private/project-shared text documents, research events, and contribution activity.
+- Expanded the Admin application/API with account verification records, researcher admission,
+  organization verification/provisioning, entitlement grants/revocation, event oversight, and a
+  limited audit trail. Added migration `0005_researcher_organizations` and tests for approval,
+  tenant boundaries, private document access, invitations, entitlements, events, and admin audit.
+- Connected the Researcher Portal UI to the new workflows and documented the implemented routes,
+  data boundaries, and deliberate limitations. M3 remains in progress: automated email
+  verification, binary file storage, comprehensive admin parity, and general audit/security
+  search remain outstanding.
 
 ## Remaining M1 and product gaps
 
 - M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
   update until after M4. The estimated M2/M3 backlog is now approved.
-- Account verification/recovery, researcher application and approval workflows, self-service
-  platform-admin identity provisioning, general audit-event search, source-backed AI, launch
+- Automated account verification/recovery, self-service platform-admin identity provisioning,
+  general audit-event search, source-backed AI, launch
   security/privacy review, production audit, and production hardening remain unimplemented.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
@@ -86,8 +98,15 @@
   Vite bundle passed using direct runners. The standard workspace install/build scripts still
   encounter permission errors on pre-existing root-owned `node_modules` and brand-asset paths;
   those paths were not modified.
+- M3 validation passed: all 55 API and architecture tests, researcher and Admin TypeScript checks,
+  and production builds for the Researcher Portal and Admin. A fresh SQLite database upgraded
+  through `0005_researcher_organizations`, passed `alembic check`, downgraded to `0004`, and
+  upgraded again. Prettier passed for all three changed frontend source files, and `git diff
+  --check` passed. The broad Researcher workspace lint script also scanned generated `.next`
+  artifacts and failed on their formatting; focused checks of the changed files passed.
 
 ## Next step
 
-Continue the M4 backlog. CI establishment and the corresponding guideline update remain deferred
-until after M4 per the owner's direction.
+Continue the remaining M3 administration and secure file-storage work before evaluating the M3
+exit gate. CI establishment and the corresponding guideline update remain deferred until after
+M4 per the owner's direction.

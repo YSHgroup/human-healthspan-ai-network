@@ -564,9 +564,9 @@ From blueprint Section 15 and the architecture's governance rules.
 | Milestone | Status |
 |---|---|
 | M0 Existing MVP baseline | Existing |
-| M1 Foundation and inventory | In progress (current route/model map and approved product decisions exist; CI setup and estimated M2/M3 backlog approval remain open) |
+| M1 Foundation and inventory | In progress (route/model map, decisions, and M2/M3 estimates are recorded; CI setup and its guideline update are deferred until after M4) |
 | M2 Social and Personal portals | Planned |
-| M3 Researcher portal and Admin | Planned |
+| M3 Researcher portal and Admin | In progress (researcher admission/profile, organization and entitlement foundation, project collaboration, events, and Admin workflows are implemented; binary document storage, full audit/security search, and remaining administration/parity work are outstanding) |
 | M4 MVP launch | Planned |
 | M5 Platform AI, health records, premium | Planned |
 | M6 Private AI Scientist foundation | Planned |

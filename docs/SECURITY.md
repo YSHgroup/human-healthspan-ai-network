@@ -14,6 +14,9 @@ before public production launch.
 - Platform administration requires an authenticated, email-verified account in the explicit `PLATFORM_ADMIN_EMAILS` allowlist; state-changing admin requests also enforce trusted origins.
 - Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
 - Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
+- Researcher applications are reviewed by platform admins; researcher profile discovery is opt-in. Project and organization access is checked on the API. Organization membership does not grant project membership, and public project visibility does not grant access to tasks, membership rosters, or project-shared documents.
+- Organization invitations are accepted only by the invited case-insensitive email address. Organization provisioning requires an admin-reviewed request and an active admin-granted pre-M5 entitlement.
+- Text documents default to private access; shared documents require project membership. Project activities and the new M3 admin decisions are recorded in a limited audit trail.
 - Architecture tests enforce: no direct database access from frontends, no cross-application imports.
 - `.env.example` holds placeholders only; secrets never enter the repository.
 
@@ -33,3 +36,9 @@ before public production launch.
 Cross-user access, cross-organization access, unauthorized health-data access, share-link scope
 and expiry, AI retrieval isolation, administrative authorization, entitlement enforcement.
 Add tests before removing any existing functionality.
+
+The M3 tests cover researcher approval, organization invite matching and entitlement gating,
+organization/project isolation, private document visibility, and event/admin workflows. Email
+verification in Admin is an operator-recorded development state, not an email challenge. Binary
+file upload/storage, malware scanning, comprehensive audit search, and production security review
+remain incomplete.

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Activity,
   ArrowUpRight,
+  CalendarDays,
   ClipboardList,
   CircleDot,
   FileClock,
@@ -23,7 +24,7 @@ import {
   SiteFooter,
   SiteHeader,
 } from "@healthspan/ui/composites";
-import { Card, CardContent, CardHeader, CardTitle } from "@healthspan/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
 import "./styles.css";
 
 const socialPortalUrl = import.meta.env.VITE_SOCIAL_APP_URL ?? "http://localhost:3000";
@@ -31,9 +32,13 @@ const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 const navigation = [
   { label: "Overview", href: "#overview", icon: LayoutDashboard },
+  { label: "Users", href: "#users", icon: UsersRound },
+  { label: "Researcher access", href: "#researcher-access", icon: ShieldCheck },
+  { label: "Organizations", href: "#organizations", icon: UsersRound },
   { label: "Community requests", href: "#communities", icon: UsersRound },
+  { label: "Research events", href: "#events", icon: CalendarDays },
   { label: "Moderation", href: "#moderation", icon: ClipboardList },
-  { label: "Audit & security", href: "#audit", icon: FileClock },
+  { label: "Audit log", href: "#audit", icon: FileClock },
 ];
 
 type CommunityRequest = {
@@ -65,9 +70,76 @@ type ModerationAppeal = {
   action_reason: string;
 };
 
-async function adminRequest<T>(path: string, body?: object): Promise<T> {
+type PlatformUser = {
+  id: string;
+  email: string;
+  display_name: string;
+  email_verified: boolean;
+  researcher_approved: boolean;
+  organization_creation_entitled: boolean;
+  created_at: string;
+};
+
+type ResearcherApplication = {
+  id: string;
+  user_id: string;
+  display_name: string;
+  email: string;
+  biography: string;
+  research_interests: string;
+  affiliation: string | null;
+  created_at: string;
+};
+
+type OrganizationRequest = {
+  id: string;
+  requester_id: string;
+  requester_display_name: string;
+  requester_email: string;
+  slug: string;
+  name: string;
+  description: string;
+  website: string;
+  created_at: string;
+};
+
+type Organization = {
+  id: string;
+  slug: string;
+  name: string;
+  website: string;
+  verification_status: string;
+  created_by_id: string;
+  verified_by_id: string;
+};
+
+type ResearchEvent = {
+  id: string;
+  organization_name: string | null;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  registration_count: number;
+};
+
+type AuditEvent = {
+  id: string;
+  actor_email: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  summary: string;
+  created_at: string;
+};
+
+async function adminRequest<T>(
+  path: string,
+  body?: object,
+  method?: "GET" | "POST" | "PUT",
+): Promise<T> {
   const response = await fetch(`${apiUrl}/api/v1/admin${path}`, {
-    method: body ? "POST" : "GET",
+    method: method ?? (body ? "POST" : "GET"),
     credentials: "include",
     headers: body
       ? { Accept: "application/json", "Content-Type": "application/json" }
@@ -120,6 +192,12 @@ function AdminApp() {
   const [communityRequests, setCommunityRequests] = useState<CommunityRequest[]>([]);
   const [reports, setReports] = useState<ModerationReport[]>([]);
   const [appeals, setAppeals] = useState<ModerationAppeal[]>([]);
+  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [researcherApplications, setResearcherApplications] = useState<ResearcherApplication[]>([]);
+  const [organizationRequests, setOrganizationRequests] = useState<OrganizationRequest[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [researchEvents, setResearchEvents] = useState<ResearchEvent[]>([]);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [reportReasons, setReportReasons] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -130,14 +208,36 @@ function AdminApp() {
     setLoading(true);
     setError(null);
     try {
-      const [requests, pendingReports, pendingAppeals] = await Promise.all([
+      const [
+        requests,
+        pendingReports,
+        pendingAppeals,
+        platformUsers,
+        applications,
+        pendingOrganizations,
+        activeOrganizations,
+        events,
+        audit,
+      ] = await Promise.all([
         adminRequest<CommunityRequest[]>("/communities/requests"),
         adminRequest<ModerationReport[]>("/moderation/reports"),
         adminRequest<ModerationAppeal[]>("/moderation/appeals"),
+        adminRequest<PlatformUser[]>("/users"),
+        adminRequest<ResearcherApplication[]>("/researcher/applications"),
+        adminRequest<OrganizationRequest[]>("/organizations/requests"),
+        adminRequest<Organization[]>("/organizations"),
+        adminRequest<ResearchEvent[]>("/events"),
+        adminRequest<AuditEvent[]>("/audit/events"),
       ]);
       setCommunityRequests(requests);
       setReports(pendingReports);
       setAppeals(pendingAppeals);
+      setUsers(platformUsers);
+      setResearcherApplications(applications);
+      setOrganizationRequests(pendingOrganizations);
+      setOrganizations(activeOrganizations);
+      setResearchEvents(events);
+      setAuditEvents(audit);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -153,12 +253,18 @@ function AdminApp() {
     void loadQueues();
   }, []);
 
-  async function submitDecision(path: string, body: object, key: string, message: string) {
+  async function submitDecision(
+    path: string,
+    body: object,
+    key: string,
+    message: string,
+    method: "POST" | "PUT" = "POST",
+  ) {
     setBusy(key);
     setError(null);
     setNotice(null);
     try {
-      await adminRequest(path, body);
+      await adminRequest(path, body, method);
       setNotice(message);
       await loadQueues();
     } catch (requestError) {
@@ -252,8 +358,8 @@ function AdminApp() {
                   as="h1"
                   id="admin-heading"
                   eyebrow="Operations & governance"
-                  title="Community approval and platform safety."
-                  description="Review community requests, global content reports, and escalations using your authenticated platform administrator account."
+                  title="Research, organizations, and platform safety."
+                  description="Manage researcher access, organization verification, pre-M5 entitlements, events, community requests, and moderation."
                 />
                 <Badge variant="outline" className="gap-1.5">
                   <Activity aria-hidden="true" />
@@ -357,6 +463,271 @@ function AdminApp() {
                         </p>
                       </article>
                     ))
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <section id="users" aria-labelledby="users-heading" className="mb-6 scroll-mt-24">
+              <Card>
+                <CardHeader>
+                  <CardTitle id="users-heading" className="font-display text-xl">
+                    User accounts and development entitlements
+                  </CardTitle>
+                  <CardDescription>
+                    Email verification here is an administrator-recorded development status, not an
+                    automated email verification flow.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3">
+                  {users.map((platformUser) => (
+                    <article
+                      key={platformUser.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
+                    >
+                      <div>
+                        <h3 className="font-medium">{platformUser.display_name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {platformUser.email} ·{" "}
+                          {platformUser.email_verified ? "verified" : "unverified"} ·{" "}
+                          {platformUser.researcher_approved ? "researcher approved" : "member"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy === platformUser.id}
+                          onClick={() =>
+                            void submitDecision(
+                              `/users/${platformUser.id}/verification`,
+                              { verified: !platformUser.email_verified },
+                              platformUser.id,
+                              `Email verification was ${platformUser.email_verified ? "revoked" : "recorded"}.`,
+                              "PUT",
+                            )
+                          }
+                        >
+                          {platformUser.email_verified ? "Revoke verification" : "Mark verified"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            busy === platformUser.id || platformUser.organization_creation_entitled
+                          }
+                          onClick={() =>
+                            void submitDecision(
+                              `/users/${platformUser.id}/entitlements`,
+                              { key: "organization_create" },
+                              platformUser.id,
+                              `Organization-creation entitlement granted to ${platformUser.email}.`,
+                            )
+                          }
+                        >
+                          {platformUser.organization_creation_entitled
+                            ? "Org entitlement active"
+                            : "Grant org entitlement"}
+                        </Button>
+                      </div>
+                    </article>
+                  ))}
+                  {users.length === 0 && !loading && (
+                    <p className="text-sm text-muted-foreground">No accounts are available.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <section
+              id="researcher-access"
+              aria-labelledby="researcher-access-heading"
+              className="mb-6 scroll-mt-24"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle id="researcher-access-heading" className="font-display text-xl">
+                    Researcher access applications
+                  </CardTitle>
+                  <CardDescription>
+                    Verify the account first. Approval grants researcher access but does not grant
+                    project or organization access.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3">
+                  {researcherApplications.map((application) => (
+                    <article
+                      key={application.id}
+                      className="grid gap-3 rounded-lg border border-border p-3"
+                    >
+                      <div>
+                        <h3 className="font-medium">
+                          {application.display_name} · {application.email}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {application.affiliation ?? "Independent"} ·{" "}
+                          {application.research_interests}
+                        </p>
+                        <p className="mt-2 text-sm">{application.biography}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {(["reject", "approve"] as const).map((decision) => (
+                          <Button
+                            key={decision}
+                            size="sm"
+                            variant={decision === "approve" ? "default" : "outline"}
+                            disabled={busy === application.id}
+                            onClick={() =>
+                              void submitDecision(
+                                `/researcher/applications/${application.id}/decision`,
+                                { decision },
+                                application.id,
+                                `${application.display_name}'s researcher application was ${decision === "approve" ? "approved" : "rejected"}.`,
+                              )
+                            }
+                          >
+                            {decision === "approve" ? "Approve researcher access" : "Reject"}
+                          </Button>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                  {researcherApplications.length === 0 && !loading && (
+                    <p className="text-sm text-muted-foreground">
+                      No pending researcher applications.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <section
+              id="organizations"
+              aria-labelledby="organizations-heading"
+              className="mb-6 scroll-mt-24"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle id="organizations-heading" className="font-display text-xl">
+                    Organization requests and verified tenants
+                  </CardTitle>
+                  <CardDescription>
+                    Approval verifies the submitted identity and website and provisions the
+                    requester as owner. An active admin-granted entitlement is required.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3">
+                  {organizationRequests.map((organizationRequest) => (
+                    <article
+                      key={organizationRequest.id}
+                      className="grid gap-3 rounded-lg border border-border p-3"
+                    >
+                      <div>
+                        <h3 className="font-medium">
+                          {organizationRequest.name} · /{organizationRequest.slug}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {organizationRequest.website} · requested by{" "}
+                          {organizationRequest.requester_display_name} (
+                          {organizationRequest.requester_email})
+                        </p>
+                        <p className="mt-2 text-sm">{organizationRequest.description}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy === organizationRequest.id}
+                          onClick={() =>
+                            void submitDecision(
+                              `/organizations/requests/${organizationRequest.id}/decision`,
+                              { decision: "reject" },
+                              organizationRequest.id,
+                              `${organizationRequest.name} was rejected.`,
+                            )
+                          }
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={busy === organizationRequest.id}
+                          onClick={() =>
+                            void submitDecision(
+                              `/organizations/requests/${organizationRequest.id}/decision`,
+                              { decision: "approve" },
+                              organizationRequest.id,
+                              `${organizationRequest.name} was verified and provisioned.`,
+                            )
+                          }
+                        >
+                          Verify & provision
+                        </Button>
+                      </div>
+                    </article>
+                  ))}
+                  {organizationRequests.length === 0 && !loading && (
+                    <p className="text-sm text-muted-foreground">
+                      No pending organization requests.
+                    </p>
+                  )}
+                  {organizations.length > 0 && (
+                    <div className="grid gap-2 border-t border-border pt-3">
+                      <h3 className="font-medium">Organizations</h3>
+                      {organizations.map((organization) => (
+                        <p key={organization.id} className="text-sm text-muted-foreground">
+                          {organization.name} · {organization.website} ·{" "}
+                          {organization.verification_status}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <section id="events" aria-labelledby="events-heading" className="mb-6 scroll-mt-24">
+              <Card>
+                <CardHeader>
+                  <CardTitle id="events-heading" className="font-display text-xl">
+                    Research event oversight
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3">
+                  {researchEvents.map((researchEvent) => (
+                    <article
+                      key={researchEvent.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
+                    >
+                      <div>
+                        <h3 className="font-medium">{researchEvent.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {researchEvent.organization_name ?? "Independent"} ·{" "}
+                          {new Date(researchEvent.starts_at).toLocaleString()} ·{" "}
+                          {researchEvent.registration_count} registrations · {researchEvent.status}
+                        </p>
+                      </div>
+                      {researchEvent.status !== "cancelled" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy === researchEvent.id}
+                          onClick={() =>
+                            void submitDecision(
+                              `/events/${researchEvent.id}/decision`,
+                              { decision: "cancel" },
+                              researchEvent.id,
+                              `${researchEvent.title} was cancelled.`,
+                            )
+                          }
+                        >
+                          Cancel event
+                        </Button>
+                      )}
+                    </article>
+                  ))}
+                  {researchEvents.length === 0 && !loading && (
+                    <p className="text-sm text-muted-foreground">No research events.</p>
                   )}
                 </CardContent>
               </Card>
@@ -512,31 +883,44 @@ function AdminApp() {
               </Card>
             </section>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <section id="audit" aria-labelledby="audit-heading" className="scroll-mt-24">
-                <Card className="h-full">
-                  <CardHeader>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-                        <FileClock aria-hidden="true" className="size-5" />
-                      </span>
-                      <Badge variant="outline">Planned</Badge>
-                    </div>
-                    <CardTitle id="audit-heading" className="pt-2 font-display text-lg">
-                      Audit and security
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <EmptyState
-                      icon={ShieldCheck}
-                      title="Audit events are not connected"
-                      description="Detailed audit event search and security operations remain outside this workflow."
-                      className="min-h-40 border-0 bg-surface-raised/50"
-                    />
-                  </CardContent>
-                </Card>
-              </section>
-            </div>
+            <section id="audit" aria-labelledby="audit-heading" className="scroll-mt-24">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
+                      <FileClock aria-hidden="true" className="size-5" />
+                    </span>
+                    <Badge variant="outline">{auditEvents.length} recent events</Badge>
+                  </div>
+                  <CardTitle id="audit-heading" className="pt-2 font-display text-lg">
+                    Administrative audit trail
+                  </CardTitle>
+                  <CardDescription>
+                    This development log covers the new verification, researcher, organization,
+                    entitlement, and event decisions; it is not a complete security-event search.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  {auditEvents.map((auditEvent) => (
+                    <article key={auditEvent.id} className="rounded-lg border border-border p-3">
+                      <p className="font-medium">
+                        {auditEvent.action} · {auditEvent.target_type}
+                      </p>
+                      <p className="text-sm">{auditEvent.summary}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {auditEvent.actor_email} ·{" "}
+                        {new Date(auditEvent.created_at).toLocaleString()} · {auditEvent.target_id}
+                      </p>
+                    </article>
+                  ))}
+                  {auditEvents.length === 0 && !loading && (
+                    <p className="text-sm text-muted-foreground">
+                      No recorded M3 administration actions yet.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
           </div>
         </PageShell>
       </main>
