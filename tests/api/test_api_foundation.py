@@ -37,6 +37,12 @@ def test_only_operational_endpoints_are_exposed() -> None:
         "/api/v1/user/social/messages/conversations/{conversation_id}/messages",
         "/api/v1/user/social/ai/chat",
         "/api/v1/user/researcher/ai/chat",
+        "/api/v1/admin/communities/requests",
+        "/api/v1/admin/communities/requests/{request_id}/decision",
+        "/api/v1/admin/moderation/reports",
+        "/api/v1/admin/moderation/reports/{report_id}/actions",
+        "/api/v1/admin/moderation/appeals",
+        "/api/v1/admin/moderation/appeals/{appeal_id}/decision",
     }
 
 

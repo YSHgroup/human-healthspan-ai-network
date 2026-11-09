@@ -54,3 +54,15 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_platform_admin(user: CurrentUser) -> User:
+    if (
+        user.email.casefold() not in settings.platform_admin_emails
+        or user.email_verified_at is None
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Platform administrator access required")
+    return user
+
+
+PlatformAdmin = Annotated[User, Depends(require_platform_admin)]

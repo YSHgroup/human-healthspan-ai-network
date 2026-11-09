@@ -42,6 +42,12 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | WebSocket | `/api/v1/user/social/messages/conversations/{conversation_id}/ws` | Receive new messages for an authenticated conversation participant in real time. |
 | POST | `/api/v1/user/social/ai/chat` | General Platform AI chat via the configured provider gateway. |
 | POST | `/api/v1/user/researcher/ai/chat` | Restricted Scientist prompt-only prototype; requires verified and approved researcher records and `SCIENTIST_ENABLED=true`. |
+| GET | `/api/v1/admin/communities/requests` | List pending community requests for a verified, allowlisted platform administrator. |
+| POST | `/api/v1/admin/communities/requests/{request_id}/decision` | Approve and provision a community with its requester as active owner, or reject the request. |
+| GET | `/api/v1/admin/moderation/reports` | List pending reports on global content and escalated community reports. |
+| POST | `/api/v1/admin/moderation/reports/{report_id}/actions` | Hide/remove content, warn its author, or dismiss an eligible global/escalated report. |
+| GET | `/api/v1/admin/moderation/appeals` | List appeals against global moderation actions. |
+| POST | `/api/v1/admin/moderation/appeals/{appeal_id}/decision` | Uphold or overturn a global moderation action. |
 
 Cross-cutting behavior already in place:
 
@@ -51,16 +57,16 @@ Cross-cutting behavior already in place:
 - Social feed content is public. Posting and reporting require an authenticated session and a trusted `Origin`; reports are queued for later moderation review.
 - Community membership is scoped to each community. Open communities admit registered members directly; restricted communities require moderator approval. Restricted-community posts/comments/reactions are available only to active members.
 - Community moderation is enforced by active owner/moderator membership. Actions are recorded; posting suspensions are time-limited, and appeals can overturn actions and restore hidden content or posting access.
+- Platform routes require an authenticated session, a verified account, and a case-insensitive email match in `PLATFORM_ADMIN_EMAILS`; browser writes also require a trusted `Origin`. The allowlist is empty by default. Because account verification is not implemented, platform administrator accounts must be provisioned and verified through a trusted operational process before they can use these routes.
+- Community approval records the reviewer and timestamp and atomically creates the community plus an active owner membership for the requester. The platform moderation queue contains pending reports against global content and reports explicitly escalated by community moderators; ordinary pending community reports remain in their community queues. Global actions and their appeals are recorded and reviewable.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
 - The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
 - AI provider credentials remain server-side. The default provider is disabled and returns an explicit 503 until configured.
 
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
-`/api/v1/admin` are mounted. The admin router is still only a namespace: platform staff cannot
-approve community-creation requests or review escalations in this slice. Communities and their
-initial owner/moderator membership must currently be provisioned by trusted operations. Topics,
-comment reactions, warnings/appeals notifications, and a platform-wide moderation queue are also
-not implemented.
+`/api/v1/admin` are mounted. Admin endpoints are implemented for community approval/provisioning,
+global and escalated report review, and global-action appeals. User/organization management,
+topics, comment reactions, and warnings/appeals notifications are not implemented.
 
 The owner retired the separate legacy MVP as a migration source. This route list describes the
 current API contract; backward compatibility with the removed legacy implementation is not
@@ -68,14 +74,14 @@ provided.
 
 ## Deliberate limitations
 
-- Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and administrative identity workflows are not implemented. Do not expose this development slice as a production identity service.
+- Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and a self-service administrative identity workflow are not implemented. A trusted operator must provision and verify platform admin accounts. Do not expose this development slice as a production identity service.
 - Researcher approval is never assigned during registration. No researcher approval or admin grant endpoint is implemented.
 - The Scientist prototype has no literature retrieval, project context, document access, citations or scientific tools. It explicitly tells the model not to claim these capabilities.
 - AI sources are returned as an empty list. The prompt requests non-fabricated citations, but provider output is not independently verified.
 - AI interaction metadata is recorded. Prompt/answer content is stored only after affirmative AI-learning consent; revocation clears previously retained content. No training or export job is implemented.
 - Direct/group messaging stores text only; attachments, audio and video are not part of this MVP slice.
 - Message WebSockets validate the request origin, session cookie and conversation membership. Delivery is in-process; run one API worker for local MVP real-time messaging. Persisted messages remain available through the REST history endpoint after a disconnect.
-- Escalated reports are recorded as escalated but are not yet visible in an Admin queue. Reports against global posts/comments without a community likewise have no moderator queue until Admin moderation is implemented. Do not treat these APIs as production moderation coverage.
+- Admin actions are authenticated and authorization-gated but do not yet have a general-purpose audit-event search or production security review. Do not treat these APIs as production moderation coverage.
 
 ## Target organization (planned)
 

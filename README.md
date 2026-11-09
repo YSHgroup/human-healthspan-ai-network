@@ -102,8 +102,11 @@ Open the services at:
 To try the Social Portal, open [http://localhost:3000/feed](http://localhost:3000/feed) to publish
 a public question or discussion, or open [http://localhost:3000/communities](http://localhost:3000/communities)
 to request a community or use membership, community discussions, comments, reactions, reports,
-moderation, and appeals. Community creation requests and initial moderator assignments still need
-platform-side provisioning; an empty directory is expected until a community is provisioned.
+moderation, and appeals. Platform administrators can review community requests and global or
+escalated reports at [http://localhost:3003](http://localhost:3003). Configure
+`PLATFORM_ADMIN_EMAILS` with verified staff accounts in `.env`; email verification is not
+self-service in this development slice, so administrator accounts must be provisioned through a
+trusted process. The Admin app uses the shared authenticated session.
 API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with
@@ -122,8 +125,9 @@ docker compose exec api python -m alembic -c api/alembic.ini upgrade head
 Implemented API scope is shared registration/session, direct and group text messaging, General AI
 chat, a restricted prompt-only Scientist prototype, opt-in AI-learning content retention, and
 Social Portal communities with membership, discussions, comments, reactions, moderation, and
-appeals. Email verification, account recovery, researcher approval workflow, AI retrieval/training,
-and platform-level community approvals/moderation are not implemented. See [API documentation](./docs/API.md)
+appeals; platform community approval/provisioning and global/escalated report moderation. Email
+verification, account recovery, researcher approval workflow, AI retrieval/training, and general
+admin audit search are not implemented. See [API documentation](./docs/API.md)
 and the [implementation inventory](./docs/MIGRATION_PLAN.md) for the current route and model map.
 
 ## Project checks

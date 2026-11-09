@@ -29,6 +29,7 @@ def _split(value: str | None) -> tuple[str, ...]:
 class Settings:
     app_env: str
     cors_origins: tuple[str, ...]
+    platform_admin_emails: tuple[str, ...]
     database_url: str
     session_ttl_days: int
     session_cookie_name: str
@@ -45,6 +46,11 @@ def get_settings() -> Settings:
     return Settings(
         app_env=os.environ.get("APP_ENV", "development"),
         cors_origins=_split(os.environ.get("API_CORS_ORIGINS")),
+        platform_admin_emails=tuple(
+            email.strip().casefold()
+            for email in os.environ.get("PLATFORM_ADMIN_EMAILS", "").split(",")
+            if email.strip()
+        ),
         database_url=os.environ.get("DATABASE_URL", "sqlite:///./healthspan.db"),
         session_ttl_days=int(os.environ.get("SESSION_TTL_DAYS", "30")),
         session_cookie_name=os.environ.get("SESSION_COOKIE_NAME", "healthspan_session"),

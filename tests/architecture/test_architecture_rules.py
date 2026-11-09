@@ -216,7 +216,11 @@ def test_api_does_not_expose_unplanned_product_routes() -> None:
         matches = list(route_pattern.finditer(source))
         if not matches:
             continue
-        prefix = route_prefixes.get(path.name)
+        prefix = (
+            "/api/v1/admin"
+            if path == ROOT / "api/app/api/v1/admin/__init__.py"
+            else route_prefixes.get(path.name)
+        )
         assert prefix is not None, f"unreviewed write routes in {path.relative_to(ROOT)}"
         routes.update(
             (match.group(1).upper(), f"{prefix}{match.group(2)}") for match in matches

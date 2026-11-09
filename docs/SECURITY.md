@@ -11,6 +11,7 @@ before public production launch.
 - Security headers on the three Next.js portals; private portals and Admin are not indexable.
 - API client sends credentials for cookie sessions; tests forbid browser-stored tokens.
 - Registration hashes passwords with scrypt; session cookies are HttpOnly, SameSite=Lax, host-only, and Secure in production; only a session-token digest is stored.
+- Platform administration requires an authenticated, email-verified account in the explicit `PLATFORM_ADMIN_EMAILS` allowlist; state-changing admin requests also enforce trusted origins.
 - Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
 - Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
 - Architecture tests enforce: no direct database access from frontends, no cross-application imports.

@@ -126,7 +126,7 @@ class ModerationActionCreate(BaseModel):
 
 class ModerationActionResponse(BaseModel):
     id: str
-    community_id: str
+    community_id: str | None
     report_id: str
     moderator_id: str
     target_user_id: str

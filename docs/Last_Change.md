@@ -33,6 +33,9 @@
   from the landing page and Social Portal navigation.
 - Added pending-appeal review to the moderator API/UI, and aligned the model and migration indexes
   so Alembic metadata checks pass.
+- Implemented platform-admin community approval/provisioning and a global moderation queue for
+  global or escalated reports, including report actions and appeals. Access requires an existing
+  verified session account explicitly listed in `PLATFORM_ADMIN_EMAILS`.
 - Updated the API inventory, setup instructions, and testing limitations.
 - Fixed the local Compose database mismatch that caused `/feed` and community creation requests to
   fail: the persisted PostgreSQL database was still at `0002_social_feed` while the code expected
@@ -46,10 +49,9 @@
 
 - M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
   update until after M4. The estimated M2/M3 backlog is now approved.
-- Account verification/recovery, researcher application and approval workflows, admin
-  authentication and operations, platform approval/provisioning for communities, escalated and
-  global-content moderation queues, source-backed AI, launch security/privacy review, production
-  audit, and production hardening remain unimplemented.
+- Account verification/recovery, researcher application and approval workflows, self-service
+  platform-admin identity provisioning, general audit-event search, source-backed AI, launch
+  security/privacy review, production audit, and production hardening remain unimplemented.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -75,9 +77,14 @@
   `compileall`, and the frontend editor diagnostics reported no problems in the new page and
   component. Frontend typecheck, lint, build, and browser validation could not be run because
   Node.js/npm are unavailable; Docker CLI access is restricted in this environment.
+- After platform approval and moderation work, all 56 Python tests passed. A fresh SQLite database
+  upgraded to `0004_platform_community_moderation`, downgraded to `0003_social_communities`, and
+  upgraded again; Alembic reported no metadata drift. Admin TypeScript checking and a production
+  Vite bundle passed using direct runners. The standard workspace install/build scripts still
+  encounter permission errors on pre-existing root-owned `node_modules` and brand-asset paths;
+  those paths were not modified.
 
 ## Next step
 
-Implement platform-side community approval/provisioning and a global moderation queue so requested
-communities can be activated and global or escalated reports can be reviewed. CI remains deferred
+Continue the M4 backlog. CI establishment and the corresponding guideline update remain deferred
 until after M4 per the owner's direction.

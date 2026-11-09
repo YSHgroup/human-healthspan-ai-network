@@ -18,7 +18,7 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `/messages` | `apps/personal-web` | Shared text-messaging UI and messaging domain |
 | `/` | `apps/researcher-web` | M3 Researcher Portal: applications, profiles, and research-community entry |
 | `/ai` | `apps/researcher-web` | Restricted Private AI Scientist prototype; research workspace and retrieval are later work |
-| Admin foundation | `apps/admin` | M3 Admin Application; authentication, authorization, workflows, and backend endpoints remain unimplemented |
+| Admin operations | `apps/admin` | Verified allowlisted platform admins can approve communities and review global/escalated reports and global-action appeals |
 
 ## Current API routes
 
@@ -39,6 +39,8 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 | `/api/v1/user/social/posts/{post_id}/reports`, `/api/v1/user/social/comments/{comment_id}/reports` | Submit moderation reports | M2 safety |
 | `/api/v1/user/social/communities/{community_id}/moderation/*` | Moderator report review, actions, and appeals | M2 safety |
 | `/api/v1/user/social/me/moderation/*` | List a member's actions and submit appeals | M2 safety |
+| `/api/v1/admin/communities/requests*` | Approve/provision or reject community requests | M3 platform operations |
+| `/api/v1/admin/moderation/*` | Review global/escalated reports and global-action appeals | M3 platform moderation |
 | `GET /api/v1/user/social/messages/conversations` | List a member's conversations | Messaging; shared by Social and Personal |
 | `POST /api/v1/user/social/messages/conversations` | Create direct/group text conversation | Messaging; shared by Social and Personal |
 | `GET /api/v1/user/social/messages/conversations/{conversation_id}/messages` | Read authorized text history | Messaging |
@@ -52,19 +54,19 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 
 | Model / table | Target domain | Current boundary |
 |---|---|---|
-| `User` / `users` | Shared identity | Account and approval-state fields; no admin role model |
+| `User` / `users` | Shared identity | Account and approval-state fields; platform admins use a verified-email allowlist rather than a user role column |
 | `UserSession` / `user_sessions` | Shared identity | Opaque hashed session token, expiry, revocation |
 | `Conversation` / `conversations` | Messaging | Conversation ownership and persisted text-message thread |
 | `ConversationParticipant` / `conversation_participants` | Messaging | Membership is required for history and WebSocket access |
 | `Message` / `messages` | Messaging | Text only; no attachment/audio/video support |
 | `Community` / `communities` | Social | Open/restricted access, rules, and creator |
 | `CommunityMembership` / `community_memberships` | Social | Per-community role and pending/active/rejected membership |
-| `CommunityCreationRequest` / `community_creation_requests` | Social/admin | Free requests; approval is not yet available through Admin |
+| `CommunityCreationRequest` / `community_creation_requests` | Social/admin | Free request; platform decision records reviewer/time and approval provisions its owner community |
 | `SocialPost` / `social_posts` | Social | Public or community-scoped questions/discussions with moderation state |
 | `SocialPostComment` / `social_post_comments` | Social | Text comments with moderation state |
 | `SocialPostReaction` / `social_post_reactions` | Social | One reaction per member per post |
-| `SocialPostReport` / `social_post_reports` | Social/moderation | One report per member and post/comment; queues are community-scoped |
-| `ModerationAction` / `moderation_actions` | Social/moderation | Auditable hide/remove/warn/suspend/escalate/dismiss action and appeal state |
+| `SocialPostReport` / `social_post_reports` | Social/moderation | One report per member and post/comment; community-local queue plus global/escalated platform queue |
+| `ModerationAction` / `moderation_actions` | Social/moderation | Recorded hide/remove/warn/suspend/escalate/dismiss action; community scope is nullable for global actions |
 | `CommunityPostingSuspension` / `community_posting_suspensions` | Social/moderation | Time-bounded community posting restriction |
 | `ModerationAppeal` / `moderation_appeals` | Social/moderation | One appeal per action, with moderator decision |
 | `AIConsent` / `ai_learning_consents` | AI governance | Versioned and revocable opt-in |
@@ -72,9 +74,9 @@ planned M2/M3 architecture; it does not ask the owner to assign individual route
 
 ## M2 and M3 work not present in the current checkout
 
-The Social community membership, comments/reactions, and community-scoped moderation APIs are now
-implemented in M2. Community creation approval, escalations, global-content moderation, and the
-Admin review surface remain open; the remaining Personal profile/personalization work is also M2.
+The Social community membership, comments/reactions, and community-scoped moderation APIs are
+implemented in M2. Platform community approval/provisioning and global/escalated moderation are
+implemented; the remaining Personal profile/personalization work is also M2.
 Researcher/Admin and organization workflows remain M3.
 
 Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md). Organization entitlement

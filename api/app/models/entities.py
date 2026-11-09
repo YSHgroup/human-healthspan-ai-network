@@ -179,8 +179,13 @@ class CommunityCreationRequest(Base):
     access_type: Mapped[str] = mapped_column(String(16))
     status: Mapped[str] = mapped_column(String(16), default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
-    requester: Mapped[User] = relationship()
+    requester: Mapped[User] = relationship(foreign_keys=[requester_id])
+    reviewer: Mapped[User | None] = relationship(foreign_keys=[reviewed_by_id])
 
 
 class CommunityMembership(Base):
@@ -261,8 +266,8 @@ class ModerationAction(Base):
     __tablename__ = "moderation_actions"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    community_id: Mapped[str] = mapped_column(
-        ForeignKey("communities.id", ondelete="CASCADE"), index=True
+    community_id: Mapped[str | None] = mapped_column(
+        ForeignKey("communities.id", ondelete="CASCADE"), nullable=True, index=True
     )
     report_id: Mapped[str] = mapped_column(
         ForeignKey("social_post_reports.id", ondelete="CASCADE"), index=True
@@ -292,6 +297,8 @@ class ModerationAppeal(Base):
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    action: Mapped[ModerationAction] = relationship()
 
 
 class AIConsent(Base):
