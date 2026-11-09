@@ -13,6 +13,9 @@
   WebSocket access and delivery, consent revocation, provider configuration, and AI access gates.
 - Added shared communication UI and connected Social, Personal, and Researcher pages. Separate
   commits were made for design tokens, shared UI, and each modified portal.
+- Completed the M2 Personal Portal foundation with editable profile fields, saved-knowledge
+  previews, consent toggles, and session-local privacy review controls consistent with the
+  private-by-default M2 requirements in `docs/DEVELOPMENT_ROADMAP.md`.
 - Mapped the current frontend routes, API endpoints, and persisted models to target domains in
   `docs/MIGRATION_PLAN.md`.
 - Recorded owner-approved M2 community access/moderation and contribution-badge principles, and
