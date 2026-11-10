@@ -4,6 +4,7 @@ alembic<2.0,>=1.14
 psycopg[binary]<4.0,>=3.2
 python-dotenv<2.0,>=1.0
 uvicorn<1.0,>=0.30
+websockets<18,>=13
 
 [dev]
 httpx<1.0,>=0.27
