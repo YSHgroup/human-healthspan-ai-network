@@ -166,6 +166,8 @@ class ResearchDocumentResponse(BaseModel):
     filename: str
     content: str
     access_scope: Literal["private", "project"]
+    media_type: str | None
+    file_size: int | None
     created_at: datetime
 
 

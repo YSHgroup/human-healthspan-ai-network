@@ -1,13 +1,15 @@
 """Administrative verification, researcher admission, organization, and entitlement workflows."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import or_, select
+from sqlalchemy import Integer, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
+from app.domains.admin.audit import record_admin_action
 from app.models import (
     AdminAuditEvent,
+    AIInteraction,
     Entitlement,
     Organization,
     OrganizationCreationRequest,
@@ -30,25 +32,6 @@ class AdminResourceConflict(ResearchAdminError):
     pass
 
 
-def _record_admin_action(
-    db: Session,
-    actor: User,
-    action: str,
-    target_type: str,
-    target_id: str,
-    summary: str,
-) -> None:
-    db.add(
-        AdminAuditEvent(
-            actor_id=actor.id,
-            action=action,
-            target_type=target_type,
-            target_id=target_id,
-            summary=summary[:500],
-        )
-    )
-
-
 def list_users(db: Session, limit: int) -> list[User]:
     return list(
         db.scalars(
@@ -67,7 +50,7 @@ def set_user_verification(
     if target is None:
         raise AdminResourceNotFound("User not found")
     target.email_verified_at = datetime.now(timezone.utc) if verified else None
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "user_verification_changed",
@@ -116,7 +99,7 @@ def decide_researcher_application(
     application.reviewed_by_id = actor.id
     if decision == "approve":
         application.applicant.researcher_approved_at = reviewed_at
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "researcher_application_decided",
@@ -205,7 +188,7 @@ def decide_organization_request(
         creation_request.status = "rejected"
     creation_request.reviewed_at = reviewed_at
     creation_request.reviewed_by_id = actor.id
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "organization_request_decided",
@@ -268,7 +251,7 @@ def grant_user_entitlement(
     )
     db.add(entitlement)
     db.flush()
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "entitlement_granted",
@@ -292,7 +275,7 @@ def revoke_user_entitlement(
     if entitlement.revoked_at is not None:
         raise AdminResourceConflict("Entitlement has already been revoked")
     entitlement.revoked_at = datetime.now(timezone.utc)
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "entitlement_revoked",
@@ -316,6 +299,53 @@ def list_research_events(db: Session, limit: int) -> list[ResearchEvent]:
     )
 
 
+def summarize_ai_usage(db: Session, days: int) -> dict[str, object]:
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    rows = db.execute(
+        select(
+            AIInteraction.environment,
+            AIInteraction.provider,
+            AIInteraction.model,
+            func.count(AIInteraction.id).label("total_interactions"),
+            func.sum(AIInteraction.succeeded.cast(Integer)).label("succeeded"),
+            func.sum((~AIInteraction.succeeded).cast(Integer)).label("failed"),
+            func.sum(AIInteraction.input_characters).label("input_characters"),
+            func.sum(AIInteraction.output_characters).label("output_characters"),
+            func.avg(AIInteraction.latency_ms).label("average_latency_ms"),
+        )
+        .where(AIInteraction.created_at >= since)
+        .group_by(
+            AIInteraction.environment,
+            AIInteraction.provider,
+            AIInteraction.model,
+        )
+        .order_by(AIInteraction.environment, AIInteraction.provider, AIInteraction.model)
+    ).all()
+    groups = [
+        {
+            "environment": row.environment,
+            "provider": row.provider,
+            "model": row.model,
+            "total_interactions": int(row.total_interactions),
+            "succeeded": int(row.succeeded or 0),
+            "failed": int(row.failed or 0),
+            "input_characters": int(row.input_characters or 0),
+            "output_characters": int(row.output_characters or 0),
+            "average_latency_ms": float(row.average_latency_ms or 0),
+        }
+        for row in rows
+    ]
+    return {
+        "days": days,
+        "total_interactions": sum(group["total_interactions"] for group in groups),
+        "succeeded": sum(group["succeeded"] for group in groups),
+        "failed": sum(group["failed"] for group in groups),
+        "input_characters": sum(group["input_characters"] for group in groups),
+        "output_characters": sum(group["output_characters"] for group in groups),
+        "groups": groups,
+    }
+
+
 def cancel_research_event(
     db: Session,
     actor: User,
@@ -327,7 +357,7 @@ def cancel_research_event(
     if event.status == "cancelled":
         raise AdminResourceConflict("Research event is already cancelled")
     event.status = "cancelled"
-    _record_admin_action(
+    record_admin_action(
         db,
         actor,
         "research_event_cancelled",

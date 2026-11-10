@@ -109,7 +109,9 @@ profiles, organization requests/invitations, scoped projects, tasks, text docume
 events. Configure `PLATFORM_ADMIN_EMAILS` with staff accounts in `.env`; the first administrator
 must be provisioned and verified through a trusted process. The Admin app then uses the shared
 authenticated session to record account verification, review researcher applications and
-organizations, grant pre-M5 organization entitlements, and review events and audit entries.
+organizations, grant or revoke pre-M5 organization entitlements, and review events and audit
+entries. Research files are stored in a private local volume; upload size/type checks and API
+authorization are enabled, but malware scanning is not.
 API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with
@@ -131,8 +133,10 @@ Social Portal communities with membership, discussions, comments, reactions, mod
 appeals; platform community approval/provisioning and global/escalated report moderation; gated
 researcher admission; verified organization provisioning with admin-granted development
 entitlements; organization invitations; project/task/text-document access controls; research
-events; and a limited M3 admin audit trail. Automated email verification, account recovery, binary
-document uploads, AI retrieval/training, and general admin audit search are not implemented. See
+events; bounded private file uploads; aggregate AI usage monitoring; and an M3 admin audit trail
+for access, organization, entitlement, event, and platform moderation decisions. Automated email
+verification, account recovery, malware scanning, provider-cost tracking, AI retrieval/training,
+and general security-event search are not implemented. See
 [API documentation](./docs/API.md)
 and the [implementation inventory](./docs/MIGRATION_PLAN.md) for the current route and model map.
 

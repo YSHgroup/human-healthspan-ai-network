@@ -1,6 +1,7 @@
 """Researcher applications, organizations, projects, tasks, documents, and events."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.identity import CurrentUser, require_trusted_origin
@@ -28,10 +29,12 @@ from app.domains.researcher.workflows import (
     can_view_project,
     create_project,
     create_project_document,
+    create_project_file_document,
     create_project_task,
     create_research_event,
     event_response_data,
     get_project,
+    get_project_file_document,
     get_researcher_application,
     invite_project_member,
     list_project_activity,
@@ -43,9 +46,14 @@ from app.domains.researcher.workflows import (
     list_researcher_profiles,
     register_for_research_event,
     require_researcher_access,
+    require_project_document_upload_access,
     submit_researcher_application,
     update_project_task,
     update_researcher_profile,
+)
+from app.infrastructure.storage.research_files import (
+    ResearchFileRejected,
+    get_research_file_storage,
 )
 from app.infrastructure.database import get_db
 from app.models import OrganizationInvitation, ResearchEvent, ResearchProject, ResearchTask
@@ -564,6 +572,81 @@ def attach_project_document(
     except ValueError as error:
         _raise_research_error(error)
     return ResearchDocumentResponse.model_validate(document)
+
+
+@router.post(
+    "/projects/{project_id}/documents/upload",
+    response_model=ResearchDocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_project_document(
+    project_id: str,
+    request: Request,
+    user: CurrentUser,
+    title: str = Form(min_length=2, max_length=200),
+    access_scope: str = Form(default="private", pattern="^(private|project)$"),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> ResearchDocumentResponse:
+    require_trusted_origin(request)
+    storage = get_research_file_storage()
+    try:
+        require_project_document_upload_access(db, project_id, user)
+        stored_file = await storage.store(file)
+        try:
+            document = create_project_file_document(
+                db,
+                project_id,
+                user,
+                title,
+                stored_file.filename,
+                access_scope,
+                stored_file.key,
+                stored_file.media_type,
+                stored_file.size,
+                stored_file.sha256,
+            )
+        except Exception:
+            storage.remove(stored_file.key)
+            raise
+    except ResearchFileRejected as error:
+        raise HTTPException(status_code=error.status_code, detail=str(error)) from error
+    except ValueError as error:
+        _raise_research_error(error)
+    finally:
+        await file.close()
+    return ResearchDocumentResponse.model_validate(document)
+
+
+@router.get(
+    "/projects/{project_id}/documents/{document_id}/download",
+    response_class=FileResponse,
+)
+def download_project_document(
+    project_id: str,
+    document_id: str,
+    user: CurrentUser,
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    try:
+        document = get_project_file_document(db, project_id, document_id, user)
+    except ValueError as error:
+        _raise_research_error(error)
+    if document.file_storage_key is None:
+        raise HTTPException(status_code=404, detail="Document file not found")
+    storage = get_research_file_storage()
+    path = storage.path_for(document.file_storage_key)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Document file is unavailable")
+    return FileResponse(
+        path,
+        media_type="application/octet-stream",
+        filename=document.filename,
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get(

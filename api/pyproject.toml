@@ -13,6 +13,7 @@ dependencies = [
   "alembic>=1.14,<2.0",
   "psycopg[binary]>=3.2,<4.0",
   "python-dotenv>=1.0,<2.0",
+  "python-multipart>=0.0.20,<1.0",
   "uvicorn>=0.30,<1.0",
   "websockets>=13,<18",
 ]

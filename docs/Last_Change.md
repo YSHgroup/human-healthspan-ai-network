@@ -56,9 +56,17 @@
   limited audit trail. Added migration `0005_researcher_organizations` and tests for approval,
   tenant boundaries, private document access, invitations, entitlements, events, and admin audit.
 - Connected the Researcher Portal UI to the new workflows and documented the implemented routes,
-  data boundaries, and deliberate limitations. M3 remains in progress: automated email
-  verification, binary file storage, comprehensive admin parity, and general audit/security
-  search remain outstanding.
+  data boundaries, and deliberate limitations.
+- Added private local-volume uploads for PDF, CSV, and UTF-8 text files (10 MiB maximum), bounded
+  request bodies, opaque storage keys, digests, authorized attachment downloads, and
+  project/document access regression tests. Production object storage, malware scanning, and
+  encryption/key management remain outstanding.
+- Expanded the Admin UI to inspect entitlement histories and revoke entitlements. Added audit
+  records for community decisions, platform moderation actions, and appeal decisions, with tests.
+  Added Admin aggregate AI usage and latency monitoring without prompt/answer exposure; provider
+  cost is not currently recorded. M3 remains in progress: final parity evaluation, automated
+  email verification, production file scanning/storage, and general security-event search remain
+  outstanding.
 
 ## Remaining M1 and product gaps
 
@@ -104,9 +112,19 @@
   upgraded again. Prettier passed for all three changed frontend source files, and `git diff
   --check` passed. The broad Researcher workspace lint script also scanned generated `.next`
   artifacts and failed on their formatting; focused checks of the changed files passed.
+- Follow-up M3 changes: Admin and researcher/API contract tests, including private upload/download,
+  request-size limits, entitlement revocation, audit coverage, and aggregate AI usage passed;
+  architecture checks passed. Both frontend typechecks and production builds passed, and migration
+  `0006_research_document_files` upgraded/downgraded cleanly with no metadata drift. Focused
+  Prettier and whitespace checks passed. The complete API and architecture suites passed (57 tests).
+- M3 exit-gate review: researcher admission, project/task/document flows and cross-organization
+  denial are covered by API tests. All current Admin endpoints have API coverage and both Admin
+  and Researcher apps build, but complete Admin workflow/UI parity acceptance is not yet established;
+  the retired legacy implementation is explicitly not a parity source. M3 remains in progress.
 
 ## Next step
 
-Continue the remaining M3 administration and secure file-storage work before evaluating the M3
-exit gate. CI establishment and the corresponding guideline update remain deferred until after
-M4 per the owner's direction.
+Complete Admin workflow/UI parity acceptance against the documented M3 scope, then reevaluate the
+exit gate. Production file scanning/storage and general security-event search remain subsequent
+hardening work. CI establishment and the corresponding guideline update remain deferred until
+after M4 per the owner's direction.

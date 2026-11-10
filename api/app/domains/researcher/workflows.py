@@ -468,6 +468,80 @@ def create_project_document(
     return document
 
 
+def create_project_file_document(
+    db: Session,
+    project_id: str,
+    uploader: User,
+    title: str,
+    filename: str,
+    access_scope: str,
+    storage_key: str,
+    media_type: str,
+    file_size: int,
+    sha256: str,
+) -> ResearchDocument:
+    project = get_project(db, project_id)
+    require_project_member(db, project, uploader)
+    document = ResearchDocument(
+        project_id=project.id,
+        uploaded_by_id=uploader.id,
+        title=title.strip(),
+        filename=filename,
+        content="",
+        access_scope=access_scope,
+        file_storage_key=storage_key,
+        media_type=media_type,
+        file_size=file_size,
+        sha256=sha256,
+    )
+    db.add(document)
+    db.flush()
+    _record_activity(db, project.id, uploader.id, "document_added", f"Uploaded document {document.title}")
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(document)
+    return document
+
+
+def require_project_document_upload_access(
+    db: Session,
+    project_id: str,
+    user: User,
+) -> None:
+    project = get_project(db, project_id)
+    require_project_member(db, project, user)
+
+
+def get_project_file_document(
+    db: Session,
+    project_id: str,
+    document_id: str,
+    user: User,
+) -> ResearchDocument:
+    project = get_project(db, project_id)
+    document = db.scalar(
+        select(ResearchDocument).where(
+            ResearchDocument.id == document_id,
+            ResearchDocument.project_id == project.id,
+            ResearchDocument.file_storage_key.is_not(None),
+        )
+    )
+    if document is None:
+        raise ResearchResourceNotFound("Document not found")
+    if not can_view_project(db, project, user):
+        raise ResearchResourceNotFound("Document not found")
+    if document.access_scope == "private" and (
+        document.uploaded_by_id != user.id and project.owner_id != user.id
+    ):
+        raise ResearchResourceNotFound("Document not found")
+    if document.access_scope == "project" and _project_member(db, project.id, user.id) is None:
+        raise ResearchResourceNotFound("Document not found")
+    return document
+
+
 def list_project_documents(
     db: Session,
     project_id: str,

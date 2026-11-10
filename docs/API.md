@@ -76,6 +76,8 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | PATCH | `/api/v1/user/researcher/projects/{project_id}/tasks/{task_id}` | Update an authorized project's task status. |
 | GET | `/api/v1/user/researcher/projects/{project_id}/documents` | List only project-shared documents and private documents owned by the caller or project owner. |
 | POST | `/api/v1/user/researcher/projects/{project_id}/documents` | Attach a text document (up to 100 KB) with private or project-member access. |
+| POST | `/api/v1/user/researcher/projects/{project_id}/documents/upload` | Upload a PDF, CSV, or UTF-8 text file up to 10 MiB as multipart data; file bytes remain outside public assets. |
+| GET | `/api/v1/user/researcher/projects/{project_id}/documents/{document_id}/download` | Download a file as an attachment after checking project, organization, and document access. |
 | GET | `/api/v1/user/researcher/projects/{project_id}/activity` | Read the auditable project contribution history. |
 | GET | `/api/v1/user/researcher/events` | Discover published research events visible to the caller. |
 | POST | `/api/v1/user/researcher/events` | Publish a future research event as an approved researcher. |
@@ -92,7 +94,8 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | POST | `/api/v1/admin/entitlements/{entitlement_id}/revoke` | Revoke an active entitlement. |
 | GET | `/api/v1/admin/events` | List research events and registration counts. |
 | POST | `/api/v1/admin/events/{event_id}/decision` | Cancel a research event. |
-| GET | `/api/v1/admin/audit/events` | List recent researcher/organization/entitlement/event administration actions. |
+| GET | `/api/v1/admin/ai/usage?days=30` | Aggregate recent AI interaction volume, outcomes, character counts and latency without exposing prompts or answers. |
+| GET | `/api/v1/admin/audit/events` | List recent identity, researcher, organization, entitlement, event, community, and platform moderation decisions. |
 
 Cross-cutting behavior already in place:
 
@@ -104,8 +107,8 @@ Cross-cutting behavior already in place:
 - Community moderation is enforced by active owner/moderator membership. Actions are recorded; posting suspensions are time-limited, and appeals can overturn actions and restore hidden content or posting access.
 - Platform routes require an authenticated session, a verified account, and a case-insensitive email match in `PLATFORM_ADMIN_EMAILS`; browser writes also require a trusted `Origin`. The allowlist is empty by default. Automated account verification is not implemented, so the first platform administrator account must be provisioned and verified through a trusted operational process before it can use these routes.
 - Researcher routes require a verified account and explicit platform approval for profiles, projects, tasks, documents, and events. Public researcher discovery is opt-in. Organization requests are open to registered members, but organization provisioning additionally requires platform review and an active admin-granted `organization_create` entitlement. No payment path exists before M5.
-- Organization invitations are case-insensitive email-bound, expire after 30 days, and grant membership only after the invitee accepts. Organization projects require organization membership and independent project membership for protected resources. Public/community project visibility does not grant access to task lists, member rosters, or project-shared documents. Private text documents are visible only to their uploader and the project owner; project-shared documents require active project membership.
-- Project activities and M3 administrative decisions are recorded. The M3 audit endpoint covers only researcher access, account verification, organization provisioning, entitlement, and event decisions; it is not a complete audit/security event system.
+- Organization invitations are case-insensitive email-bound, expire after 30 days, and grant membership only after the invitee accepts. Organization projects require organization membership and independent project membership for protected resources. Public/community project visibility does not grant access to task lists, member rosters, or project-shared documents. Private documents are visible only to their uploader and the project owner; project-shared documents require active project membership. File downloads use the same authorization and are served as attachments.
+- Project activities and M3 administrative decisions are recorded. The M3 audit endpoint covers researcher admission, account verification, organization provisioning, entitlement, event, community approval, global moderation and appeal decisions; it is not a complete audit/security event system.
 - Community approval records the reviewer and timestamp and atomically creates the community plus an active owner membership for the requester. The platform moderation queue contains pending reports against global content and reports explicitly escalated by community moderators; ordinary pending community reports remain in their community queues. Global actions and their appeals are recorded and reviewable.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
 - The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
@@ -126,7 +129,8 @@ provided.
 
 - Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and a self-service administrative identity workflow are not implemented. Email verification in the M3 Admin is an operator-recorded state, not proof of an email challenge. A trusted operator must provision and verify platform admin accounts. Do not expose this development slice as a production identity service.
 - Organization website/identity verification is an administrator attestation to the submitted details; there is no automated domain ownership check or external verification provider.
-- Project attachments in this milestone are text records only. Binary upload, object storage, malware scanning, document versioning, and production document retention are not implemented.
+- Research document uploads support PDF, CSV, and UTF-8 text up to 10 MiB. The development stack stores opaque-keyed files on a private local volume outside public assets; production object storage, malware scanning, encryption/key management, document versioning, and production retention remain unimplemented.
+- Admin AI monitoring reports aggregate usage and latency only; provider cost is not recorded by the current interaction schema.
 - Research events support publication, discovery, registration, and admin cancellation only; event discussion, capacity, notifications, and attendance workflows are not implemented.
 - The M3 audit trail is limited to the explicit admin workflows listed above and does not replace general audit-event search or a production security review.
 - The Scientist prototype has no literature retrieval, project context, document access, citations or scientific tools. It explicitly tells the model not to claim these capabilities.

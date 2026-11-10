@@ -26,8 +26,8 @@ this repository call it the **Social Portal** (`apps/social-web`). They are the 
 |---|---|---|---|
 | Social Portal | `apps/social-web` | Next.js + TypeScript | Landing page, text messaging and General AI prototype |
 | Personal Portal | `apps/personal-web` | Next.js + TypeScript | Foundation page and shared text messaging |
-| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Researcher applications/profiles, organizations, scoped projects/tasks/text documents, and research events; Scientist prototype |
-| Admin Application | `apps/admin` | React + Vite + TypeScript | Community moderation plus researcher admission, organization verification/entitlements, event oversight, and limited audit |
+| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Researcher applications/profiles, organizations, scoped projects/tasks/text and uploaded-file documents, and research events; Scientist prototype |
+| Admin Application | `apps/admin` | React + Vite + TypeScript | Community moderation plus researcher admission, organization verification/entitlements, event oversight, aggregate AI usage, and limited audit |
 | Backend API | `api/` | Python + FastAPI modular monolith | Shared identity, social/messaging, researcher/organization collaboration, admin workflows, and AI prototype endpoints |
 | AI platform | `ai/` | Python | OpenAI-compatible provider gateway and prompt-only General/Scientist workflows; provider disabled by default |
 | Shared packages | `packages/` | TypeScript | Skeletons; shared types and UI primitives |

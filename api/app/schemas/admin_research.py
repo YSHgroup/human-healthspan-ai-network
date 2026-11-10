@@ -94,6 +94,28 @@ class AdminResearchEventResponse(BaseModel):
     registration_count: int
 
 
+class AdminAIUsageGroup(BaseModel):
+    environment: str
+    provider: str
+    model: str | None
+    total_interactions: int
+    succeeded: int
+    failed: int
+    input_characters: int
+    output_characters: int
+    average_latency_ms: float
+
+
+class AdminAIUsageResponse(BaseModel):
+    days: int
+    total_interactions: int
+    succeeded: int
+    failed: int
+    input_characters: int
+    output_characters: int
+    groups: list[AdminAIUsageGroup]
+
+
 class AdminAuditEventResponse(BaseModel):
     id: str
     actor_id: str

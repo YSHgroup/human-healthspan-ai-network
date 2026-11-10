@@ -21,12 +21,14 @@ from app.domains.admin.research import (
     list_user_entitlements,
     list_users,
     revoke_user_entitlement,
+    summarize_ai_usage,
     set_user_verification,
 )
 from app.infrastructure.database import get_db
 from app.models import ResearchEventRegistration
 from app.schemas.admin_research import (
     AdminAuditEventResponse,
+    AdminAIUsageResponse,
     AdminEntitlementResponse,
     AdminOrganizationResponse,
     AdminResearchEventResponse,
@@ -50,6 +52,15 @@ def _raise_admin_error(error: ValueError) -> None:
     if isinstance(error, AdminResourceConflict):
         raise HTTPException(status_code=409, detail=str(error)) from error
     raise error
+
+
+@router.get("/ai/usage", response_model=AdminAIUsageResponse)
+def ai_usage(
+    admin: PlatformAdmin,
+    db: Session = Depends(get_db),
+    days: int = Query(default=30, ge=1, le=90),
+) -> AdminAIUsageResponse:
+    return AdminAIUsageResponse(**summarize_ai_usage(db, days))
 
 
 @router.get("/users", response_model=list[PlatformUserResponse])

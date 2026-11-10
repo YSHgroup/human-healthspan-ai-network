@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Activity,
   ArrowUpRight,
+  BarChart3,
   CalendarDays,
   ClipboardList,
   CircleDot,
@@ -37,6 +38,7 @@ const navigation = [
   { label: "Organizations", href: "#organizations", icon: UsersRound },
   { label: "Community requests", href: "#communities", icon: UsersRound },
   { label: "Research events", href: "#events", icon: CalendarDays },
+  { label: "AI monitoring", href: "#ai-monitoring", icon: BarChart3 },
   { label: "Moderation", href: "#moderation", icon: ClipboardList },
   { label: "Audit log", href: "#audit", icon: FileClock },
 ];
@@ -78,6 +80,14 @@ type PlatformUser = {
   researcher_approved: boolean;
   organization_creation_entitled: boolean;
   created_at: string;
+};
+
+type UserEntitlement = {
+  id: string;
+  key: string;
+  granted_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
 };
 
 type ResearcherApplication = {
@@ -131,6 +141,26 @@ type AuditEvent = {
   target_id: string;
   summary: string;
   created_at: string;
+};
+
+type AIUsage = {
+  days: number;
+  total_interactions: number;
+  succeeded: number;
+  failed: number;
+  input_characters: number;
+  output_characters: number;
+  groups: Array<{
+    environment: string;
+    provider: string;
+    model: string | null;
+    total_interactions: number;
+    succeeded: number;
+    failed: number;
+    input_characters: number;
+    output_characters: number;
+    average_latency_ms: number;
+  }>;
 };
 
 async function adminRequest<T>(
@@ -193,11 +223,16 @@ function AdminApp() {
   const [reports, setReports] = useState<ModerationReport[]>([]);
   const [appeals, setAppeals] = useState<ModerationAppeal[]>([]);
   const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [entitlementsByUser, setEntitlementsByUser] = useState<Record<string, UserEntitlement[]>>(
+    {},
+  );
+  const [expandedEntitlementUser, setExpandedEntitlementUser] = useState<string | null>(null);
   const [researcherApplications, setResearcherApplications] = useState<ResearcherApplication[]>([]);
   const [organizationRequests, setOrganizationRequests] = useState<OrganizationRequest[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [researchEvents, setResearchEvents] = useState<ResearchEvent[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [aiUsage, setAIUsage] = useState<AIUsage | null>(null);
   const [reportReasons, setReportReasons] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -217,6 +252,7 @@ function AdminApp() {
         pendingOrganizations,
         activeOrganizations,
         events,
+        usage,
         audit,
       ] = await Promise.all([
         adminRequest<CommunityRequest[]>("/communities/requests"),
@@ -227,6 +263,7 @@ function AdminApp() {
         adminRequest<OrganizationRequest[]>("/organizations/requests"),
         adminRequest<Organization[]>("/organizations"),
         adminRequest<ResearchEvent[]>("/events"),
+        adminRequest<AIUsage>("/ai/usage"),
         adminRequest<AuditEvent[]>("/audit/events"),
       ]);
       setCommunityRequests(requests);
@@ -237,6 +274,7 @@ function AdminApp() {
       setOrganizationRequests(pendingOrganizations);
       setOrganizations(activeOrganizations);
       setResearchEvents(events);
+      setAIUsage(usage);
       setAuditEvents(audit);
     } catch (requestError) {
       setError(
@@ -252,6 +290,28 @@ function AdminApp() {
   useEffect(() => {
     void loadQueues();
   }, []);
+
+  async function loadUserEntitlements(userId: string) {
+    try {
+      const entitlements = await adminRequest<UserEntitlement[]>(`/users/${userId}/entitlements`);
+      setEntitlementsByUser((current) => ({ ...current, [userId]: entitlements }));
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Entitlement history could not be loaded.",
+      );
+    }
+  }
+
+  async function toggleEntitlementHistory(userId: string) {
+    if (expandedEntitlementUser === userId) {
+      setExpandedEntitlementUser(null);
+      return;
+    }
+    setExpandedEntitlementUser(userId);
+    await loadUserEntitlements(userId);
+  }
 
   async function submitDecision(
     path: string,
@@ -483,53 +543,108 @@ function AdminApp() {
                   {users.map((platformUser) => (
                     <article
                       key={platformUser.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
+                      className="grid gap-3 rounded-lg border border-border p-3"
                     >
-                      <div>
-                        <h3 className="font-medium">{platformUser.display_name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {platformUser.email} ·{" "}
-                          {platformUser.email_verified ? "verified" : "unverified"} ·{" "}
-                          {platformUser.researcher_approved ? "researcher approved" : "member"}
-                        </p>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h3 className="font-medium">{platformUser.display_name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {platformUser.email} ·{" "}
+                            {platformUser.email_verified ? "verified" : "unverified"} ·{" "}
+                            {platformUser.researcher_approved ? "researcher approved" : "member"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={busy === platformUser.id}
+                            onClick={() =>
+                              void submitDecision(
+                                `/users/${platformUser.id}/verification`,
+                                { verified: !platformUser.email_verified },
+                                platformUser.id,
+                                `Email verification was ${platformUser.email_verified ? "revoked" : "recorded"}.`,
+                                "PUT",
+                              )
+                            }
+                          >
+                            {platformUser.email_verified ? "Revoke verification" : "Mark verified"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              busy === platformUser.id ||
+                              platformUser.organization_creation_entitled
+                            }
+                            onClick={() =>
+                              void submitDecision(
+                                `/users/${platformUser.id}/entitlements`,
+                                { key: "organization_create" },
+                                platformUser.id,
+                                `Organization-creation entitlement granted to ${platformUser.email}.`,
+                              ).then(() => loadUserEntitlements(platformUser.id))
+                            }
+                          >
+                            {platformUser.organization_creation_entitled
+                              ? "Org entitlement active"
+                              : "Grant org entitlement"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void toggleEntitlementHistory(platformUser.id)}
+                          >
+                            {expandedEntitlementUser === platformUser.id
+                              ? "Hide entitlement history"
+                              : "Manage entitlements"}
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy === platformUser.id}
-                          onClick={() =>
-                            void submitDecision(
-                              `/users/${platformUser.id}/verification`,
-                              { verified: !platformUser.email_verified },
-                              platformUser.id,
-                              `Email verification was ${platformUser.email_verified ? "revoked" : "recorded"}.`,
-                              "PUT",
-                            )
-                          }
-                        >
-                          {platformUser.email_verified ? "Revoke verification" : "Mark verified"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={
-                            busy === platformUser.id || platformUser.organization_creation_entitled
-                          }
-                          onClick={() =>
-                            void submitDecision(
-                              `/users/${platformUser.id}/entitlements`,
-                              { key: "organization_create" },
-                              platformUser.id,
-                              `Organization-creation entitlement granted to ${platformUser.email}.`,
-                            )
-                          }
-                        >
-                          {platformUser.organization_creation_entitled
-                            ? "Org entitlement active"
-                            : "Grant org entitlement"}
-                        </Button>
-                      </div>
+                      {expandedEntitlementUser === platformUser.id && (
+                        <div className="grid gap-2 border-t border-border pt-3">
+                          {entitlementsByUser[platformUser.id]?.map((entitlement) => (
+                            <div
+                              key={entitlement.id}
+                              className="flex flex-wrap items-center justify-between gap-2 text-sm"
+                            >
+                              <p>
+                                {entitlement.key} · granted{" "}
+                                {new Date(entitlement.granted_at).toLocaleDateString()} ·{" "}
+                                {entitlement.revoked_at
+                                  ? "revoked"
+                                  : entitlement.expires_at &&
+                                      new Date(entitlement.expires_at) < new Date()
+                                    ? "expired"
+                                    : "active"}
+                              </p>
+                              {!entitlement.revoked_at && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={busy === entitlement.id}
+                                  onClick={() =>
+                                    void submitDecision(
+                                      `/entitlements/${entitlement.id}/revoke`,
+                                      {},
+                                      entitlement.id,
+                                      `${entitlement.key} entitlement revoked.`,
+                                    ).then(() => loadUserEntitlements(platformUser.id))
+                                  }
+                                >
+                                  Revoke
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                          {entitlementsByUser[platformUser.id]?.length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              No entitlement history for this account.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </article>
                   ))}
                   {users.length === 0 && !loading && (
@@ -878,6 +993,72 @@ function AdminApp() {
                         </article>
                       ))}
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <section
+              id="ai-monitoring"
+              aria-labelledby="ai-monitoring-heading"
+              className="mb-6 scroll-mt-24"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle id="ai-monitoring-heading" className="font-display text-xl">
+                    AI usage monitoring
+                  </CardTitle>
+                  <CardDescription>
+                    Aggregate interaction counts, character volume, outcomes, and latency for the
+                    last {aiUsage?.days ?? 30} days. Provider cost is not recorded by the current AI
+                    interaction contract.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  {aiUsage ? (
+                    <>
+                      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        {[
+                          ["Interactions", aiUsage.total_interactions],
+                          ["Succeeded", aiUsage.succeeded],
+                          ["Failed", aiUsage.failed],
+                          ["Input characters", aiUsage.input_characters],
+                          ["Output characters", aiUsage.output_characters],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-lg border border-border p-3">
+                            <dt className="text-sm text-muted-foreground">{label}</dt>
+                            <dd className="text-xl font-semibold">
+                              {Number(value).toLocaleString()}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                      {aiUsage.groups.map((group) => (
+                        <article
+                          key={`${group.environment}-${group.provider}-${group.model ?? "default"}`}
+                          className="flex flex-wrap justify-between gap-2 rounded-lg border border-border p-3 text-sm"
+                        >
+                          <p>
+                            {group.environment} · {group.provider} ·{" "}
+                            {group.model ?? "default model"}
+                          </p>
+                          <p>
+                            {group.total_interactions} interactions · avg{" "}
+                            {Math.round(group.average_latency_ms).toLocaleString()} ms ·{" "}
+                            {group.failed} failed
+                          </p>
+                        </article>
+                      ))}
+                      {aiUsage.groups.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          No AI interactions were recorded in this period.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      AI usage metrics are unavailable.
+                    </p>
                   )}
                 </CardContent>
               </Card>

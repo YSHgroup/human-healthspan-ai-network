@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 
 from app.api.dependencies import identity
+from app.infrastructure.storage.research_files import ResearchFileStorage
+
+import app.api.v1.user.researcher as researcher_api
 
 
 ADMIN_ORIGIN = {"Origin": "http://localhost:3003"}
@@ -86,7 +89,14 @@ def approve_researcher(
 def test_researcher_organization_project_and_admin_workflows(
     api_client: TestClient,
     monkeypatch,
+    tmp_path,
 ) -> None:
+    file_storage = ResearchFileStorage(tmp_path / "research-files")
+    monkeypatch.setattr(
+        researcher_api,
+        "get_research_file_storage",
+        lambda: file_storage,
+    )
     admin_id, admin_session = platform_admin(api_client, monkeypatch)
     owner_id, owner_session = register(api_client, "owner@example.test", "Research Lead")
     member_id, member_session = register(api_client, "member@example.test", "Research Member")
@@ -149,6 +159,17 @@ def test_researcher_organization_project_and_admin_workflows(
     )
     assert provisioned.status_code == 200, provisioned.text
     organization_id = provisioned.json()["organization_id"]
+    granted_entitlements = api_client.get(
+        f"/api/v1/admin/users/{owner_id}/entitlements"
+    )
+    assert granted_entitlements.status_code == 200
+    entitlement_id = granted_entitlements.json()[0]["id"]
+    revoked = api_client.post(
+        f"/api/v1/admin/entitlements/{entitlement_id}/revoke",
+        headers=ADMIN_ORIGIN,
+    )
+    assert revoked.status_code == 200, revoked.text
+    assert revoked.json()["revoked_at"] is not None
 
     use_session(api_client, owner_session)
     invite = api_client.post(
@@ -217,13 +238,51 @@ def test_researcher_organization_project_and_admin_workflows(
         },
     )
     assert private_document.status_code == 201, private_document.text
+    uploaded_document = api_client.post(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/upload",
+        headers=RESEARCHER_ORIGIN,
+        data={"title": "Cohort summary", "access_scope": "project"},
+        files={"file": ("../cohort.csv", b"subject,age\n001,65\n", "text/csv")},
+    )
+    assert uploaded_document.status_code == 201, uploaded_document.text
+    assert uploaded_document.json()["filename"] == "cohort.csv"
+    assert uploaded_document.json()["file_size"] == len(b"subject,age\n001,65\n")
+    private_file = api_client.post(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/upload",
+        headers=RESEARCHER_ORIGIN,
+        data={"title": "Private cohort notes", "access_scope": "private"},
+        files={"file": ("notes.txt", b"Uploader and project owner only.", "text/plain")},
+    )
+    assert private_file.status_code == 201, private_file.text
+    oversized_file = api_client.post(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/upload",
+        headers=RESEARCHER_ORIGIN,
+        data={"title": "Oversized", "access_scope": "project"},
+        files={"file": ("large.txt", b"x" * (10 * 1024 * 1024 + 1), "text/plain")},
+    )
+    assert oversized_file.status_code == 413
 
     use_session(api_client, member_session)
     shared_documents = api_client.get(
         f"/api/v1/user/researcher/projects/{project_id}/documents"
     )
     assert shared_documents.status_code == 200, shared_documents.text
-    assert [item["id"] for item in shared_documents.json()] == [document.json()["id"]]
+    assert {item["id"] for item in shared_documents.json()} == {
+        document.json()["id"],
+        uploaded_document.json()["id"],
+    }
+    assert api_client.get(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/"
+        f"{private_file.json()['id']}/download"
+    ).status_code == 404
+    downloaded = api_client.get(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/"
+        f"{uploaded_document.json()['id']}/download"
+    )
+    assert downloaded.status_code == 200
+    assert downloaded.content == b"subject,age\n001,65\n"
+    assert downloaded.headers["content-disposition"].startswith("attachment;")
+    assert downloaded.headers["x-content-type-options"] == "nosniff"
     assert api_client.get(
         f"/api/v1/user/researcher/projects/{project_id}/tasks"
     ).status_code == 200
@@ -234,6 +293,19 @@ def test_researcher_organization_project_and_admin_workflows(
     )
     assert denied_project.status_code == 403
     assert api_client.get("/api/v1/user/researcher/projects").json() == []
+    assert api_client.get(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/"
+        f"{uploaded_document.json()['id']}/download"
+    ).status_code == 404
+
+    use_session(api_client, owner_session)
+    rejected_upload = api_client.post(
+        f"/api/v1/user/researcher/projects/{project_id}/documents/upload",
+        headers=RESEARCHER_ORIGIN,
+        data={"title": "Executable", "access_scope": "project"},
+        files={"file": ("payload.exe", b"not allowed", "application/octet-stream")},
+    )
+    assert rejected_upload.status_code == 415
 
     use_session(api_client, owner_session)
     public_project = api_client.post(

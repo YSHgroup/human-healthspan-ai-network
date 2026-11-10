@@ -39,6 +39,7 @@ class Settings:
     ai_base_url: str | None
     ai_timeout_seconds: float
     scientist_enabled: bool
+    research_file_storage_path: Path
 
 
 @lru_cache
@@ -60,4 +61,10 @@ def get_settings() -> Settings:
         ai_base_url=os.environ.get("AI_BASE_URL") or None,
         ai_timeout_seconds=float(os.environ.get("AI_TIMEOUT_SECONDS", "45")),
         scientist_enabled=os.environ.get("SCIENTIST_ENABLED", "false").lower() == "true",
+        research_file_storage_path=Path(
+            os.environ.get(
+                "RESEARCH_FILE_STORAGE_PATH",
+                str(Path(__file__).resolve().parents[3] / ".data" / "research-files"),
+            )
+        ).resolve(),
     )

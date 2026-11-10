@@ -6,6 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
+from app.domains.admin.audit import record_admin_action
 from app.models import (
     Community,
     CommunityCreationRequest,
@@ -108,6 +109,14 @@ def decide_community_request(
 
         creation_request.reviewed_at = reviewed_at
         creation_request.reviewed_by_id = reviewer.id
+        record_admin_action(
+            db,
+            reviewer,
+            "community_request_decided",
+            "community_request",
+            creation_request.id,
+            f"{decision.title()} community request for {creation_request.name}",
+        )
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -222,6 +231,15 @@ def review_platform_report(
             target_post.moderation_status = "hidden" if action == "hide" else "removed"
     db.add(moderation_action)
     report.status = "reviewed"
+    record_admin_action(
+        db,
+        reviewer,
+        "moderation_report_reviewed",
+        "moderation_report",
+        report.id,
+        f"Applied {action} moderation action to "
+        f"{'comment' if target_comment is not None else 'post'} report",
+    )
     db.commit()
     db.refresh(moderation_action)
     return moderation_action
@@ -267,6 +285,14 @@ def decide_platform_appeal(
     appeal.reviewed_by_id = reviewer.id
     appeal.reviewed_at = now
     appeal.action.appeal_status = decision
+    record_admin_action(
+        db,
+        reviewer,
+        "moderation_appeal_decided",
+        "moderation_appeal",
+        appeal.id,
+        f"{decision.title()} platform moderation appeal",
+    )
     if decision == "overturned":
         report = db.get(SocialPostReport, appeal.action.report_id)
         if report and report.post_id:

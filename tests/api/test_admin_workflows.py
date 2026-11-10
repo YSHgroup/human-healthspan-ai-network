@@ -1,10 +1,11 @@
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
 from app.api.dependencies import identity
 from app.models import (
+    AIInteraction,
     Community,
     CommunityMembership,
     CommunityCreationRequest,
@@ -102,6 +103,13 @@ def test_platform_admin_approves_and_provisions_community_request(
     assert decision.status_code == 200, decision.text
     assert decision.json()["status"] == "approved"
     community_id = decision.json()["community_id"]
+    audit = api_client.get("/api/v1/admin/audit/events")
+    assert audit.status_code == 200
+    assert any(
+        event["action"] == "community_request_decided"
+        and event["target_id"] == request_id
+        for event in audit.json()
+    )
 
     with api_client.app.state.test_session_factory() as db:
         creation_request = db.get(CommunityCreationRequest, request_id)
@@ -124,6 +132,78 @@ def test_platform_admin_approves_and_provisions_community_request(
     assert next(item for item in communities.json() if item["id"] == community_id)[
         "membership_role"
     ] == "owner"
+
+
+def test_admin_ai_usage_is_aggregated_and_excludes_prompt_content(
+    api_client: TestClient,
+    monkeypatch,
+) -> None:
+    admin_id, admin_session = register(api_client, "admin@example.test", "Admin")
+    enable_platform_admin(monkeypatch, api_client, admin_id)
+    with api_client.app.state.test_session_factory() as db:
+        db.add_all(
+            [
+                AIInteraction(
+                    user_id=admin_id,
+                    environment="general",
+                    provider="test",
+                    model="model-a",
+                    input_characters=10,
+                    output_characters=20,
+                    latency_ms=100,
+                    succeeded=True,
+                ),
+                AIInteraction(
+                    user_id=admin_id,
+                    environment="general",
+                    provider="test",
+                    model="model-a",
+                    input_characters=5,
+                    output_characters=0,
+                    latency_ms=300,
+                    succeeded=False,
+                    error_code="provider_error",
+                ),
+                AIInteraction(
+                    user_id=admin_id,
+                    environment="general",
+                    provider="test",
+                    model="old",
+                    input_characters=100,
+                    output_characters=100,
+                    latency_ms=100,
+                    succeeded=True,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=40),
+                ),
+            ]
+        )
+        db.commit()
+
+    api_client.cookies.clear()
+    assert api_client.get("/api/v1/admin/ai/usage").status_code == 401
+    api_client.cookies.set("healthspan_session", admin_session)
+    response = api_client.get("/api/v1/admin/ai/usage?days=30")
+    assert response.status_code == 200, response.text
+    usage = response.json()
+    assert usage["total_interactions"] == 2
+    assert usage["succeeded"] == 1
+    assert usage["failed"] == 1
+    assert usage["input_characters"] == 15
+    assert usage["output_characters"] == 20
+    assert usage["groups"] == [
+        {
+            "environment": "general",
+            "provider": "test",
+            "model": "model-a",
+            "total_interactions": 2,
+            "succeeded": 1,
+            "failed": 1,
+            "input_characters": 15,
+            "output_characters": 20,
+            "average_latency_ms": 200.0,
+        }
+    ]
+    assert "prompt_content" not in response.text
 
 
 def test_platform_admin_rejects_request_without_provisioning(
@@ -311,6 +391,10 @@ def test_platform_queue_reviews_global_and_escalated_reports_and_appeals(
     )
     assert dismiss.status_code == 201, dismiss.text
     assert api_client.get("/api/v1/admin/moderation/reports").json() == []
+    audit = api_client.get("/api/v1/admin/audit/events")
+    assert audit.status_code == 200
+    assert any(event["action"] == "moderation_report_reviewed" for event in audit.json())
+    assert any(event["action"] == "moderation_appeal_decided" for event in audit.json())
 
     with api_client.app.state.test_session_factory() as db:
         global_post_model = db.get(SocialPost, global_post["id"])

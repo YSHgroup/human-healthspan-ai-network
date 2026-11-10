@@ -1,7 +1,7 @@
 # Data Model
 
 **Status: incremental development schema.** Alembic revisions through
-`0005_researcher_organizations.py` create the shared identity, messaging, AI-consent, social,
+`0006_research_document_files.py` create the shared identity, messaging, AI-consent, social,
 researcher, organization, collaboration, event, entitlement, and limited administrative-audit
 tables. The owner retired the separate legacy MVP as a migration source; no legacy schema or data
 migration is promised.
@@ -16,9 +16,9 @@ migration is promised.
 | Implemented AI learning | `ai_learning_consents`, `ai_interactions` | Consent is versioned/revocable; prompt/answer fields are nullable; training eligibility defaults false |
 | Implemented researcher access | `researcher_applications` | One application per account; explicit platform decision; profile discovery is opt-in |
 | Implemented organizations | `organizations`, `organization_creation_requests`, `organization_memberships`, `organization_invitations`, `entitlements` | Platform review verifies submitted identity/website; invite-based tenant membership; pre-M5 creation entitlement is admin-granted |
-| Implemented research workspace | `research_projects`, `research_project_members`, `research_tasks`, `research_documents`, `research_activities` | Organization and project authorization are checked separately; documents are text-only with private/project access |
+| Implemented research workspace | `research_projects`, `research_project_members`, `research_tasks`, `research_documents`, `research_activities` | Organization and project authorization are checked separately; private text and file documents use private/project access; binary metadata references private filesystem objects |
 | Implemented research events | `research_events`, `research_event_registrations` | Published events, organization-scoped visibility, single registration per member |
-| Implemented M3 admin audit | `admin_audit_events` | Limited events for M3 verification, admission, organization, entitlement, and event decisions; not a general audit system |
+| Implemented M3 admin audit | `admin_audit_events` | Limited events for M3 access, organization, entitlement, event, and platform community/moderation decisions; not a general security-event system |
 | Research management | Projects, questions, hypotheses, tasks, experiments, results | Ownership, permissions, versioning, provenance |
 | Scientific knowledge | Papers, authors, citations, genes, proteins, pathways, biomarkers | Source traceability and entity resolution |
 | Files and datasets | Documents, images, structured datasets | Object storage with metadata and access controls |
@@ -51,8 +51,11 @@ ProvenanceRecord, AIConversation, AIRun, ModelVersion, Evaluation, AuditLog, Pol
 - Work history is auditable; corrections use amendments, subject to legal deletion and retention rules.
 - Current models and migrations are extended with reviewed, tested migrations.
 - Project summary visibility does not grant access to project tasks, members, or documents. Protected
-  project resources require active project membership; private text documents are visible only to
+  project resources require active project membership; private documents are visible only to
   their uploader and the project owner.
+- Uploaded file bytes are stored outside public assets under opaque generated keys. Database rows
+  contain the original filename, validated media type, byte size, and SHA-256 digest; downloads
+  resolve through an authenticated, permission-checked API route.
 - AI metadata (environment, provider/model, character counts, latency and outcome) is recorded; content retention requires affirmative user consent. Revocation clears retained prompt/answer content. No training process consumes these records.
 - `researcher_approved_at` and `email_verified_at` are null on registration; only authorized platform
   administrators can record verification or researcher approval. Automated email verification is

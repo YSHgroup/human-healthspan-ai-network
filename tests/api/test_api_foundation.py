@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.api import middleware
 from app.main import app
 
 client = TestClient(app)
@@ -55,6 +56,8 @@ def test_only_operational_endpoints_are_exposed() -> None:
         "/api/v1/user/researcher/projects/{project_id}/tasks",
         "/api/v1/user/researcher/projects/{project_id}/tasks/{task_id}",
         "/api/v1/user/researcher/projects/{project_id}/documents",
+        "/api/v1/user/researcher/projects/{project_id}/documents/upload",
+        "/api/v1/user/researcher/projects/{project_id}/documents/{document_id}/download",
         "/api/v1/user/researcher/projects/{project_id}/activity",
         "/api/v1/user/researcher/events",
         "/api/v1/user/researcher/events/{event_id}/registration",
@@ -64,6 +67,7 @@ def test_only_operational_endpoints_are_exposed() -> None:
         "/api/v1/admin/moderation/reports/{report_id}/actions",
         "/api/v1/admin/moderation/appeals",
         "/api/v1/admin/moderation/appeals/{appeal_id}/decision",
+        "/api/v1/admin/ai/usage",
         "/api/v1/admin/users",
         "/api/v1/admin/users/{user_id}/verification",
         "/api/v1/admin/researcher/applications",
@@ -85,6 +89,17 @@ def test_responses_carry_request_id_and_security_headers() -> None:
     assert response.headers["X-Request-ID"] == "req-123"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["X-Frame-Options"] == "DENY"
+
+
+def test_chunked_research_upload_body_is_bounded(monkeypatch) -> None:
+    monkeypatch.setattr(middleware, "MAX_RESEARCH_UPLOAD_BODY_SIZE", 32)
+    response = client.post(
+        "/api/v1/user/researcher/projects/project-id/documents/upload",
+        headers={"Content-Type": "multipart/form-data; boundary=upload"},
+        content=iter([b"x" * 24, b"y" * 24]),
+    )
+    assert response.status_code == 413
+    assert response.json()["code"] == "request_too_large"
 
 
 def test_request_id_is_generated_when_missing() -> None:

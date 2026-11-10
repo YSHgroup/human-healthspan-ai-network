@@ -70,6 +70,8 @@ type ResearchDocument = {
   filename: string;
   content: string;
   access_scope: "private" | "project";
+  media_type: string | null;
+  file_size: number | null;
 };
 
 type ResearchEvent = {
@@ -101,7 +103,9 @@ async function researcherRequest<T>(path: string, init: RequestInit = {}): Promi
       ...init,
       headers: {
         Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(init.body && !(init.body instanceof FormData)
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...init.headers,
       },
     });
@@ -385,6 +389,27 @@ export function ResearchWorkspace() {
     }
   }
 
+  async function uploadDocument(event: FormEvent<HTMLFormElement>, projectId: string) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await researcherRequest(`/projects/${projectId}/documents/upload`, {
+        method: "POST",
+        body: new FormData(form),
+      });
+      form.reset();
+      setNotice("Project file uploaded.");
+      await loadWorkspace();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "The file upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const navigation = [
     { label: "Projects", href: "#projects" },
     { label: "Organizations", href: "#organizations" },
@@ -640,6 +665,7 @@ export function ResearchWorkspace() {
                     documents={documentsByProject[project.id] ?? []}
                     busy={busy}
                     onSubmit={submit}
+                    onUpload={uploadDocument}
                   />
                 ))}
               </div>
@@ -906,9 +932,9 @@ export function ResearchWorkspace() {
           <Alert className="border-warning/25 bg-warning-muted/60">
             <LockKeyhole aria-hidden="true" className="size-4 text-warning-foreground" />
             <AlertDescription>
-              Project documents in this milestone are text-only records. Binary uploads, secure
-              object storage, malware scanning, research AI retrieval, and advanced institutional
-              administration remain later work.
+              PDF, CSV, and UTF-8 text uploads are stored outside public assets and downloads are
+              permission-checked. Malware scanning and production object storage are not yet
+              available; do not upload untrusted files or production-sensitive data.
             </AlertDescription>
           </Alert>
         </PageShell>
@@ -924,6 +950,7 @@ function ProjectCard({
   documents,
   busy,
   onSubmit,
+  onUpload,
 }: {
   project: Project;
   tasks: ResearchTask[];
@@ -936,6 +963,7 @@ function ProjectCard({
     method?: string,
     booleanFields?: string[],
   ) => Promise<void>;
+  onUpload: (event: FormEvent<HTMLFormElement>, projectId: string) => Promise<void>;
 }) {
   return (
     <article className="grid gap-4 rounded-xl border border-border/70 bg-card p-4">
@@ -1037,11 +1065,54 @@ function ProjectCard({
             <summary className="cursor-pointer text-sm">
               {document.title} · {document.filename} · {document.access_scope}
             </summary>
-            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">
-              {document.content}
-            </pre>
+            {document.file_size !== null ? (
+              <a
+                href={`${apiUrl}${apiBase}/projects/${project.id}/documents/${document.id}/download`}
+                className="mt-2 inline-flex min-h-10 items-center text-sm underline"
+              >
+                Download file ({(document.file_size / 1024).toFixed(1)} KiB)
+              </a>
+            ) : (
+              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">
+                {document.content}
+              </pre>
+            )}
           </details>
         ))}
+        <form
+          className="grid gap-2 rounded-lg border border-border p-3"
+          onSubmit={(event) => void onUpload(event, project.id)}
+        >
+          <p className="text-sm font-medium">Upload a file (PDF, CSV, or UTF-8 text; max 10 MiB)</p>
+          <input
+            name="title"
+            required
+            minLength={2}
+            maxLength={200}
+            placeholder="Document title"
+            className="min-h-10 rounded-lg border border-border bg-background px-3 text-sm"
+          />
+          <input
+            name="file"
+            type="file"
+            accept=".pdf,.csv,.txt,application/pdf,text/csv,text/plain"
+            required
+            className="min-h-10 rounded-lg border border-border bg-background px-3 text-sm"
+          />
+          <label className="grid gap-1.5 text-sm font-medium">
+            File access
+            <select
+              name="access_scope"
+              className="min-h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal"
+            >
+              <option value="private">Private to uploader and project owner</option>
+              <option value="project">Share with authorized project members</option>
+            </select>
+          </label>
+          <Button type="submit" size="sm" variant="outline" disabled={busy}>
+            Upload file
+          </Button>
+        </form>
         <form
           className="grid gap-2"
           onSubmit={(event) =>

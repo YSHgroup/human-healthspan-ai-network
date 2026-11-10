@@ -23,6 +23,7 @@ app/config/__init__.py
 app/config/settings.py
 app/domains/__init__.py
 app/domains/admin/__init__.py
+app/domains/admin/audit.py
 app/domains/admin/research.py
 app/domains/admin/workflows.py
 app/domains/audit/__init__.py
@@ -60,6 +61,7 @@ app/infrastructure/observability/__init__.py
 app/infrastructure/queue/__init__.py
 app/infrastructure/search/__init__.py
 app/infrastructure/storage/__init__.py
+app/infrastructure/storage/research_files.py
 app/models/__init__.py
 app/models/entities.py
 app/repositories/__init__.py

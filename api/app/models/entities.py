@@ -514,6 +514,9 @@ class ResearchTask(Base):
 
 class ResearchDocument(Base):
     __tablename__ = "research_documents"
+    __table_args__ = (
+        Index("uq_research_documents_file_storage_key", "file_storage_key", unique=True),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     project_id: Mapped[str] = mapped_column(
@@ -522,8 +525,12 @@ class ResearchDocument(Base):
     uploaded_by_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     title: Mapped[str] = mapped_column(String(200))
     filename: Mapped[str] = mapped_column(String(255))
-    content: Mapped[str] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text, default="")
     access_scope: Mapped[str] = mapped_column(String(16), default="private")
+    file_storage_key: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    media_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     project: Mapped[ResearchProject] = relationship()

@@ -67,8 +67,10 @@ services:
       API_CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-healthspan}:${POSTGRES_PASSWORD:-healthspan_dev}@postgres:5432/${POSTGRES_DB:-healthspan}
       REDIS_URL: redis://redis:6379/0
+      RESEARCH_FILE_STORAGE_PATH: /workspace/.data/research-files
     volumes:
       - .:/workspace
+      - healthspan-research-files:/workspace/.data/research-files
     ports:
       - "8000:8000"
     depends_on:
@@ -109,3 +111,4 @@ volumes:
   pnpm-node-modules:
   healthspan-postgres:
   healthspan-redis:
+  healthspan-research-files:
