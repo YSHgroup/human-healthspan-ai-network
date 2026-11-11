@@ -59,3 +59,8 @@ pilots. Organization activation additionally requires platform-admin verificatio
 identity and website. Organization membership is invite-based with owner, admin, and member roles,
 and organization data is strictly tenant-isolated. Payment never bypasses organization verification
 or access controls.
+
+## D8. Admin AI cost reporting - DECIDED
+Defer provider cost reporting to M4. M3 Admin acceptance covers aggregate interaction usage,
+outcomes, character volume, and latency without estimating costs. Add cost reporting only when
+reliable provider usage and pricing inputs are available.

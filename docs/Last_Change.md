@@ -78,6 +78,8 @@
   security/privacy review, production audit, and production hardening remain unimplemented.
 - Automated email verification remains unimplemented; Admin verification is an operator-recorded
   development status.
+- AI provider cost reporting is deferred to M4 by owner decision D8; costs are not estimated without
+  reliable provider usage and pricing inputs.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -127,14 +129,12 @@
 - M3 exit-gate review: researcher admission, collaboration, document access and cross-organization
   denial pass their API tests. Documented Admin authentication and operational workflows pass
   acceptance; the retired legacy implementation is not a parity baseline. AI usage and latency are
-  shown, but provider costs cannot be reported from current persisted telemetry. Production file
+  shown. By owner decision D8, AI provider cost reporting is deferred to M4. Production file
   scanning/storage and general security-event search are subsequent hardening per owner direction.
-  M3 remains in progress pending an owner decision on whether AI cost reporting is required before
-  the milestone closes.
+  All M3 exit-gate criteria pass; M3 is marked complete.
 
 ## Next step
 
-Resolve whether provider cost reporting is required before M3 closes; all other documented Admin
-workflow/UI acceptance is complete. Production file scanning/storage and general security-event
-search remain subsequent hardening work. CI establishment and the corresponding guideline update
-remain deferred until after M4 per the owner's direction.
+Proceed to M4. AI provider cost reporting is deferred to M4 by D8. Production file scanning/storage
+and general security-event search remain subsequent hardening work. CI establishment and the
+corresponding guideline update remain deferred until after M4 per the owner's direction.

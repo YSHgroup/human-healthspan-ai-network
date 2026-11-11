@@ -287,14 +287,13 @@ the removed application.
 | Users and researcher access | Pass | Admin UI exposes account verification and researcher application decisions; API authorization/workflow tests pass. Verification is operator-recorded, not an email challenge. |
 | Organizations and entitlements | Pass | UI covers request review, provisioned organization oversight, entitlement history/grant/revocation; API workflow tests cover entitlement gating and decisions. |
 | Communities, events and moderation | Pass | UI exposes community approval, event cancellation, global/escalated reports and appeals; API tests cover decisions and audit records. Ordinary community moderation remains in community-scoped workflows. |
-| AI monitoring | Partial | UI reports aggregate volume, outcomes, character counts and latency without prompt/answer exposure. The current interaction record has no provider cost data, so cost reporting is not implemented or estimated. |
+| AI monitoring | Pass for M3 | UI reports aggregate volume, outcomes, character counts and latency without prompt/answer exposure. Provider cost reporting is explicitly deferred to M4 by owner decision D8; costs are not estimated. |
 | Audit and security | M3 audit subset passes | Identity, researcher, organization, entitlement, event, community and platform moderation decisions are available and tested. General security-event search is subsequent hardening per owner direction. |
 
 Researcher admission, project/task/document flows and cross-organization denial pass the API tests;
-the Researcher and Admin applications build. Production file scanning/storage and general
-security-event search are subsequent hardening, not blockers for this M3 acceptance. The overall
-M3 exit gate remains open pending an owner decision on whether AI provider cost reporting is
-required before M3 closes; no provider cost telemetry or pricing input is currently available.
+the Researcher and Admin applications build. All M3 exit-gate criteria pass. AI provider cost
+reporting is deferred to M4 by owner decision D8; production file scanning/storage and general
+security-event search are subsequent hardening, not blockers for M3 completion.
 
 ## 6.5 Approved backlog estimate
 
@@ -588,7 +587,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | M0 Existing MVP baseline | Existing |
 | M1 Foundation and inventory | In progress (route/model map, decisions, and M2/M3 estimates are recorded; CI setup and its guideline update are deferred until after M4) |
 | M2 Social and Personal portals | Planned |
-| M3 Researcher portal and Admin | In progress (documented Admin authentication and workflow/UI acceptance is complete; researcher admission/profile, organization and entitlement foundation, project collaboration, events, bounded private development file uploads, and aggregate AI usage monitoring are implemented; AI provider cost reporting remains an exit-gate decision; production file scanning/storage and general security-event search are subsequent hardening) |
+| M3 Researcher portal and Admin | Complete (researcher admission/profile, organization and entitlement foundation, project collaboration, events, bounded private development file uploads, and Admin authentication/workflow acceptance meet the exit gate; AI provider cost reporting is deferred to M4 by D8; production file scanning/storage and general security-event search are subsequent hardening) |
 | M4 MVP launch | Planned |
 | M5 Platform AI, health records, premium | Planned |
 | M6 Private AI Scientist foundation | Planned |
