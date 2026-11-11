@@ -392,11 +392,11 @@ function AdminApp() {
     setLoading(true);
     setError(null);
     try {
+      const platformUsers = await adminRequest<PlatformUser[]>("/users");
       const [
         requests,
         pendingReports,
         pendingAppeals,
-        platformUsers,
         applications,
         pendingOrganizations,
         activeOrganizations,
@@ -407,7 +407,6 @@ function AdminApp() {
         adminRequest<CommunityRequest[]>("/communities/requests"),
         adminRequest<ModerationReport[]>("/moderation/reports"),
         adminRequest<ModerationAppeal[]>("/moderation/appeals"),
-        adminRequest<PlatformUser[]>("/users"),
         adminRequest<ResearcherApplication[]>("/researcher/applications"),
         adminRequest<OrganizationRequest[]>("/organizations/requests"),
         adminRequest<Organization[]>("/organizations"),
