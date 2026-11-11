@@ -367,6 +367,7 @@ function AdminApp() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [adminAccessChecked, setAdminAccessChecked] = useState(false);
   const [signOutBusy, setSignOutBusy] = useState(false);
   const [communityRequests, setCommunityRequests] = useState<CommunityRequest[]>([]);
   const [reports, setReports] = useState<ModerationReport[]>([]);
@@ -393,6 +394,8 @@ function AdminApp() {
     setError(null);
     try {
       const platformUsers = await adminRequest<PlatformUser[]>("/users");
+      setUsers(platformUsers);
+      setAdminAccessChecked(true);
       const [
         requests,
         pendingReports,
@@ -417,7 +420,6 @@ function AdminApp() {
       setCommunityRequests(requests);
       setReports(pendingReports);
       setAppeals(pendingAppeals);
-      setUsers(platformUsers);
       setResearcherApplications(applications);
       setOrganizationRequests(pendingOrganizations);
       setOrganizations(activeOrganizations);
@@ -427,6 +429,7 @@ function AdminApp() {
     } catch (requestError) {
       if (requestError instanceof APIRequestError && requestError.status === 401) {
         setSessionUser(null);
+        setAdminAccessChecked(false);
         setSessionError("Your session has expired. Sign in again to continue.");
       } else if (requestError instanceof APIRequestError && requestError.status === 403) {
         setAccessDenied(true);
@@ -486,6 +489,7 @@ function AdminApp() {
       }
       setSessionUser(null);
       setAccessDenied(false);
+      setAdminAccessChecked(false);
       setNotice(null);
     } catch (requestError) {
       const message =
@@ -516,6 +520,7 @@ function AdminApp() {
         onSignedIn={(user) => {
           setSessionError(null);
           setAccessDenied(false);
+          setAdminAccessChecked(false);
           setSessionUser(user);
         }}
       />
@@ -558,6 +563,51 @@ function AdminApp() {
           </PageShell>
         </main>
         <SiteFooter note="Administrator access is enforced by the API, not this interface." />
+      </div>
+    );
+  }
+
+  if (!adminAccessChecked) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader
+          title="Healthspan Operations"
+          eyebrow="Administration"
+          homeHref="#access-check"
+          themeToggle={<AdminThemeToggle />}
+        />
+        <main id="access-check">
+          <PageShell className="grid min-h-[65vh] place-items-center py-10">
+            <Card className="w-full max-w-lg">
+              <CardHeader>
+                <CardTitle className="font-display text-2xl">
+                  Checking administrator access
+                </CardTitle>
+                <CardDescription>
+                  Admin operations remain hidden until the API confirms this account has access.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                {error && (
+                  <Alert role="alert" className="border-destructive/30 bg-destructive/5">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                {loading ? (
+                  <p role="status" className="text-sm text-muted-foreground">
+                    Verifying platform administrator access…
+                  </p>
+                ) : (
+                  <Button onClick={() => void loadQueues()}>Retry access check</Button>
+                )}
+                <Button variant="outline" onClick={() => void signOut()} disabled={signOutBusy}>
+                  <LogOut aria-hidden="true" />
+                  {signOutBusy ? "Signing out…" : "Sign out"}
+                </Button>
+              </CardContent>
+            </Card>
+          </PageShell>
+        </main>
       </div>
     );
   }
