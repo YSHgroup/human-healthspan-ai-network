@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
@@ -9,6 +9,7 @@ import {
   CircleDot,
   FileClock,
   LayoutDashboard,
+  LogOut,
   Moon,
   ShieldCheck,
   Sun,
@@ -163,6 +164,33 @@ type AIUsage = {
   }>;
 };
 
+type IdentityUser = {
+  id: string;
+  email: string;
+  display_name: string;
+};
+
+class APIRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+async function responseError(response: Response, fallback: string): Promise<APIRequestError> {
+  let message = `${fallback} (${response.status})`;
+  try {
+    const result = (await response.json()) as { detail?: unknown; message?: unknown };
+    if (typeof result.detail === "string") message = result.detail;
+    else if (typeof result.message === "string") message = result.message;
+  } catch {
+    // Keep the explicit status fallback for non-JSON error responses.
+  }
+  return new APIRequestError(message, response.status);
+}
+
 async function adminRequest<T>(
   path: string,
   body?: object,
@@ -176,11 +204,127 @@ async function adminRequest<T>(
       : { Accept: "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const result = (await response.json()) as { message?: string };
   if (!response.ok) {
-    throw new Error(result.message ?? `Administration request failed (${response.status})`);
+    throw await responseError(response, "Administration request failed");
   }
-  return result as T;
+  return (await response.json()) as T;
+}
+
+async function identityRequest<T>(path: string, body?: object): Promise<T> {
+  const response = await fetch(`${apiUrl}/api/v1/user/auth${path}`, {
+    method: body ? "POST" : "GET",
+    credentials: "include",
+    headers: body
+      ? { Accept: "application/json", "Content-Type": "application/json" }
+      : { Accept: "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!response.ok) {
+    throw await responseError(response, "Identity request failed");
+  }
+  return (await response.json()) as T;
+}
+
+function AdminSignIn({
+  initialError,
+  onSignedIn,
+}: {
+  initialError: string | null;
+  onSignedIn: (user: IdentityUser) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(initialError);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const user = await identityRequest<IdentityUser>("/login", { email, password });
+      setPassword("");
+      onSignedIn(user);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error ? requestError.message : "Sign-in could not be completed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <SiteHeader
+        title="Healthspan Operations"
+        eyebrow="Administration"
+        homeHref="#sign-in"
+        actions={
+          <a
+            href={socialPortalUrl}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+          >
+            Public network <ArrowUpRight aria-hidden="true" className="size-4" />
+          </a>
+        }
+      />
+      <main id="sign-in">
+        <PageShell className="grid min-h-[65vh] place-items-center py-10">
+          <Card className="w-full max-w-lg">
+            <CardHeader>
+              <CardTitle className="font-display text-2xl">Sign in to administration</CardTitle>
+              <CardDescription>
+                Use an existing platform account. Access is limited to verified accounts listed in
+                the server&apos;s <code>PLATFORM_ADMIN_EMAILS</code> setting.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <Alert role="alert" className="mb-4 border-destructive/30 bg-destructive/5">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <form className="grid gap-4" onSubmit={(event) => void submit(event)}>
+                <div className="grid gap-2">
+                  <label htmlFor="admin-email" className="text-sm font-medium">
+                    Email
+                  </label>
+                  <input
+                    id="admin-email"
+                    type="email"
+                    autoComplete="username"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="admin-password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <input
+                    id="admin-password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm"
+                  />
+                </div>
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Signing in…" : "Sign in"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </PageShell>
+      </main>
+      <SiteFooter note="Administrator access requires a verified account on the platform allowlist." />
+    </div>
+  );
 }
 
 function AdminThemeToggle() {
@@ -219,6 +363,11 @@ function AdminThemeToggle() {
 }
 
 function AdminApp() {
+  const [sessionUser, setSessionUser] = useState<IdentityUser | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [signOutBusy, setSignOutBusy] = useState(false);
   const [communityRequests, setCommunityRequests] = useState<CommunityRequest[]>([]);
   const [reports, setReports] = useState<ModerationReport[]>([]);
   const [appeals, setAppeals] = useState<ModerationAppeal[]>([]);
@@ -277,19 +426,142 @@ function AdminApp() {
       setAIUsage(usage);
       setAuditEvents(audit);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to load platform operations.",
-      );
+      if (requestError instanceof APIRequestError && requestError.status === 401) {
+        setSessionUser(null);
+        setSessionError("Your session has expired. Sign in again to continue.");
+      } else if (requestError instanceof APIRequestError && requestError.status === 403) {
+        setAccessDenied(true);
+        setError(null);
+      } else {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load platform operations.",
+        );
+      }
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadQueues();
+    let active = true;
+    identityRequest<IdentityUser>("/me")
+      .then((user) => {
+        if (active) setSessionUser(user);
+      })
+      .catch((requestError: unknown) => {
+        if (!active) return;
+        if (!(requestError instanceof APIRequestError && requestError.status === 401)) {
+          setSessionError(
+            requestError instanceof Error
+              ? requestError.message
+              : "The current session could not be checked.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setSessionLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (sessionUser) void loadQueues();
+  }, [sessionUser]);
+
+  async function signOut() {
+    setSignOutBusy(true);
+    setSessionError(null);
+    setError(null);
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/user/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw await responseError(response, "Sign-out failed");
+      }
+      setSessionUser(null);
+      setAccessDenied(false);
+      setNotice(null);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error ? requestError.message : "Sign-out could not be completed.";
+      setSessionError(message);
+      setError(message);
+    } finally {
+      setSignOutBusy(false);
+    }
+  }
+
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <PageShell className="grid min-h-screen place-items-center">
+          <p role="status" className="text-sm text-muted-foreground">
+            Checking administrator session…
+          </p>
+        </PageShell>
+      </div>
+    );
+  }
+
+  if (!sessionUser) {
+    return (
+      <AdminSignIn
+        initialError={sessionError}
+        onSignedIn={(user) => {
+          setSessionError(null);
+          setAccessDenied(false);
+          setSessionUser(user);
+        }}
+      />
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader
+          title="Healthspan Operations"
+          eyebrow="Administration"
+          homeHref="#access-denied"
+          themeToggle={<AdminThemeToggle />}
+        />
+        <main id="access-denied">
+          <PageShell className="grid min-h-[65vh] place-items-center py-10">
+            <Card className="w-full max-w-lg">
+              <CardHeader>
+                <CardTitle className="font-display text-2xl">
+                  Administrator access required
+                </CardTitle>
+                <CardDescription>
+                  Signed in as {sessionUser.email}. This account must be verified and included in
+                  the server&apos;s <code>PLATFORM_ADMIN_EMAILS</code> setting.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                {sessionError && (
+                  <Alert role="alert" className="border-destructive/30 bg-destructive/5">
+                    <AlertDescription>{sessionError}</AlertDescription>
+                  </Alert>
+                )}
+                <Button variant="outline" onClick={() => void signOut()} disabled={signOutBusy}>
+                  <LogOut aria-hidden="true" />
+                  {signOutBusy ? "Signing out…" : "Sign out"}
+                </Button>
+              </CardContent>
+            </Card>
+          </PageShell>
+        </main>
+        <SiteFooter note="Administrator access is enforced by the API, not this interface." />
+      </div>
+    );
+  }
 
   async function loadUserEntitlements(userId: string) {
     try {
@@ -353,12 +625,26 @@ function AdminApp() {
         links={navigation.map(({ label, href }) => ({ label, href }))}
         themeToggle={<AdminThemeToggle />}
         actions={
-          <a
-            href={socialPortalUrl}
-            className="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:inline-flex"
-          >
-            Public network <ArrowUpRight aria-hidden="true" className="size-4" />
-          </a>
+          <>
+            <span className="hidden text-sm text-muted-foreground xl:inline">
+              {sessionUser.email}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void signOut()}
+              disabled={signOutBusy}
+            >
+              <LogOut aria-hidden="true" />
+              {signOutBusy ? "Signing out…" : "Sign out"}
+            </Button>
+            <a
+              href={socialPortalUrl}
+              className="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:inline-flex"
+            >
+              Public network <ArrowUpRight aria-hidden="true" className="size-4" />
+            </a>
+          </>
         }
       />
       <main id="admin-main">
