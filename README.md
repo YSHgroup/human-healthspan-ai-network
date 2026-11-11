@@ -107,11 +107,11 @@ escalated reports at [http://localhost:3003](http://localhost:3003). The Researc
 [http://localhost:3002](http://localhost:3002) supports researcher applications, opt-in researcher
 profiles, organization requests/invitations, scoped projects, tasks, text documents, and research
 events. Configure `PLATFORM_ADMIN_EMAILS` with staff accounts in `.env`; the first administrator
-must be provisioned and verified through a trusted process. The Admin app then uses the shared
-authenticated session to record account verification, review researcher applications and
-organizations, grant or revoke pre-M5 organization entitlements, and review events and audit
-entries. Research files are stored in a private local volume; upload size/type checks and API
-authorization are enabled, but malware scanning is not.
+must be provisioned and verified through a trusted process. The Admin app provides sign-in and
+sign-out using the shared account session, then supports account verification, researcher
+applications, organization review, pre-M5 entitlement grants/revocation, event oversight,
+moderation, and audit review. Research files are stored in a private local volume; upload size/type
+checks and API authorization are enabled, but malware scanning is not.
 API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with

@@ -64,9 +64,10 @@
 - Expanded the Admin UI to inspect entitlement histories and revoke entitlements. Added audit
   records for community decisions, platform moderation actions, and appeal decisions, with tests.
   Added Admin aggregate AI usage and latency monitoring without prompt/answer exposure; provider
-  cost is not currently recorded. M3 remains in progress: final parity evaluation, automated
-  email verification, production file scanning/storage, and general security-event search remain
-  outstanding.
+  cost is not currently recorded.
+- Added Admin sign-in and sign-out using the shared HttpOnly session endpoints. The UI now checks
+  the current session, clearly denies signed-in accounts without platform-admin access, and probes
+  Admin authorization before loading operational queues.
 
 ## Remaining M1 and product gaps
 
@@ -75,6 +76,8 @@
 - Automated account verification/recovery, self-service platform-admin identity provisioning,
   general audit-event search, source-backed AI, launch
   security/privacy review, production audit, and production hardening remain unimplemented.
+- Automated email verification remains unimplemented; Admin verification is an operator-recorded
+  development status.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -117,14 +120,21 @@
   architecture checks passed. Both frontend typechecks and production builds passed, and migration
   `0006_research_document_files` upgraded/downgraded cleanly with no metadata drift. Focused
   Prettier and whitespace checks passed. The complete API and architecture suites passed (57 tests).
-- M3 exit-gate review: researcher admission, project/task/document flows and cross-organization
-  denial are covered by API tests. All current Admin endpoints have API coverage and both Admin
-  and Researcher apps build, but complete Admin workflow/UI parity acceptance is not yet established;
-  the retired legacy implementation is explicitly not a parity source. M3 remains in progress.
+- Admin acceptance: the UI maps every current Admin operation in the documented M3 scope. The
+  isolated-database browser smoke verified allowlisted sign-in, dashboard access, non-admin denial,
+  and server-side sign-out revocation. Admin production build and the API/architecture suite passed
+  (57 tests); focused Prettier and `git diff --check` passed.
+- M3 exit-gate review: researcher admission, collaboration, document access and cross-organization
+  denial pass their API tests. Documented Admin authentication and operational workflows pass
+  acceptance; the retired legacy implementation is not a parity baseline. AI usage and latency are
+  shown, but provider costs cannot be reported from current persisted telemetry. Production file
+  scanning/storage and general security-event search are subsequent hardening per owner direction.
+  M3 remains in progress pending an owner decision on whether AI cost reporting is required before
+  the milestone closes.
 
 ## Next step
 
-Complete Admin workflow/UI parity acceptance against the documented M3 scope, then reevaluate the
-exit gate. Production file scanning/storage and general security-event search remain subsequent
-hardening work. CI establishment and the corresponding guideline update remain deferred until
-after M4 per the owner's direction.
+Resolve whether provider cost reporting is required before M3 closes; all other documented Admin
+workflow/UI acceptance is complete. Production file scanning/storage and general security-event
+search remain subsequent hardening work. CI establishment and the corresponding guideline update
+remain deferred until after M4 per the owner's direction.

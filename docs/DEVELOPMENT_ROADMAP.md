@@ -271,8 +271,30 @@ The Admin API must stay compatible during the front-end migration.
 
 - A researcher can apply, be admitted, create a project, assign tasks and attach documents.
 - Cross-organization access attempts are denied in tests.
-- The new admin passes parity tests for every previous admin workflow.
+- The new Admin supports the documented M3 operations and passes their API/workflow acceptance
+  tests. The retired legacy Admin is not an acceptance baseline.
 - The original `apps/web` and old admin can be retired or repurposed.
+
+### Current Admin scope acceptance (2026-11-11)
+
+The legacy Admin source was retired by owner decision, so acceptance is against the documented M3
+modules and current Admin API contract, not a byte-for-byte or behavior-for-behavior comparison with
+the removed application.
+
+| Admin module | Acceptance result | Evidence and limits |
+|---|---|---|
+| Authentication | Pass | Browser smoke verified sign-in for a verified allowlisted account, explicit denial for a signed-in non-admin, and server-side session revocation on sign-out. |
+| Users and researcher access | Pass | Admin UI exposes account verification and researcher application decisions; API authorization/workflow tests pass. Verification is operator-recorded, not an email challenge. |
+| Organizations and entitlements | Pass | UI covers request review, provisioned organization oversight, entitlement history/grant/revocation; API workflow tests cover entitlement gating and decisions. |
+| Communities, events and moderation | Pass | UI exposes community approval, event cancellation, global/escalated reports and appeals; API tests cover decisions and audit records. Ordinary community moderation remains in community-scoped workflows. |
+| AI monitoring | Partial | UI reports aggregate volume, outcomes, character counts and latency without prompt/answer exposure. The current interaction record has no provider cost data, so cost reporting is not implemented or estimated. |
+| Audit and security | M3 audit subset passes | Identity, researcher, organization, entitlement, event, community and platform moderation decisions are available and tested. General security-event search is subsequent hardening per owner direction. |
+
+Researcher admission, project/task/document flows and cross-organization denial pass the API tests;
+the Researcher and Admin applications build. Production file scanning/storage and general
+security-event search are subsequent hardening, not blockers for this M3 acceptance. The overall
+M3 exit gate remains open pending an owner decision on whether AI provider cost reporting is
+required before M3 closes; no provider cost telemetry or pricing input is currently available.
 
 ## 6.5 Approved backlog estimate
 
@@ -566,7 +588,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | M0 Existing MVP baseline | Existing |
 | M1 Foundation and inventory | In progress (route/model map, decisions, and M2/M3 estimates are recorded; CI setup and its guideline update are deferred until after M4) |
 | M2 Social and Personal portals | Planned |
-| M3 Researcher portal and Admin | In progress (researcher admission/profile, organization and entitlement foundation, project collaboration, events, bounded private development file uploads, and AI usage monitoring are implemented; final Admin parity acceptance and production-grade file scanning/storage remain outstanding) |
+| M3 Researcher portal and Admin | In progress (documented Admin authentication and workflow/UI acceptance is complete; researcher admission/profile, organization and entitlement foundation, project collaboration, events, bounded private development file uploads, and aggregate AI usage monitoring are implemented; AI provider cost reporting remains an exit-gate decision; production file scanning/storage and general security-event search are subsequent hardening) |
 | M4 MVP launch | Planned |
 | M5 Platform AI, health records, premium | Planned |
 | M6 Private AI Scientist foundation | Planned |
