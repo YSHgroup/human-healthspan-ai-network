@@ -42,9 +42,15 @@ async def complete(
             )
         response.raise_for_status()
         data = response.json()
-        content = data["choices"][0]["message"]["content"]
+        message = data["choices"][0]["message"]
+        content = message["content"]
         if not isinstance(content, str) or not content.strip():
             raise ProviderRequestError("AI provider returned an empty completion")
+        raw_sources = message.get("sources") or []
+        sources = tuple(str(source) for source in raw_sources if isinstance(source, str) and source.strip())
+        source_notice = message.get("source_notice")
+        if source_notice is not None and not isinstance(source_notice, str):
+            source_notice = str(source_notice)
         usage = data.get("usage") or {}
         return Completion(
             provider=config.provider,
@@ -52,6 +58,8 @@ async def complete(
             content=content.strip(),
             input_tokens=usage.get("prompt_tokens"),
             output_tokens=usage.get("completion_tokens"),
+            sources=sources,
+            source_notice=source_notice,
         )
     except ProviderConfigurationError:
         raise

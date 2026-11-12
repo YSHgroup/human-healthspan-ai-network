@@ -22,7 +22,15 @@ def test_openai_compatible_provider_sends_server_side_credentials(monkeypatch) -
             200,
             json={
                 "model": "test-model",
-                "choices": [{"message": {"content": "A sourced answer."}}],
+                "choices": [
+                    {
+                        "message": {
+                            "content": "A sourced answer.",
+                            "sources": ["https://example.test/source/1"],
+                            "source_notice": "Source-backed answer.",
+                        }
+                    }
+                ],
                 "usage": {"prompt_tokens": 10, "completion_tokens": 4},
             },
         )
@@ -43,7 +51,9 @@ def test_openai_compatible_provider_sends_server_side_credentials(monkeypatch) -
 
     assert completion.content == "A sourced answer."
     assert completion.input_tokens == 10
-    assert seen["authorization"] == "Bearer test-key"
+    assert completion.sources == ("https://example.test/source/1",)
+    assert completion.source_notice == "Source-backed answer."
+    assert seen["authorization"] == "******"
     assert '"content":"Question"' in str(seen["body"])
 
 
