@@ -37,7 +37,7 @@ async def complete(
         async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
             response = await client.post(
                 url,
-                headers={"Authorization": f"******"},
+                headers={"Authorization": "******"},
                 json=payload,
             )
         response.raise_for_status()

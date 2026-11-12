@@ -84,7 +84,7 @@ async def run_chat(
     user: User,
     environment: str,
     messages: list[ChatMessage],
-) -> tuple[str, str, str | None]:
+):
     started = perf_counter()
     try:
         completion = await complete_chat(gateway_config(), environment, messages)
@@ -114,4 +114,4 @@ async def run_chat(
         latency_ms=int((perf_counter() - started) * 1000),
         succeeded=True,
     )
-    return completion.content, completion.provider, completion.model
+    return completion

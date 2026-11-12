@@ -10,13 +10,28 @@ SCIENTIST_SYSTEM_MESSAGE = (
     "Preserve uncertainty, do not invent citations, and label hypotheses as proposals requiring "
     "independent validation. Do not claim to have searched literature or project documents."
 )
+NO_VERIFIED_SOURCES_NOTICE = (
+    "This prototype has no verified retrieval sources or literature search. Treat all outputs as "
+    "proposals requiring independent validation before use."
+)
 
 
 async def answer(
     config: GatewayConfig,
     messages: list[ChatMessage],
 ) -> Completion:
-    return await complete_provider(
+    completion = await complete_provider(
         config,
         [ChatMessage(role="system", content=SCIENTIST_SYSTEM_MESSAGE), *messages],
     )
+    if completion.source_notice is None:
+        return Completion(
+            provider=completion.provider,
+            model=completion.model,
+            content=completion.content,
+            input_tokens=completion.input_tokens,
+            output_tokens=completion.output_tokens,
+            sources=completion.sources,
+            source_notice=NO_VERIFIED_SOURCES_NOTICE,
+        )
+    return completion

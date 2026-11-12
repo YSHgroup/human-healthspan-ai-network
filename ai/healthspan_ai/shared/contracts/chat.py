@@ -29,3 +29,5 @@ class Completion:
     content: str
     input_tokens: int | None = None
     output_tokens: int | None = None
+    sources: tuple[str, ...] = ()
+    source_notice: str | None = None

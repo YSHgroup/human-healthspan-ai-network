@@ -9,7 +9,7 @@ from healthspan_ai.gateway.providers.openai_compatible import (
     complete,
 )
 from healthspan_ai.gateway.service import complete_chat
-from healthspan_ai.shared.contracts.chat import ChatMessage, GatewayConfig
+from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 
 def test_openai_compatible_provider_sends_server_side_credentials(monkeypatch) -> None:
@@ -57,3 +57,16 @@ def test_gateway_requires_a_configured_provider() -> None:
     )
     with pytest.raises(ProviderConfigurationError):
         asyncio.run(complete_chat(config, "general", [ChatMessage(role="user", content="Question")]))
+
+
+def test_completion_keeps_explicit_source_metadata() -> None:
+    completion = Completion(
+        provider="openai-compatible",
+        model="test-model",
+        content="A sourced answer.",
+        sources=("https://example.test/source",),
+        source_notice="This answer has source metadata.",
+    )
+
+    assert completion.sources == ("https://example.test/source",)
+    assert completion.source_notice == "This answer has source metadata."

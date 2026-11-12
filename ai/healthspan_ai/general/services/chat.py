@@ -11,13 +11,28 @@ GENERAL_SYSTEM_MESSAGE = (
     "Provide traceable source details when you know them; never invent citations. "
     "Label AI-generated hypotheses as proposals, not validated findings."
 )
+NO_VERIFIED_SOURCES_NOTICE = (
+    "This prototype has no verified retrieval sources. Check claims and citations independently; "
+    "AI-generated hypotheses are not validated findings."
+)
 
 
 async def answer(
     config: GatewayConfig,
     messages: list[ChatMessage],
 ) -> Completion:
-    return await complete_provider(
+    completion = await complete_provider(
         config,
         [ChatMessage(role="system", content=GENERAL_SYSTEM_MESSAGE), *messages],
     )
+    if completion.source_notice is None:
+        return Completion(
+            provider=completion.provider,
+            model=completion.model,
+            content=completion.content,
+            input_tokens=completion.input_tokens,
+            output_tokens=completion.output_tokens,
+            sources=completion.sources,
+            source_notice=NO_VERIFIED_SOURCES_NOTICE,
+        )
+    return completion

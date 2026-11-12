@@ -23,7 +23,7 @@ async def respond(
     db: Session,
 ) -> ChatResponse:
     try:
-        answer, provider, model = await run_chat(db, user, environment, messages)
+        completion = await run_chat(db, user, environment, messages)
     except ProviderConfigurationError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -35,12 +35,13 @@ async def respond(
             detail="The configured AI provider could not complete the request",
         ) from exc
     return ChatResponse(
-        answer=answer,
-        provider=provider,
-        model=model,
-        sources=[],
+        answer=completion.content,
+        provider=completion.provider,
+        model=completion.model,
+        sources=list(completion.sources),
         source_notice=(
-            "This prototype has no verified retrieval sources. Check claims and citations "
+            completion.source_notice
+            or "This prototype has no verified retrieval sources. Check claims and citations "
             "independently; AI-generated hypotheses are not validated findings."
         ),
     )
