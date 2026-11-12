@@ -2,6 +2,7 @@
 
 ## Completed
 
+- Started the M4 MVP launch work by tightening the AI gateway routing and OpenAI-compatible provider handling: provider and environment names are normalized before routing, required provider values are stripped and validated, and the request path remains server-only with a redacted authorization header.
 - Added an Ubuntu Docker Compose development stack for all four portals, the Python 3.14 API,
   PostgreSQL and Redis. Updated the setup guide and pinned the Node.js engine to major version 24.
 - Recorded the owner-approved M1 audience, geographic-availability, and MVP-boundary decisions in

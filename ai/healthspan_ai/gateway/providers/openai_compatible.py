@@ -19,21 +19,25 @@ async def complete(
     config: GatewayConfig,
     messages: list[ChatMessage],
 ) -> Completion:
-    if not config.api_key or not config.model or not config.base_url:
+    api_key = (config.api_key or "").strip()
+    model = (config.model or "").strip()
+    base_url = (config.base_url or "").strip()
+
+    if not api_key or not model or not base_url:
         raise ProviderConfigurationError(
             "AI_PROVIDER=openai-compatible requires AI_API_KEY, AI_MODEL and AI_BASE_URL"
         )
 
-    url = urljoin(config.base_url.rstrip("/") + "/", "chat/completions")
+    url = urljoin(base_url.rstrip("/") + "/", "chat/completions")
     payload = {
-        "model": config.model,
+        "model": model,
         "messages": [{"role": message.role, "content": message.content} for message in messages],
     }
     try:
         async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
             response = await client.post(
                 url,
-                headers={"Authorization": f"Bearer {config.api_key}"},
+                headers={"Authorization": f"******"},
                 json=payload,
             )
         response.raise_for_status()
@@ -44,7 +48,7 @@ async def complete(
         usage = data.get("usage") or {}
         return Completion(
             provider=config.provider,
-            model=data.get("model", config.model),
+            model=data.get("model", model),
             content=content.strip(),
             input_tokens=usage.get("prompt_tokens"),
             output_tokens=usage.get("completion_tokens"),

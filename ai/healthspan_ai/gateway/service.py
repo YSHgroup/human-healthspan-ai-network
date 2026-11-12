@@ -12,17 +12,20 @@ async def complete_chat(
     environment: str,
     messages: list[ChatMessage],
 ) -> Completion:
-    if config.provider == "openai-compatible":
-        if environment == "general":
+    provider = (config.provider or "").strip().lower()
+    environment_name = (environment or "").strip().lower()
+
+    if provider == "openai-compatible":
+        if environment_name == "general":
             from healthspan_ai.general.services.chat import answer
 
             return await answer(config, messages)
-        if environment == "scientist":
+        if environment_name == "scientist":
             from healthspan_ai.scientist.services.chat import answer
 
             return await answer(config, messages)
-        raise ProviderConfigurationError("Unsupported AI environment")
-    if config.provider == "disabled":
+        raise ProviderConfigurationError(f"Unsupported AI environment: {environment}")
+    if provider == "disabled":
         raise ProviderConfigurationError("No AI provider is configured")
     raise ProviderConfigurationError(f"Unsupported AI provider: {config.provider}")
 
