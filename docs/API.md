@@ -94,7 +94,7 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | POST | `/api/v1/admin/entitlements/{entitlement_id}/revoke` | Revoke an active entitlement. |
 | GET | `/api/v1/admin/events` | List research events and registration counts. |
 | POST | `/api/v1/admin/events/{event_id}/decision` | Cancel a research event. |
-| GET | `/api/v1/admin/ai/usage?days=30` | Aggregate recent AI interaction volume, outcomes, character counts and latency without exposing prompts or answers. |
+| GET | `/api/v1/admin/ai/usage?days=30` | Aggregate recent AI interaction volume, outcomes, token usage, latency, and optional configured cost estimates without exposing prompts or answers. |
 | GET | `/api/v1/admin/audit/events` | List recent identity, researcher, organization, entitlement, event, community, and platform moderation decisions. |
 
 Cross-cutting behavior already in place:
@@ -130,11 +130,11 @@ provided.
 - Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and a self-service administrative identity workflow are not implemented. Email verification in the M3 Admin is an operator-recorded state, not proof of an email challenge. A trusted operator must provision and verify platform admin accounts. Do not expose this development slice as a production identity service.
 - Organization website/identity verification is an administrator attestation to the submitted details; there is no automated domain ownership check or external verification provider.
 - Research document uploads support PDF, CSV, and UTF-8 text up to 10 MiB. The development stack stores opaque-keyed files on a private local volume outside public assets; production object storage, malware scanning, encryption/key management, document versioning, and production retention remain unimplemented.
-- Admin AI monitoring reports aggregate usage and latency only; provider cost is not recorded by the current interaction schema.
+- Admin AI monitoring reports aggregate character/token usage, outcomes and latency. Optional cost estimates require exact-model rates in `AI_MODEL_PRICING_JSON` and a traceable `AI_PRICING_SOURCE`; unknown model rates or missing provider token usage are reported as unpriced. Estimates are not provider invoices.
 - Research events support publication, discovery, registration, and admin cancellation only; event discussion, capacity, notifications, and attendance workflows are not implemented.
 - The M3 audit trail is limited to the explicit admin workflows listed above and does not replace general audit-event search or a production security review.
 - The Scientist prototype has no literature retrieval, project context, document access, citations or scientific tools. It explicitly tells the model not to claim these capabilities.
-- AI sources are returned as an empty list. The prompt requests non-fabricated citations, but provider output is not independently verified.
+- The AI response may contain provider-supplied source metadata, but `sources_verified` is always `false`; provider citations and source notices are not independently validated. No retrieval index or verified source pipeline is connected.
 - AI interaction metadata is recorded. Prompt/answer content is stored only after affirmative AI-learning consent; revocation clears previously retained content. No training or export job is implemented.
 - Direct/group messaging stores text only; attachments, audio and video are not part of this MVP slice.
 - Message WebSockets validate the request origin, session cookie and conversation membership. Delivery is in-process; run one API worker for local MVP real-time messaging. Persisted messages remain available through the REST history endpoint after a disconnect.

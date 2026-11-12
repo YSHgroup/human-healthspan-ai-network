@@ -64,23 +64,34 @@
   encryption/key management remain outstanding.
 - Expanded the Admin UI to inspect entitlement histories and revoke entitlements. Added audit
   records for community decisions, platform moderation actions, and appeal decisions, with tests.
-  Added Admin aggregate AI usage and latency monitoring without prompt/answer exposure; provider
-  cost is not currently recorded.
+  Added Admin aggregate AI usage and latency monitoring without prompt/answer exposure.
 - Added Admin sign-in and sign-out using the shared HttpOnly session endpoints. The UI now checks
   the current session, clearly denies signed-in accounts without platform-admin access, and probes
   Admin authorization before loading operational queues.
+- Continued M4 governance hardening: centralized environment permission checks now enforce the
+  Scientist feature flag, verified-email state and researcher approval before gateway dispatch.
+  AI responses label all provider-supplied source details and notices as unverified.
+- Implemented optional, auditable AI cost estimates from provider-reported token counts and
+  exact-model USD rates supplied with a pricing-source label. Stored rate snapshots and estimates,
+  exposed priced/unpriced usage to Admin, and added focused permission, privacy, pricing and API
+  tests. These estimates are not provider invoices.
 
 ## Remaining M1 and product gaps
 
 - M1 remains in progress: the owner deferred CI establishment and the corresponding guideline
   update until after M4. The estimated M2/M3 backlog is now approved.
 - Automated account verification/recovery, self-service platform-admin identity provisioning,
-  general audit-event search, source-backed AI, launch
-  security/privacy review, production audit, and production hardening remain unimplemented.
+  general audit-event search, source-backed AI, launch security/privacy review, production audit,
+  and production hardening remain unimplemented.
 - Automated email verification remains unimplemented; Admin verification is an operator-recorded
   development status.
-- AI provider cost reporting is deferred to M4 by owner decision D8; costs are not estimated without
-  reliable provider usage and pricing inputs.
+- M4 remains incomplete: rate limiting/MFA/recovery, malware scanning and production file storage,
+  encryption/key management, tested production backup/restore, monitoring/alerting, incident
+  runbooks, legal/privacy review, and a production security assessment are not established.
+- AI retrieval and verified citations are not connected. Cost estimates remain unavailable when
+  token usage, exact-model rates, or the operator-supplied pricing source are missing.
+- Production deployment, launch-measure baselines, and operational dashboards beyond current Admin
+  AI usage monitoring are not certified.
 - Payment/checkout remains deferred until M5; M3 entitlement checks use admin-granted development
   and pilot entitlements.
 - The legacy source was retired by owner decision. Its routes, schema, behavior, and production data
@@ -133,9 +144,16 @@
   shown. By owner decision D8, AI provider cost reporting is deferred to M4. Production file
   scanning/storage and general security-event search are subsequent hardening per owner direction.
   All M3 exit-gate criteria pass; M3 is marked complete.
+- M4 incremental validation: all 73 architecture, API, AI, and migration tests passed. A fresh
+  SQLite database upgraded through `0007_ai_usage_costs`, passed `alembic check`, downgraded to
+  `0006_research_document_files`, and upgraded again with no metadata drift. Admin TypeScript
+  checking, focused Prettier, the production Vite bundle, and `git diff --check` passed. The Python
+  tests report one existing Starlette/httpx deprecation warning.
 
 ## Next step
 
-Proceed to M4. AI provider cost reporting is deferred to M4 by D8. Production file scanning/storage
-and general security-event search remain subsequent hardening work. CI establishment and the
-corresponding guideline update remain deferred until after M4 per the owner's direction.
+Continue the M4 launch-readiness work without marking the milestone complete until the roadmap
+exit gate is met. Resolve production identity and abuse controls, complete security/privacy and
+legal assessments, test production backup/restore and operations, and connect only approved,
+permission-aware source retrieval before treating AI outputs as source-backed. CI establishment
+and its guideline update remain deferred until after M4 per the owner's direction.

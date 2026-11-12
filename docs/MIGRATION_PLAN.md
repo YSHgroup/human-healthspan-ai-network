@@ -90,8 +90,10 @@ implemented. M3 now includes a gated researcher application/profile path, organi
 and invite-based membership, tenant-scoped project/task/text and uploaded-file document APIs,
 research events, a pre-M5 entitlement foundation, and matching Admin workflows. File uploads
 use bounded private local storage and authorized downloads; production object storage, malware
-scanning, automated email verification, provider-cost tracking, full audit/security search,
-advanced organization administration, and AI retrieval remain later or out-of-scope work. The
+scanning, automated email verification, full audit/security search, advanced organization
+administration, and AI retrieval remain later or out-of-scope work. M4 adds token-based AI cost
+estimates only when exact-model pricing and its source are configured; these are not provider
+invoices. The
 separate retired legacy admin implementation is not a parity source.
 
 Approved product decisions are recorded in [DECISIONS.md](./DECISIONS.md), including the

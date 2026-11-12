@@ -31,7 +31,13 @@ provenance) - `training` - `evaluation` - `governance` - `monitoring` - `shared`
 - The Scientist route requires `SCIENTIST_ENABLED=true`, an authenticated user, a verified email and an explicit researcher-approval timestamp. Registration grants neither state. No corpus, project file, retrieval tool or AI admin grant workflow is connected.
 - Chat history is held in the browser for the current page and sent with each request; it is not persisted as a conversation by default.
 - Operational AI interaction metadata is stored. Prompt and response content are retained only with a current affirmative AI-learning consent. Revocation deletes retained content, while metadata remains. `training_eligible` stays false.
-- The API returns no verified source entries. Provider-generated citations are not independently validated.
+- Provider-supplied source metadata can pass through the chat response, but the API always marks it
+  `sources_verified: false` and states that it is unverified. No retrieval index or verified source
+  pipeline is connected.
+- Provider token counts are retained as operational metadata. Optional estimated USD cost requires
+  exact-model input/output rates and a traceable `AI_PRICING_SOURCE`; unknown rates or missing
+  provider usage remain unpriced. The applied rates and source label are snapshotted per
+  interaction. Estimates are not invoices and do not certify provider billing.
 
 ## Rules
 
