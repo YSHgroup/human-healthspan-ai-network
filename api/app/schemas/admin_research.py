@@ -1,6 +1,7 @@
 """Administrative researcher, organization, entitlement, event, and audit schemas."""
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -98,11 +99,19 @@ class AdminAIUsageGroup(BaseModel):
     environment: str
     provider: str
     model: str | None
+    pricing_source: str | None
+    input_usd_per_million_tokens: Decimal | None
+    output_usd_per_million_tokens: Decimal | None
     total_interactions: int
     succeeded: int
     failed: int
     input_characters: int
     output_characters: int
+    input_tokens: int
+    output_tokens: int
+    priced_interactions: int
+    unpriced_successful_interactions: int
+    estimated_cost_usd: Decimal | None
     average_latency_ms: float
 
 
@@ -113,6 +122,11 @@ class AdminAIUsageResponse(BaseModel):
     failed: int
     input_characters: int
     output_characters: int
+    input_tokens: int
+    output_tokens: int
+    priced_interactions: int
+    unpriced_successful_interactions: int
+    estimated_cost_usd: Decimal | None
     groups: list[AdminAIUsageGroup]
 
 

@@ -151,15 +151,28 @@ type AIUsage = {
   failed: number;
   input_characters: number;
   output_characters: number;
+  input_tokens: number;
+  output_tokens: number;
+  priced_interactions: number;
+  unpriced_successful_interactions: number;
+  estimated_cost_usd: string | null;
   groups: Array<{
     environment: string;
     provider: string;
     model: string | null;
+    pricing_source: string | null;
+    input_usd_per_million_tokens: string | null;
+    output_usd_per_million_tokens: string | null;
     total_interactions: number;
     succeeded: number;
     failed: number;
     input_characters: number;
     output_characters: number;
+    input_tokens: number;
+    output_tokens: number;
+    priced_interactions: number;
+    unpriced_successful_interactions: number;
+    estimated_cost_usd: string | null;
     average_latency_ms: number;
   }>;
 };
@@ -1344,33 +1357,43 @@ function AdminApp() {
                     AI usage monitoring
                   </CardTitle>
                   <CardDescription>
-                    Aggregate interaction counts, character volume, outcomes, and latency for the
-                    last {aiUsage?.days ?? 30} days. Provider cost is not recorded by the current AI
-                    interaction contract.
+                    Aggregate interaction counts, token volume, outcomes, latency, and optional
+                    configured cost estimates for the last {aiUsage?.days ?? 30} days. Estimates are
+                    not provider invoices; missing usage or pricing remains unpriced.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">
                   {aiUsage ? (
                     <>
-                      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                           ["Interactions", aiUsage.total_interactions],
                           ["Succeeded", aiUsage.succeeded],
                           ["Failed", aiUsage.failed],
-                          ["Input characters", aiUsage.input_characters],
-                          ["Output characters", aiUsage.output_characters],
+                          ["Input tokens", aiUsage.input_tokens],
+                          ["Output tokens", aiUsage.output_tokens],
+                          [
+                            "Estimated cost (USD)",
+                            aiUsage.estimated_cost_usd === null
+                              ? "Not available"
+                              : `$${Number(aiUsage.estimated_cost_usd).toFixed(10)}`,
+                          ],
+                          [
+                            "Successful interactions without a cost estimate",
+                            aiUsage.unpriced_successful_interactions,
+                          ],
                         ].map(([label, value]) => (
                           <div key={label} className="rounded-lg border border-border p-3">
                             <dt className="text-sm text-muted-foreground">{label}</dt>
                             <dd className="text-xl font-semibold">
-                              {Number(value).toLocaleString()}
+                              {typeof value === "number" ? value.toLocaleString() : value}
                             </dd>
                           </div>
                         ))}
                       </dl>
                       {aiUsage.groups.map((group) => (
                         <article
-                          key={`${group.environment}-${group.provider}-${group.model ?? "default"}`}
+                          key={`${group.environment}-${group.provider}-${group.model ?? "default"}-${group.pricing_source ?? "unpriced"}`}
                           className="flex flex-wrap justify-between gap-2 rounded-lg border border-border p-3 text-sm"
                         >
                           <p>
@@ -1380,7 +1403,20 @@ function AdminApp() {
                           <p>
                             {group.total_interactions} interactions · avg{" "}
                             {Math.round(group.average_latency_ms).toLocaleString()} ms ·{" "}
-                            {group.failed} failed
+                            {group.failed} failed · {group.input_tokens.toLocaleString()} input /{" "}
+                            {group.output_tokens.toLocaleString()} output tokens · estimated{" "}
+                            {group.estimated_cost_usd === null
+                              ? "unavailable"
+                              : `$${Number(group.estimated_cost_usd).toFixed(10)}`}
+                          </p>
+                          <p className="w-full text-muted-foreground">
+                            Rate source: {group.pricing_source ?? "not configured"} ·{" "}
+                            {group.input_usd_per_million_tokens === null ||
+                            group.output_usd_per_million_tokens === null
+                              ? "rates unavailable"
+                              : `input $${group.input_usd_per_million_tokens} / 1M, output $${group.output_usd_per_million_tokens} / 1M`}{" "}
+                            · {group.unpriced_successful_interactions} successful interactions
+                            unpriced
                           </p>
                         </article>
                       ))}

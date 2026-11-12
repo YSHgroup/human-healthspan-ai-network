@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
@@ -150,6 +151,12 @@ def test_admin_ai_usage_is_aggregated_and_excludes_prompt_content(
                     model="model-a",
                     input_characters=10,
                     output_characters=20,
+                    input_tokens=1000,
+                    output_tokens=500,
+                    input_usd_per_million_tokens=Decimal("2.0000000000"),
+                    output_usd_per_million_tokens=Decimal("10.0000000000"),
+                    estimated_cost_usd=Decimal("0.0001230000"),
+                    pricing_source="test provider rate card",
                     latency_ms=100,
                     succeeded=True,
                 ),
@@ -160,6 +167,9 @@ def test_admin_ai_usage_is_aggregated_and_excludes_prompt_content(
                     model="model-a",
                     input_characters=5,
                     output_characters=0,
+                    pricing_source="test provider rate card",
+                    input_usd_per_million_tokens=Decimal("2.0000000000"),
+                    output_usd_per_million_tokens=Decimal("10.0000000000"),
                     latency_ms=300,
                     succeeded=False,
                     error_code="provider_error",
@@ -190,16 +200,29 @@ def test_admin_ai_usage_is_aggregated_and_excludes_prompt_content(
     assert usage["failed"] == 1
     assert usage["input_characters"] == 15
     assert usage["output_characters"] == 20
+    assert usage["input_tokens"] == 1000
+    assert usage["output_tokens"] == 500
+    assert usage["priced_interactions"] == 1
+    assert usage["unpriced_successful_interactions"] == 0
+    assert Decimal(str(usage["estimated_cost_usd"])) == Decimal("0.000123")
     assert usage["groups"] == [
         {
             "environment": "general",
             "provider": "test",
             "model": "model-a",
+            "pricing_source": "test provider rate card",
+            "input_usd_per_million_tokens": "2.0000000000",
+            "output_usd_per_million_tokens": "10.0000000000",
             "total_interactions": 2,
             "succeeded": 1,
             "failed": 1,
             "input_characters": 15,
             "output_characters": 20,
+            "input_tokens": 1000,
+            "output_tokens": 500,
+            "priced_interactions": 1,
+            "unpriced_successful_interactions": 0,
+            "estimated_cost_usd": "0.0001230000",
             "average_latency_ms": 200.0,
         }
     ]

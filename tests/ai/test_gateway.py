@@ -8,7 +8,7 @@ from healthspan_ai.gateway.providers.openai_compatible import (
     ProviderConfigurationError,
     complete,
 )
-from healthspan_ai.gateway.service import complete_chat
+from healthspan_ai.gateway.service import AccessDeniedError, complete_chat
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 
@@ -51,6 +51,7 @@ def test_openai_compatible_provider_sends_server_side_credentials(monkeypatch) -
 
     assert completion.content == "A sourced answer."
     assert completion.input_tokens == 10
+    assert completion.output_tokens == 4
     assert completion.sources == ("https://example.test/source/1",)
     assert completion.source_notice == "Source-backed answer."
     assert seen["authorization"] == "******"
@@ -67,6 +68,26 @@ def test_gateway_requires_a_configured_provider() -> None:
     )
     with pytest.raises(ProviderConfigurationError):
         asyncio.run(complete_chat(config, "general", [ChatMessage(role="user", content="Question")]))
+
+
+def test_gateway_denies_unapproved_scientist_access_before_provider_dispatch() -> None:
+    config = GatewayConfig(
+        provider="openai-compatible",
+        model="test-model",
+        api_key="test-key",
+        base_url="https://provider.example/v1",
+        timeout_seconds=2,
+    )
+    with pytest.raises(AccessDeniedError, match="Approved researcher"):
+        asyncio.run(
+            complete_chat(
+                config,
+                "scientist",
+                [ChatMessage(role="user", content="Question")],
+                scientist_enabled=True,
+                email_verified=True,
+            )
+        )
 
 
 def test_completion_keeps_explicit_source_metadata() -> None:

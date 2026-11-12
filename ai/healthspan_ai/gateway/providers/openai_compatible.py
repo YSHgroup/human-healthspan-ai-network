@@ -6,6 +6,8 @@ import httpx
 
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
+MAX_RECORDED_TOKEN_COUNT = 2_147_483_647
+
 
 class ProviderConfigurationError(Exception):
     """The selected provider is missing required configuration."""
@@ -13,6 +15,15 @@ class ProviderConfigurationError(Exception):
 
 class ProviderRequestError(Exception):
     """The provider rejected or failed to complete a request."""
+
+
+def _optional_token_count(usage: object, key: str) -> int | None:
+    if not isinstance(usage, dict):
+        return None
+    value = usage.get(key)
+    if type(value) is int and 0 <= value <= MAX_RECORDED_TOKEN_COUNT:
+        return value
+    return None
 
 
 async def complete(
@@ -46,18 +57,25 @@ async def complete(
         content = message["content"]
         if not isinstance(content, str) or not content.strip():
             raise ProviderRequestError("AI provider returned an empty completion")
-        raw_sources = message.get("sources") or []
-        sources = tuple(str(source) for source in raw_sources if isinstance(source, str) and source.strip())
+        raw_sources = message.get("sources")
+        sources = (
+            tuple(source.strip() for source in raw_sources if isinstance(source, str) and source.strip())
+            if isinstance(raw_sources, list)
+            else ()
+        )
         source_notice = message.get("source_notice")
-        if source_notice is not None and not isinstance(source_notice, str):
-            source_notice = str(source_notice)
-        usage = data.get("usage") or {}
+        if not isinstance(source_notice, str):
+            source_notice = None
+        usage = data.get("usage")
+        response_model = data.get("model")
+        if not isinstance(response_model, str) or not response_model.strip():
+            response_model = model
         return Completion(
             provider=config.provider,
-            model=data.get("model", model),
+            model=response_model,
             content=content.strip(),
-            input_tokens=usage.get("prompt_tokens"),
-            output_tokens=usage.get("completion_tokens"),
+            input_tokens=_optional_token_count(usage, "prompt_tokens"),
+            output_tokens=_optional_token_count(usage, "completion_tokens"),
             sources=sources,
             source_notice=source_notice,
         )

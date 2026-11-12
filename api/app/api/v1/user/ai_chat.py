@@ -9,8 +9,11 @@ from app.infrastructure.database import get_db
 from app.models import User
 from app.schemas.ai import ChatRequest, ChatResponse
 from app.services.ai_chat import run_chat
-from healthspan_ai.governance.permissions import AccessDeniedError
-from healthspan_ai.gateway.service import ProviderConfigurationError, ProviderRequestError
+from healthspan_ai.gateway.service import (
+    AccessDeniedError,
+    ProviderConfigurationError,
+    ProviderRequestError,
+)
 from healthspan_ai.shared.contracts.chat import ChatMessage
 
 router = APIRouter()
@@ -40,16 +43,25 @@ async def respond(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="The configured AI provider could not complete the request",
         ) from exc
+    source_notice = completion.source_notice
+    if completion.sources or completion.source_notice:
+        source_notice = (
+            "Provider-supplied source details and notices are unverified. "
+            f"{source_notice or 'No verified retrieval sources are connected.'}"
+        )
+    else:
+        source_notice = source_notice or (
+            "This prototype has no verified retrieval sources. Check claims and citations "
+            "independently; AI-generated hypotheses are not validated findings."
+        )
+
     return ChatResponse(
         answer=completion.content,
         provider=completion.provider,
         model=completion.model,
         sources=list(completion.sources),
-        source_notice=(
-            completion.source_notice
-            or "This prototype has no verified retrieval sources. Check claims and citations "
-            "independently; AI-generated hypotheses are not validated findings."
-        ),
+        sources_verified=False,
+        source_notice=source_notice,
     )
 
 

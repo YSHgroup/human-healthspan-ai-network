@@ -1,8 +1,9 @@
 """Administrative verification, researcher admission, organization, and entitlement workflows."""
 
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
-from sqlalchemy import Integer, func, or_, select
+from sqlalchemy import Integer, and_, case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -306,11 +307,30 @@ def summarize_ai_usage(db: Session, days: int) -> dict[str, object]:
             AIInteraction.environment,
             AIInteraction.provider,
             AIInteraction.model,
+            AIInteraction.pricing_source,
+            AIInteraction.input_usd_per_million_tokens,
+            AIInteraction.output_usd_per_million_tokens,
             func.count(AIInteraction.id).label("total_interactions"),
             func.sum(AIInteraction.succeeded.cast(Integer)).label("succeeded"),
             func.sum((~AIInteraction.succeeded).cast(Integer)).label("failed"),
             func.sum(AIInteraction.input_characters).label("input_characters"),
             func.sum(AIInteraction.output_characters).label("output_characters"),
+            func.sum(AIInteraction.input_tokens).label("input_tokens"),
+            func.sum(AIInteraction.output_tokens).label("output_tokens"),
+            func.count(AIInteraction.estimated_cost_usd).label("priced_interactions"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            AIInteraction.succeeded.is_(True),
+                            AIInteraction.estimated_cost_usd.is_(None),
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("unpriced_successful_interactions"),
+            func.sum(AIInteraction.estimated_cost_usd).label("estimated_cost_usd"),
             func.avg(AIInteraction.latency_ms).label("average_latency_ms"),
         )
         .where(AIInteraction.created_at >= since)
@@ -318,23 +338,50 @@ def summarize_ai_usage(db: Session, days: int) -> dict[str, object]:
             AIInteraction.environment,
             AIInteraction.provider,
             AIInteraction.model,
+            AIInteraction.pricing_source,
+            AIInteraction.input_usd_per_million_tokens,
+            AIInteraction.output_usd_per_million_tokens,
         )
-        .order_by(AIInteraction.environment, AIInteraction.provider, AIInteraction.model)
+        .order_by(
+            AIInteraction.environment,
+            AIInteraction.provider,
+            AIInteraction.model,
+            AIInteraction.pricing_source,
+            AIInteraction.input_usd_per_million_tokens,
+            AIInteraction.output_usd_per_million_tokens,
+        )
     ).all()
     groups = [
         {
             "environment": row.environment,
             "provider": row.provider,
             "model": row.model,
+            "pricing_source": row.pricing_source,
+            "input_usd_per_million_tokens": row.input_usd_per_million_tokens,
+            "output_usd_per_million_tokens": row.output_usd_per_million_tokens,
             "total_interactions": int(row.total_interactions),
             "succeeded": int(row.succeeded or 0),
             "failed": int(row.failed or 0),
             "input_characters": int(row.input_characters or 0),
             "output_characters": int(row.output_characters or 0),
+            "input_tokens": int(row.input_tokens or 0),
+            "output_tokens": int(row.output_tokens or 0),
+            "priced_interactions": int(row.priced_interactions or 0),
+            "unpriced_successful_interactions": int(row.unpriced_successful_interactions or 0),
+            "estimated_cost_usd": row.estimated_cost_usd,
             "average_latency_ms": float(row.average_latency_ms or 0),
         }
         for row in rows
     ]
+    priced_interactions = sum(group["priced_interactions"] for group in groups)
+    estimated_cost = (
+        sum(
+            (group["estimated_cost_usd"] or Decimal(0) for group in groups),
+            Decimal(0),
+        )
+        if priced_interactions
+        else None
+    )
     return {
         "days": days,
         "total_interactions": sum(group["total_interactions"] for group in groups),
@@ -342,6 +389,13 @@ def summarize_ai_usage(db: Session, days: int) -> dict[str, object]:
         "failed": sum(group["failed"] for group in groups),
         "input_characters": sum(group["input_characters"] for group in groups),
         "output_characters": sum(group["output_characters"] for group in groups),
+        "input_tokens": sum(group["input_tokens"] for group in groups),
+        "output_tokens": sum(group["output_tokens"] for group in groups),
+        "priced_interactions": priced_interactions,
+        "unpriced_successful_interactions": sum(
+            group["unpriced_successful_interactions"] for group in groups
+        ),
+        "estimated_cost_usd": estimated_cost,
         "groups": groups,
     }
 

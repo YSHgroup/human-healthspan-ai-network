@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from pathlib import Path
 
@@ -26,6 +28,49 @@ def _split(value: str | None) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True)
+class AIModelPricing:
+    input_usd_per_million_tokens: Decimal
+    output_usd_per_million_tokens: Decimal
+
+
+def _parse_ai_model_pricing(value: str) -> dict[str, AIModelPricing]:
+    try:
+        raw_pricing = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI_MODEL_PRICING_JSON must be valid JSON") from exc
+    if not isinstance(raw_pricing, dict):
+        raise ValueError("AI_MODEL_PRICING_JSON must be an object keyed by exact model name")
+
+    pricing: dict[str, AIModelPricing] = {}
+    for model, raw_rates in raw_pricing.items():
+        if not isinstance(model, str) or not model.strip() or not isinstance(raw_rates, dict):
+            raise ValueError("AI model pricing entries must map non-empty model names to rate objects")
+        try:
+            input_rate = Decimal(str(raw_rates["input_usd_per_million_tokens"]))
+            output_rate = Decimal(str(raw_rates["output_usd_per_million_tokens"]))
+        except (KeyError, InvalidOperation, ValueError) as exc:
+            raise ValueError(
+                f"AI pricing for {model!r} requires valid input and output USD rates"
+            ) from exc
+        if (
+            not input_rate.is_finite()
+            or not output_rate.is_finite()
+            or input_rate < 0
+            or output_rate < 0
+            or input_rate > Decimal("1000000000")
+            or output_rate > Decimal("1000000000")
+        ):
+            raise ValueError(
+                f"AI pricing rates for {model!r} must be finite, non-negative and no greater than 1e9"
+            )
+        pricing[model.strip()] = AIModelPricing(
+            input_usd_per_million_tokens=input_rate,
+            output_usd_per_million_tokens=output_rate,
+        )
+    return pricing
+
+
+@dataclass(frozen=True)
 class Settings:
     app_env: str
     cors_origins: tuple[str, ...]
@@ -38,12 +83,17 @@ class Settings:
     ai_model: str | None
     ai_base_url: str | None
     ai_timeout_seconds: float
+    ai_model_pricing: dict[str, AIModelPricing]
+    ai_pricing_source: str | None
     scientist_enabled: bool
     research_file_storage_path: Path
 
 
 @lru_cache
 def get_settings() -> Settings:
+    pricing_source = os.environ.get("AI_PRICING_SOURCE", "").strip() or None
+    if pricing_source is not None and len(pricing_source) > 256:
+        raise ValueError("AI_PRICING_SOURCE must be no longer than 256 characters")
     return Settings(
         app_env=os.environ.get("APP_ENV", "development"),
         cors_origins=_split(os.environ.get("API_CORS_ORIGINS")),
@@ -60,6 +110,8 @@ def get_settings() -> Settings:
         ai_model=os.environ.get("AI_MODEL") or None,
         ai_base_url=os.environ.get("AI_BASE_URL") or None,
         ai_timeout_seconds=float(os.environ.get("AI_TIMEOUT_SECONDS", "45")),
+        ai_model_pricing=_parse_ai_model_pricing(os.environ.get("AI_MODEL_PRICING_JSON", "{}")),
+        ai_pricing_source=pricing_source,
         scientist_enabled=os.environ.get("SCIENTIST_ENABLED", "false").lower() == "true",
         research_file_storage_path=Path(
             os.environ.get(

@@ -4,6 +4,7 @@ from healthspan_ai.gateway.providers.openai_compatible import (
     ProviderConfigurationError,
     ProviderRequestError,
 )
+from healthspan_ai.governance.permissions import AccessDeniedError, ensure_environment_allowed
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 
@@ -11,9 +12,21 @@ async def complete_chat(
     config: GatewayConfig,
     environment: str,
     messages: list[ChatMessage],
+    *,
+    scientist_enabled: bool = False,
+    email_verified: bool = False,
+    researcher_approved: bool = False,
 ) -> Completion:
     provider = (config.provider or "").strip().lower()
-    environment_name = (environment or "").strip().lower()
+    try:
+        environment_name = ensure_environment_allowed(
+            environment,
+            scientist_enabled=scientist_enabled,
+            email_verified=email_verified,
+            researcher_approved=researcher_approved,
+        )
+    except ValueError as exc:
+        raise ProviderConfigurationError(str(exc)) from exc
 
     if provider == "openai-compatible":
         if environment_name == "general":
@@ -30,4 +43,9 @@ async def complete_chat(
     raise ProviderConfigurationError(f"Unsupported AI provider: {config.provider}")
 
 
-__all__ = ["ProviderConfigurationError", "ProviderRequestError", "complete_chat"]
+__all__ = [
+    "AccessDeniedError",
+    "ProviderConfigurationError",
+    "ProviderRequestError",
+    "complete_chat",
+]

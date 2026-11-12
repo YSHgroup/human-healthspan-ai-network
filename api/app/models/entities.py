@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -12,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -326,6 +328,16 @@ class AIInteraction(Base):
     response_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     input_characters: Mapped[int] = mapped_column(Integer)
     output_characters: Mapped[int] = mapped_column(Integer)
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    input_usd_per_million_tokens: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 10), nullable=True
+    )
+    output_usd_per_million_tokens: Mapped[Decimal | None] = mapped_column(
+        Numeric(20, 10), nullable=True
+    )
+    estimated_cost_usd: Mapped[Decimal | None] = mapped_column(Numeric(20, 10), nullable=True)
+    pricing_source: Mapped[str | None] = mapped_column(String(256), nullable=True)
     latency_ms: Mapped[int] = mapped_column(Integer)
     succeeded: Mapped[bool] = mapped_column(Boolean)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)

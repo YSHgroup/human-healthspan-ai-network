@@ -29,4 +29,5 @@ class ChatResponse(BaseModel):
     provider: str
     model: str | None
     sources: list[str]
+    sources_verified: bool
     source_notice: str
