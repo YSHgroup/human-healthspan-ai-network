@@ -9,6 +9,7 @@ from app.infrastructure.database import get_db
 from app.models import User
 from app.schemas.ai import ChatRequest, ChatResponse
 from app.services.ai_chat import run_chat
+from healthspan_ai.governance.permissions import AccessDeniedError
 from healthspan_ai.gateway.service import ProviderConfigurationError, ProviderRequestError
 from healthspan_ai.shared.contracts.chat import ChatMessage
 
@@ -24,6 +25,11 @@ async def respond(
 ) -> ChatResponse:
     try:
         completion = await run_chat(db, user, environment, messages)
+    except AccessDeniedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     except ProviderConfigurationError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

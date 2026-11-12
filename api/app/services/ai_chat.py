@@ -10,12 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.models import AIConsent, AIInteraction, User
-from healthspan_ai.shared.contracts.chat import ChatMessage, GatewayConfig
+from healthspan_ai.governance.permissions import AccessDeniedError, ensure_environment_allowed
 from healthspan_ai.gateway.service import (
     ProviderConfigurationError,
     ProviderRequestError,
     complete_chat,
 )
+from healthspan_ai.shared.contracts.chat import ChatMessage, GatewayConfig
 
 settings = get_settings()
 
@@ -87,7 +88,27 @@ async def run_chat(
 ):
     started = perf_counter()
     try:
+        ensure_environment_allowed(
+            environment,
+            scientist_enabled=settings.scientist_enabled,
+            email_verified=user.email_verified_at is not None,
+            researcher_approved=user.researcher_approved_at is not None,
+        )
         completion = await complete_chat(gateway_config(), environment, messages)
+    except AccessDeniedError as exc:
+        record_interaction(
+            db,
+            user=user,
+            environment=environment,
+            messages=messages,
+            provider=settings.ai_provider,
+            model=settings.ai_model,
+            answer=None,
+            latency_ms=int((perf_counter() - started) * 1000),
+            succeeded=False,
+            error_code="AccessDeniedError",
+        )
+        raise
     except (ProviderConfigurationError, ProviderRequestError) as exc:
         record_interaction(
             db,
