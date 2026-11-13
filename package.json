@@ -20,7 +20,7 @@
     "dev:personal": "turbo dev --filter=@healthspan/personal-web",
     "dev:researcher": "turbo dev --filter=@healthspan/researcher-web",
     "dev:admin": "turbo dev --filter=@healthspan/admin",
-    "dev:api": "python -m alembic -c api/alembic.ini upgrade head && python -m uvicorn app.main:app --app-dir api --reload --port 8000",
+    "dev:api": "python -m alembic -c api/alembic.ini upgrade head && python -m uvicorn app.main:asgi_app --app-dir api --reload --port 8000",
     "db:migrate": "python -m alembic -c api/alembic.ini upgrade head",
     "test:api": "python -m pytest tests/api -q",
     "test:ai": "python -m pytest tests/ai -q",

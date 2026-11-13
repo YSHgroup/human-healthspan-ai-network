@@ -75,6 +75,21 @@ py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e "api[dev]" -e ai
 $env:PATH = "$PWD\.venv\Scripts;$env:PATH"
 npm.cmd run db:migrate
+```
+
+Before starting the API for the first time, set `PLATFORM_ADMIN_EMAILS`,
+`INITIAL_ADMIN_EMAIL` (the same address), and a strong `INITIAL_ADMIN_PASSWORD` in `.env`.
+Then provision the initial admin account once:
+
+```powershell
+python -m app.bootstrap_admin
+```
+
+The command creates or verifies an existing unverified account and sets its password. It will not
+change credentials on an already verified account. Keep the password in your local `.env` only;
+never commit it. Then start the API:
+
+```powershell
 npm.cmd run dev:api
 ```
 
@@ -106,12 +121,12 @@ moderation, and appeals. Platform administrators can review community requests a
 escalated reports at [http://localhost:3003](http://localhost:3003). The Researcher Portal at
 [http://localhost:3002](http://localhost:3002) supports researcher applications, opt-in researcher
 profiles, organization requests/invitations, scoped projects, tasks, text documents, and research
-events. Configure `PLATFORM_ADMIN_EMAILS` with staff accounts in `.env`; the first administrator
-must be provisioned and verified through a trusted process. The Admin app provides sign-in and
-sign-out using the shared account session, then supports account verification, researcher
-applications, organization review, pre-M5 entitlement grants/revocation, event oversight,
-moderation, and audit review. Research files are stored in a private local volume; upload size/type
-checks and API authorization are enabled, but malware scanning is not.
+events. Configure `PLATFORM_ADMIN_EMAILS` with staff accounts in `.env`; use the one-time
+`python -m app.bootstrap_admin` command to provision and verify the initial administrator. The
+Admin app provides sign-in and sign-out using the shared account session, then supports account
+verification, researcher applications, organization review, pre-M5 entitlement grants/revocation,
+event oversight, moderation, and audit review. Research files are stored in a private local volume;
+upload size/type checks and API authorization are enabled, but malware scanning is not.
 API routes are also listed at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Run the stack in the background with `docker compose up --build -d`. Follow its logs with

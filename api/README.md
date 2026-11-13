@@ -10,5 +10,5 @@ Feature routes, persistence, authentication, authorization, audit services, and 
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -e "api[dev]"
-uvicorn app.main:app --app-dir api --reload --port 8000
+uvicorn app.main:asgi_app --app-dir api --reload --port 8000
 ```

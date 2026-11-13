@@ -111,7 +111,7 @@ Cross-cutting behavior already in place:
 - Project activities and M3 administrative decisions are recorded. The M3 audit endpoint covers researcher admission, account verification, organization provisioning, entitlement, event, community approval, global moderation and appeal decisions; it is not a complete audit/security event system.
 - Community approval records the reviewer and timestamp and atomically creates the community plus an active owner membership for the requester. The platform moderation queue contains pending reports against global content and reports explicitly escalated by community moderators; ordinary pending community reports remain in their community queues. Global actions and their appeals are recorded and reviewable.
 - Sessions use a random opaque token in an HttpOnly, SameSite=Lax cookie; only its SHA-256 digest is stored. The cookie has no Domain attribute, so `localhost` apps on ports 3000–3003 share it.
-- The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL.
+- The default development database is SQLite at `./healthspan.db`; configure `DATABASE_URL` for PostgreSQL. PostgreSQL connections use the `public` schema.
 - AI provider credentials remain server-side. The default provider is disabled and returns an explicit 503 until configured.
 
 The routers `/api/v1/user/social`, `/api/v1/user/personal`, `/api/v1/user/researcher` and
