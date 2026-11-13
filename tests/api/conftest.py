@@ -29,7 +29,7 @@ def api_client(tmp_path, monkeypatch) -> Generator[TestClient, None, None]:
     main.app.dependency_overrides[get_db] = override_get_db
     main.app.state.test_session_factory = test_session
     monkeypatch.setattr(main, "engine", test_engine)
-    with TestClient(main.app) as client:
+    with TestClient(main.asgi_app) as client:
         yield client
     main.app.dependency_overrides.clear()
     del main.app.state.test_session_factory

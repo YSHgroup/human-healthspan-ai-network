@@ -85,7 +85,7 @@ def decide_researcher_application(
         select(ResearcherApplication)
         .options(joinedload(ResearcherApplication.applicant))
         .where(ResearcherApplication.id == application_id)
-        .with_for_update()
+        .with_for_update(of=ResearcherApplication)
     )
     if application is None:
         raise AdminResourceNotFound("Researcher application not found")
@@ -146,7 +146,7 @@ def decide_organization_request(
         select(OrganizationCreationRequest)
         .options(joinedload(OrganizationCreationRequest.requester))
         .where(OrganizationCreationRequest.id == request_id)
-        .with_for_update()
+        .with_for_update(of=OrganizationCreationRequest)
     )
     if creation_request is None:
         raise AdminResourceNotFound("Organization request not found")

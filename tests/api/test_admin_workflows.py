@@ -2,7 +2,10 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
+from sqlalchemy import select
+from sqlalchemy.dialects import postgresql
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import joinedload
 
 from app.api.dependencies import identity
 from app.models import (
@@ -10,6 +13,9 @@ from app.models import (
     Community,
     CommunityMembership,
     CommunityCreationRequest,
+    ModerationAppeal,
+    OrganizationCreationRequest,
+    ResearcherApplication,
     SocialPost,
     SocialPostReport,
     User,
@@ -18,6 +24,50 @@ from app.models import (
 
 ORIGIN = {"Origin": "http://localhost:3003"}
 SOCIAL_ORIGIN = {"Origin": "http://localhost:3000"}
+
+
+def test_admin_decision_locks_target_only_the_primary_row() -> None:
+    statements = (
+        (
+            select(CommunityCreationRequest)
+            .options(joinedload(CommunityCreationRequest.requester))
+            .where(CommunityCreationRequest.id == "request-id")
+            .with_for_update(of=CommunityCreationRequest),
+            "community_creation_requests",
+        ),
+        (
+            select(OrganizationCreationRequest)
+            .options(joinedload(OrganizationCreationRequest.requester))
+            .where(OrganizationCreationRequest.id == "request-id")
+            .with_for_update(of=OrganizationCreationRequest),
+            "organization_creation_requests",
+        ),
+        (
+            select(ResearcherApplication)
+            .options(joinedload(ResearcherApplication.applicant))
+            .where(ResearcherApplication.id == "request-id")
+            .with_for_update(of=ResearcherApplication),
+            "researcher_applications",
+        ),
+        (
+            select(SocialPostReport)
+            .options(joinedload(SocialPostReport.post), joinedload(SocialPostReport.comment))
+            .where(SocialPostReport.id == "request-id")
+            .with_for_update(of=SocialPostReport),
+            "social_post_reports",
+        ),
+        (
+            select(ModerationAppeal)
+            .options(joinedload(ModerationAppeal.action))
+            .where(ModerationAppeal.id == "request-id")
+            .with_for_update(of=ModerationAppeal),
+            "moderation_appeals",
+        ),
+    )
+
+    for statement, table_name in statements:
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        assert f"FOR UPDATE OF {table_name}" in sql
 
 
 def register(client: TestClient, email: str, display_name: str) -> tuple[str, str]:

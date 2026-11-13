@@ -19,14 +19,6 @@ app = FastAPI(
     description="Modular-monolith backend for the Human Healthspan Scientific AI Network.",
 )
 
-# Only trusted application origins may call the API with credentials (shared session cookies).
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=list(settings.cors_origins),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept", "X-Request-ID"],
-)
 install_middleware(app)
 app.include_router(api_router)
 
@@ -81,3 +73,14 @@ async def request_validation_error_handler(
             "requestId": getattr(request.state, "request_id", None),
         },
     )
+
+
+# Wrap the complete application so CORS headers are present on unhandled error responses too.
+asgi_app = CORSMiddleware(
+    app=app,
+    allow_origins=list(settings.cors_origins),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept", "X-Request-ID"],
+)
+asgi_app.state = app.state

@@ -69,7 +69,7 @@ def decide_community_request(
         select(CommunityCreationRequest)
         .options(joinedload(CommunityCreationRequest.requester))
         .where(CommunityCreationRequest.id == request_id)
-        .with_for_update()
+        .with_for_update(of=CommunityCreationRequest)
     )
     if creation_request is None:
         raise CommunityRequestNotFound
@@ -189,7 +189,7 @@ def review_platform_report(
             .joinedload(SocialPost.community),
         )
         .where(SocialPostReport.id == report_id)
-        .with_for_update()
+        .with_for_update(of=SocialPostReport)
     )
     if report is None:
         raise PlatformReportNotFound
@@ -270,7 +270,7 @@ def decide_platform_appeal(
         select(ModerationAppeal)
         .options(joinedload(ModerationAppeal.action))
         .where(ModerationAppeal.id == appeal_id)
-        .with_for_update()
+        .with_for_update(of=ModerationAppeal)
     )
     if (
         appeal is None

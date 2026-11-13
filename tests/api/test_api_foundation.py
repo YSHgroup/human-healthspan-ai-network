@@ -1,9 +1,11 @@
+import pytest
 from fastapi.testclient import TestClient
+from starlette.routing import Route
 
 from app.api import middleware
-from app.main import app
+from app.main import app, asgi_app
 
-client = TestClient(app)
+client = TestClient(asgi_app)
 
 
 def test_only_operational_endpoints_are_exposed() -> None:
@@ -106,10 +108,12 @@ def test_request_id_is_generated_when_missing() -> None:
     assert client.get("/healthz").headers["X-Request-ID"]
 
 
-def test_cors_allows_trusted_portal_origin_with_credentials() -> None:
-    response = client.get("/healthz", headers={"Origin": "http://localhost:3001"})
+@pytest.mark.parametrize("port", [3000, 3001, 3002, 3003])
+def test_cors_allows_trusted_portal_origin_with_credentials(port: int) -> None:
+    origin = f"http://localhost:{port}"
+    response = client.get("/healthz", headers={"Origin": origin})
 
-    assert response.headers["access-control-allow-origin"] == "http://localhost:3001"
+    assert response.headers["access-control-allow-origin"] == origin
     assert response.headers["access-control-allow-credentials"] == "true"
 
 
@@ -117,3 +121,19 @@ def test_cors_does_not_allow_unknown_origins() -> None:
     response = client.get("/healthz", headers={"Origin": "https://untrusted.example"})
 
     assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_headers_are_added_to_unhandled_server_errors(monkeypatch) -> None:
+    async def fail(request):
+        raise RuntimeError("simulated unhandled error")
+
+    route = Route("/_test/unhandled-error", fail)
+    monkeypatch.setattr(app.router, "routes", [*app.router.routes, route])
+    with TestClient(asgi_app, raise_server_exceptions=False) as error_client:
+        response = error_client.get(
+            "/_test/unhandled-error",
+            headers={"Origin": "http://localhost:3003"},
+        )
+
+    assert response.status_code == 500
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3003"

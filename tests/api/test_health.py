@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import asgi_app
 
-client = TestClient(app)
+client = TestClient(asgi_app)
 
 
 def test_health_endpoint_reports_liveness() -> None:
