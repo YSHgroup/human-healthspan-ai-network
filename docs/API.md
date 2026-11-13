@@ -101,6 +101,11 @@ Cross-cutting behavior already in place:
 
 - CORS allows only the origins in `API_CORS_ORIGINS`, with credentials (session cookies). The local default is ports 3000–3003 on `localhost`; no custom domain is needed.
 - Every response carries `X-Request-ID` and baseline security headers.
+- `APP_ENV=production` requires explicit HTTPS application origins, a PostgreSQL `DATABASE_URL`,
+  and a non-empty `PLATFORM_ADMIN_EMAILS` allowlist. It rejects the prompt-only Scientist
+  prototype and non-HTTPS configured AI endpoints; enabled AI also requires its key and model.
+  Production requires a `RATE_LIMIT_HASH_KEY` of at least 32 characters and caps session
+  lifetime at 30 days; the API adds an HSTS response header.
 - Browser write requests with an `Origin` header are checked against the trusted-origin list.
 - Registration and login use database-backed fixed-window limits keyed by an HMAC of the direct
   client address; AI chat uses an authenticated-account HMAC bucket. Defaults are 10

@@ -7,6 +7,8 @@ import uuid
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
+from app.config import get_settings
+
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -88,4 +90,6 @@ def install_middleware(app: FastAPI) -> None:
         response.headers["X-Request-ID"] = request_id
         for header, value in SECURITY_HEADERS.items():
             response.headers.setdefault(header, value)
+        if get_settings().app_env == "production":
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         return response

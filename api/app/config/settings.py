@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 
@@ -32,6 +33,60 @@ def _positive_int(name: str, default: int) -> int:
     if not 1 <= value <= 100_000:
         raise ValueError(f"{name} must be between 1 and 100000")
     return value
+
+
+def _validate_production_configuration() -> None:
+    cors_value = os.environ.get("API_CORS_ORIGINS", "").strip()
+    if not cors_value:
+        raise ValueError("API_CORS_ORIGINS must be explicitly configured in production")
+    origins = _split(cors_value)
+    for origin in origins:
+        parsed = urlsplit(origin)
+        if (
+            parsed.scheme != "https"
+            or not parsed.netloc
+            or parsed.username
+            or parsed.password
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+            or parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        ):
+            raise ValueError("Production API_CORS_ORIGINS must contain only HTTPS origins")
+        try:
+            parsed.port
+        except ValueError as exc:
+            raise ValueError("Production API_CORS_ORIGINS contains an invalid port") from exc
+
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+    if not database_url or not database_url.startswith(("postgresql://", "postgresql+")):
+        raise ValueError("DATABASE_URL must use PostgreSQL in production")
+
+    platform_admin_emails = tuple(
+        email.strip()
+        for email in os.environ.get("PLATFORM_ADMIN_EMAILS", "").split(",")
+        if email.strip()
+    )
+    if not platform_admin_emails:
+        raise ValueError("PLATFORM_ADMIN_EMAILS must include a production administrator")
+
+    if os.environ.get("SCIENTIST_ENABLED", "false").strip().lower() == "true":
+        raise ValueError(
+            "SCIENTIST_ENABLED cannot be true in production until private retrieval and provider safeguards exist"
+        )
+
+    ai_provider = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
+    if ai_provider not in {"disabled", "openai-compatible"}:
+        raise ValueError("Production AI_PROVIDER must be disabled or openai-compatible")
+    if ai_provider == "openai-compatible":
+        base_url = os.environ.get("AI_BASE_URL", "").strip()
+        parsed_base_url = urlsplit(base_url)
+        if parsed_base_url.scheme != "https" or not parsed_base_url.netloc:
+            raise ValueError("AI_BASE_URL must use HTTPS in production")
+        if not os.environ.get("AI_API_KEY", "").strip() or not os.environ.get("AI_MODEL", "").strip():
+            raise ValueError("AI_API_KEY and AI_MODEL are required when production AI is enabled")
+        if parsed_base_url.username or parsed_base_url.password or parsed_base_url.fragment:
+            raise ValueError("AI_BASE_URL cannot contain credentials or a fragment")
 
 
 @dataclass(frozen=True)
@@ -103,6 +158,13 @@ class Settings:
 @lru_cache
 def get_settings() -> Settings:
     app_env = os.environ.get("APP_ENV", "development").strip().lower()
+    if app_env not in {"development", "test", "production"}:
+        raise ValueError("APP_ENV must be development, test, or production")
+    if app_env == "production":
+        _validate_production_configuration()
+    session_ttl_days = _positive_int("SESSION_TTL_DAYS", 30)
+    if app_env == "production" and session_ttl_days > 30:
+        raise ValueError("SESSION_TTL_DAYS must be 30 or fewer in production")
     pricing_source = os.environ.get("AI_PRICING_SOURCE", "").strip() or None
     if pricing_source is not None and len(pricing_source) > 256:
         raise ValueError("AI_PRICING_SOURCE must be no longer than 256 characters")
@@ -120,7 +182,7 @@ def get_settings() -> Settings:
             if email.strip()
         ),
         database_url=os.environ.get("DATABASE_URL", "sqlite:///./healthspan.db"),
-        session_ttl_days=int(os.environ.get("SESSION_TTL_DAYS", "30")),
+        session_ttl_days=session_ttl_days,
         session_cookie_name=os.environ.get("SESSION_COOKIE_NAME", "healthspan_session"),
         ai_provider=os.environ.get("AI_PROVIDER", "disabled").strip().lower(),
         ai_api_key=os.environ.get("AI_API_KEY") or None,

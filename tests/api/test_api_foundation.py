@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 from fastapi.testclient import TestClient
 from starlette.routing import Route
@@ -91,6 +93,15 @@ def test_responses_carry_request_id_and_security_headers() -> None:
     assert response.headers["X-Request-ID"] == "req-123"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["X-Frame-Options"] == "DENY"
+
+
+def test_production_responses_include_hsts(monkeypatch) -> None:
+    settings = middleware.get_settings()
+    monkeypatch.setattr(middleware, "get_settings", lambda: replace(settings, app_env="production"))
+
+    response = client.get("/healthz")
+
+    assert response.headers["Strict-Transport-Security"] == "max-age=31536000"
 
 
 def test_chunked_research_upload_body_is_bounded(monkeypatch) -> None:

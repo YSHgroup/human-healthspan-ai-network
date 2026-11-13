@@ -80,6 +80,10 @@
   buckets. Limits are configurable, return `429` with `Retry-After`, and are covered by API tests.
   These are baseline controls; production edge-level proxy-aware and account-farm abuse protection
   is still required.
+- Added production configuration fail-fast checks for HTTPS application origins, PostgreSQL,
+  explicit admin allowlisting, HTTPS external AI endpoints, and keeping the prompt-only Scientist
+  prototype disabled, requiring a private rate-limit HMAC key, and bounding session lifetime;
+  production API responses now emit HSTS.
 
 ## Remaining M1 and product gaps
 
@@ -94,6 +98,9 @@
   malware scanning and production file storage, encryption/key management, tested production
   backup/restore, monitoring/alerting, incident runbooks, legal/privacy review, and a production
   security assessment are not established.
+- Production configuration checks reduce accidental insecure deployment, but they do not
+  establish a production deployment, TLS termination, key management, a security assessment, or
+  operational monitoring.
 - AI retrieval and verified citations are not connected. Cost estimates remain unavailable when
   token usage, exact-model rates, or the operator-supplied pricing source are missing.
 - Production deployment, launch-measure baselines, and operational dashboards beyond current Admin
@@ -105,6 +112,8 @@
 
 ## Verification
 
+- The full architecture/API/AI/migration suite passed: 96 tests. A single existing Starlette/httpx
+  deprecation warning remains.
 - `git diff --check` passed. Docker Compose could not be run in this environment because the
   Docker daemon is inaccessible.
 - `npm test` and `pnpm test`: each passed with 5 frontend tests and 40 Python

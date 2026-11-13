@@ -7,6 +7,11 @@ before public production launch.
 ## In place
 
 - Backend CORS restricted to trusted application origins (`API_CORS_ORIGINS`).
+- Production startup rejects missing/non-HTTPS CORS origins, non-PostgreSQL databases, an empty
+  administrator allowlist, and enabling the prompt-only Scientist prototype. Configured external
+  AI endpoints must use HTTPS and provide model/key configuration; the session lifetime is capped
+  at 30 days and the rate-limit HMAC key must be at least 32 characters. Production API responses
+  emit HSTS.
 - `X-Request-ID` and baseline security headers on API responses.
 - Security headers on the three Next.js portals; private portals and Admin are not indexable.
 - API client sends credentials for cookie sessions; tests forbid browser-stored tokens.
@@ -14,7 +19,7 @@ before public production launch.
 - Platform administration requires an authenticated, email-verified account in the explicit `PLATFORM_ADMIN_EMAILS` allowlist; state-changing admin requests also enforce trusted origins.
 - Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
 - Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
-- Scientist environment access is checked in the API service before gateway dispatch, in addition to the route gate; the shared permission contract requires the feature flag, verified email and approved-researcher record.
+- Scientist environment access is checked at the shared AI gateway before provider dispatch, in addition to the route gate; the shared permission contract requires the feature flag, verified email and approved-researcher record.
 - Registration and login have database-backed fixed-window rate limits keyed by a secret HMAC of the direct peer address; AI chat is limited per authenticated account. Limits persist across API workers for supported PostgreSQL/SQLite databases. These are baseline controls, not a substitute for reverse-proxy-aware edge protections or account-farm controls.
 - Researcher applications are reviewed by platform admins; researcher profile discovery is opt-in. Project and organization access is checked on the API. Organization membership does not grant project membership, and public project visibility does not grant access to tasks, membership rosters, or project-shared documents.
 - Organization invitations are accepted only by the invited case-insensitive email address. Organization provisioning requires an admin-reviewed request and an active admin-granted pre-M5 entitlement.

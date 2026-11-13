@@ -30,6 +30,16 @@ The current development slice includes shared identity/session, text messaging, 
 AI provider gateway and consent-aware AI interaction records. It is not production-ready; see
 `API.md`, `SECURITY.md` and `PRIVACY_AND_GOVERNANCE.md` for missing controls.
 
+## Production configuration guard
+
+There is no production deployment recipe yet. If `APP_ENV=production` is selected, API startup
+requires explicit HTTPS `API_CORS_ORIGINS`, a PostgreSQL `DATABASE_URL`, a non-empty
+`PLATFORM_ADMIN_EMAILS` allowlist, and a `RATE_LIMIT_HASH_KEY` of at least 32 characters.
+`SESSION_TTL_DAYS` cannot exceed 30. The prompt-only Scientist prototype must remain disabled;
+if external AI is enabled, its endpoint must use HTTPS and both `AI_API_KEY` and `AI_MODEL` must
+be set. These checks do not provision TLS, secrets, storage, monitoring, backups, or other
+production infrastructure.
+
 On macOS/Linux use `python3 -m venv .venv` and `.venv/bin/python -m pip install -e "api[dev]" -e ai`,
 then activate the venv before running the npm API scripts.
 
