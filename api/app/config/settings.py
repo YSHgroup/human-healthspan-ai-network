@@ -27,6 +27,13 @@ def _split(value: str | None) -> tuple[str, ...]:
     return tuple(item.strip().rstrip("/") for item in value.split(",") if item.strip())
 
 
+def _positive_int(name: str, default: int) -> int:
+    value = int(os.environ.get(name, str(default)))
+    if not 1 <= value <= 100_000:
+        raise ValueError(f"{name} must be between 1 and 100000")
+    return value
+
+
 @dataclass(frozen=True)
 class AIModelPricing:
     input_usd_per_million_tokens: Decimal
@@ -87,15 +94,25 @@ class Settings:
     ai_pricing_source: str | None
     scientist_enabled: bool
     research_file_storage_path: Path
+    auth_register_rate_limit: int
+    auth_login_rate_limit: int
+    ai_chat_rate_limit: int
+    rate_limit_hash_key: str
 
 
 @lru_cache
 def get_settings() -> Settings:
+    app_env = os.environ.get("APP_ENV", "development").strip().lower()
     pricing_source = os.environ.get("AI_PRICING_SOURCE", "").strip() or None
     if pricing_source is not None and len(pricing_source) > 256:
         raise ValueError("AI_PRICING_SOURCE must be no longer than 256 characters")
+    rate_limit_hash_key = os.environ.get("RATE_LIMIT_HASH_KEY", "").strip()
+    if app_env == "production" and len(rate_limit_hash_key) < 32:
+        raise ValueError("RATE_LIMIT_HASH_KEY must be configured with at least 32 characters in production")
+    if not rate_limit_hash_key:
+        rate_limit_hash_key = "development-only-rate-limit-key"
     return Settings(
-        app_env=os.environ.get("APP_ENV", "development"),
+        app_env=app_env,
         cors_origins=_split(os.environ.get("API_CORS_ORIGINS")),
         platform_admin_emails=tuple(
             email.strip().casefold()
@@ -119,4 +136,8 @@ def get_settings() -> Settings:
                 str(Path(__file__).resolve().parents[3] / ".data" / "research-files"),
             )
         ).resolve(),
+        auth_register_rate_limit=_positive_int("AUTH_REGISTER_RATE_LIMIT", 10),
+        auth_login_rate_limit=_positive_int("AUTH_LOGIN_RATE_LIMIT", 30),
+        ai_chat_rate_limit=_positive_int("AI_CHAT_RATE_LIMIT", 20),
+        rate_limit_hash_key=rate_limit_hash_key,
     )

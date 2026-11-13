@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.identity import CurrentUser, require_trusted_origin
+from app.api.dependencies.rate_limit import rate_limit
 from app.config import get_settings
 from app.infrastructure.database import get_db
 from app.models import User
@@ -65,7 +66,12 @@ async def respond(
     )
 
 
-@router.post("/social/ai/chat", response_model=ChatResponse, tags=["general-ai"])
+@router.post(
+    "/social/ai/chat",
+    response_model=ChatResponse,
+    tags=["general-ai"],
+    dependencies=[Depends(rate_limit("ai_chat"))],
+)
 async def general_ai_chat(
     body: ChatRequest,
     request: Request,
@@ -81,7 +87,12 @@ async def general_ai_chat(
     )
 
 
-@router.post("/researcher/ai/chat", response_model=ChatResponse, tags=["private-ai-scientist"])
+@router.post(
+    "/researcher/ai/chat",
+    response_model=ChatResponse,
+    tags=["private-ai-scientist"],
+    dependencies=[Depends(rate_limit("ai_chat"))],
+)
 async def scientist_chat(
     body: ChatRequest,
     request: Request,

@@ -47,6 +47,7 @@ async def http_error_handler(request: Request, exc: StarletteHTTPException) -> J
         403: "forbidden",
         404: "not_found",
         409: "conflict",
+        429: "rate_limited",
         422: "validation_error",
         503: "service_unavailable",
     }.get(exc.status_code, "request_error")
@@ -57,6 +58,7 @@ async def http_error_handler(request: Request, exc: StarletteHTTPException) -> J
             "message": exc.detail if isinstance(exc.detail, str) else "Request failed",
             "requestId": getattr(request.state, "request_id", None),
         },
+        headers=exc.headers,
     )
 
 

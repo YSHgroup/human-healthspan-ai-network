@@ -345,6 +345,15 @@ class AIInteraction(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
 
 
+class RateLimitBucket(Base):
+    __tablename__ = "rate_limit_buckets"
+    __table_args__ = (Index("ix_rate_limit_buckets_window_started_at", "window_started_at"),)
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    request_count: Mapped[int] = mapped_column(Integer)
+
+
 class ResearcherApplication(Base):
     __tablename__ = "researcher_applications"
     __table_args__ = (UniqueConstraint("user_id", name="uq_researcher_applications_user"),)

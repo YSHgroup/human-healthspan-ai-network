@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.identity import CurrentUser, require_trusted_origin, token_digest
+from app.api.dependencies.rate_limit import rate_limit
 from app.config import get_settings
 from app.infrastructure.database import get_db
 from app.models import AIConsent, AIInteraction, User, UserSession
@@ -91,7 +92,12 @@ def normalize_email(email: str) -> str:
     return email.strip().casefold()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("register"))],
+)
 def register(
     body: RegisterRequest,
     request: Request,
@@ -118,7 +124,11 @@ def register(
     return user_response(db, user)
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post(
+    "/login",
+    response_model=UserResponse,
+    dependencies=[Depends(rate_limit("login"))],
+)
 def login(
     body: LoginRequest,
     request: Request,
