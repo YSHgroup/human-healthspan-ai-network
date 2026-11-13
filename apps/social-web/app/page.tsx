@@ -1,481 +1,434 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Brain,
-  Dna,
-  FlaskConical,
-  HeartPulse,
+  CalendarDays,
+  Globe,
+  Handshake,
   LockKeyhole,
-  Microscope,
-  Moon,
-  Network,
+  MessageCircle,
   ShieldCheck,
   Sparkles,
   UsersRound,
-  type LucideIcon,
+  FlaskConical,
+  BookOpenCheck,
 } from "lucide-react";
 
-import { Badge } from "@healthspan/ui/badge";
-import { Button } from "@healthspan/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@healthspan/ui/card";
-import {
-  EmptyState,
-  EvidenceBadge,
-  FeatureCard,
-  PageShell,
-  PortalSwitcher,
-  SectionHeading,
-  SiteFooter,
-  SiteHeader,
-} from "@healthspan/ui/composites";
-import { Reveal, StatCard } from "@healthspan/ui/motion";
+import { Reveal } from "@healthspan/ui/motion";
 import { ThemeToggle } from "@healthspan/ui/theme-toggle";
 
-const socialPortalUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+import { Bubble, Helix, Leaf } from "../components/landing/decor";
+import { LandingHeader, type NavGroup } from "../components/landing/landing-header";
+import { ParallaxStage } from "../components/landing/parallax-stage";
+import "./landing.css";
+
 const personalPortalUrl = process.env.PERSONAL_APP_URL ?? "http://localhost:3001";
 const researcherPortalUrl = process.env.RESEARCHER_APP_URL ?? "http://localhost:3002";
 
-const navigation = [
-  { label: "The network", href: "#network" },
-  { label: "How it works", href: "#journey" },
-  { label: "Principles", href: "#principles" },
-];
+const css = (vars: Record<string, string | number>) => vars as CSSProperties;
 
-const audiences: { title: string; description: string; icon: LucideIcon }[] = [
+const navGroups: NavGroup[] = [
   {
-    title: "People",
-    description: "Bring questions, experience, and curiosity to a thoughtful community.",
-    icon: UsersRound,
+    label: "About",
+    items: [
+      { label: "Our vision", href: "#vision", hint: "Why the network exists" },
+      { label: "Responsible AI", href: "#ai", hint: "How we use AI" },
+    ],
   },
   {
-    title: "Researchers",
-    description: "Find collaborators and make research context easier to follow.",
-    icon: Microscope,
+    label: "Explore",
+    items: [
+      { label: "Scientific knowledge", href: "#knowledge", hint: "Six areas of science" },
+      { label: "Community feed", href: "/feed", hint: "Public questions and discussions" },
+    ],
   },
   {
-    title: "Health professionals",
-    description: "Contribute professional perspectives with clear verification boundaries.",
-    icon: HeartPulse,
+    label: "Communities",
+    items: [
+      { label: "Find a community", href: "/communities", hint: "Join or apply" },
+      { label: "Community feed", href: "/feed", hint: "Browse discussions" },
+      { label: "Messages", href: "/messages", hint: "Talk with members" },
+    ],
   },
   {
-    title: "Scientists and builders",
-    description: "Connect disciplines while keeping methods and evidence visible.",
-    icon: FlaskConical,
-  },
-];
-
-const journey = [
-  { label: "Ask", detail: "Start with a useful question.", icon: Sparkles },
-  { label: "Discuss", detail: "Bring different perspectives together.", icon: UsersRound },
-  { label: "Explore", detail: "Look at sources and uncertainty.", icon: Microscope },
-  { label: "Collaborate", detail: "Find the right people and context.", icon: Network },
-];
-
-const principles = [
-  {
-    title: "Evidence over popularity",
-    description: "Engagement and scientific support are different things.",
-    icon: FlaskConical,
+    label: "AI Ecosystem",
+    items: [
+      { label: "Healthspan AI", href: "/ai", hint: "Ask a question" },
+      { label: "Responsible AI", href: "#ai", hint: "Evidence and privacy" },
+    ],
   },
   {
-    title: "Privacy by default",
-    description: "Personal health information stays private unless people choose otherwise.",
-    icon: LockKeyhole,
-  },
-  {
-    title: "Clear provenance",
-    description: "Sources and evidence classes should be visible in context.",
-    icon: Dna,
-  },
-  {
-    title: "Responsible AI",
-    description: "AI-generated ideas are hypotheses, not validated findings.",
-    icon: ShieldCheck,
+    label: "Resources",
+    items: [
+      { label: "Research and impact", href: "#impact", hint: "Collaboration at work" },
+      { label: "Personal portal", href: personalPortalUrl, hint: "Your private space" },
+      { label: "Researcher portal", href: researcherPortalUrl, hint: "Approved research" },
+    ],
   },
 ];
 
-const focusAreas = [
-  { label: "Health & aging", icon: HeartPulse },
-  { label: "Sleep", icon: Moon },
-  { label: "Brain & cognition", icon: Brain },
-  { label: "Research", icon: Microscope },
+const pillars = [
+  { label: "Better Health", icon: "icon-health", tone: "green" },
+  { label: "Timeless Beauty", icon: "icon-beauty", tone: "pink" },
+  { label: "Longer Life", icon: "icon-life", tone: "gold" },
+  { label: "Greater Power", icon: "icon-power", tone: "blue" },
+  { label: "Unlimited Potential", icon: "icon-potential", tone: "violet" },
+];
+
+const topics = [
+  { label: "Longevity & Healthspan", image: "leaf", position: "50% 50%" },
+  { label: "Genetics & Epigenetics", image: "dna", position: "50% 50%" },
+  { label: "Biotechnology", image: "flask", position: "50% 50%" },
+  { label: "Brain & Cognition", image: "brain", position: "50% 40%" },
+  { label: "Beauty & Wellness", image: "face", position: "62% 35%" },
+  { label: "Nutrition & Human Performance", image: "food", position: "50% 50%" },
+];
+
+const impact = [
+  { label: "Communities", detail: "Open and moderated spaces", icon: UsersRound },
+  { label: "Organizations & Labs", detail: "Verified research teams", icon: Handshake },
+  { label: "Events & Knowledge", detail: "Learn and share together", icon: CalendarDays },
+  { label: "Global Impact", detail: "People and science worldwide", icon: Globe },
+];
+
+const trust = [
+  { label: "Evidence over popularity", icon: FlaskConical },
+  { label: "Private by default", icon: LockKeyhole },
+  { label: "Clear sources", icon: BookOpenCheck },
+  { label: "Ideas, not findings", icon: ShieldCheck },
 ];
 
 export default function Home() {
   return (
-    <div id="top" className="min-h-screen bg-background text-foreground">
-      <a
-        href="#main-content"
-        className="sr-only z-50 rounded-md bg-card px-4 py-3 text-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus-visible:ring-[3px] focus-visible:ring-ring/40"
-      >
+    <div id="top" className="hs-landing">
+      <a href="#main-content" className="hs-skip">
         Skip to content
       </a>
-      <SiteHeader
-        eyebrow="People · Science · Possibility"
-        title="Healthspan Network"
-        homeHref="#top"
-        brand={
-          <Image
-            src="/brand/logo.png"
-            alt="Healthspan Network"
-            width={1112}
-            height={385}
-            priority
-            className="h-auto w-36 sm:w-40"
-          />
-        }
-        links={navigation}
+      <LandingHeader
+        groups={navGroups}
+        joinHref="/communities"
+        loginHref="/communities"
+        searchHref="/feed"
         themeToggle={<ThemeToggle />}
-        actions={
-          <div className="flex items-center gap-2">
-            <a
-              href="/communities"
-              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
-            >
-              Communities
-            </a>
-            <a
-              href="/feed"
-              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
-            >
-              Community feed
-            </a>
-            <a
-              href="/messages"
-              className="inline-flex min-h-11 items-center rounded-full border border-hero-foreground/30 px-3 text-sm font-medium text-hero-foreground transition hover:bg-hero-foreground/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
-            >
-              Messages
-            </a>
-            <a
-              href="/ai"
-              className="inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
-            >
-              AI <ArrowUpRight aria-hidden="true" className="ml-1 size-4" />
-            </a>
-          </div>
-        }
       />
 
       <main id="main-content">
-        <section className="hero-surface relative isolate overflow-hidden text-hero-foreground">
-          <div className="hero-orb hero-orb-one" aria-hidden="true" />
-          <div className="hero-orb hero-orb-two" aria-hidden="true" />
-          <PageShell className="relative grid min-h-[min(44rem,calc(100dvh-4.5rem))] items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:py-24">
-            <Reveal className="relative z-10 max-w-2xl">
-              <Badge className="mb-6 gap-2 border-hero-foreground/25 bg-hero-foreground/10 text-hero-foreground">
-                <span className="size-2 rounded-full bg-success" aria-hidden="true" />A place for
-                better questions
-              </Badge>
-              <h1 className="max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-                Human healthspan,
-                <span className="mt-1 block text-hero-foreground/80">built together.</span>
+        {/* Hero */}
+        <section className="hs-hero" aria-labelledby="hero-title">
+          <div className="hs-sky" aria-hidden="true">
+            <span className="hs-cloud hs-cloud--1" />
+            <span className="hs-cloud hs-cloud--2" />
+            <span className="hs-cloud hs-cloud--3" />
+            <span className="hs-sun" />
+          </div>
+          <ParallaxStage className="hs-hero-grid">
+            <div className="hs-hero-copy">
+              <h1 id="hero-title" className="hs-rise" style={css({ "--i": 0 })}>
+                Do you want to live long while staying <em className="c-green">youthful</em>,{" "}
+                <em className="c-green">healthy</em>, <em className="c-pink">beautiful</em> and{" "}
+                <em className="c-gold">powerful</em>?
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-hero-foreground/80 sm:text-lg">
-                A connected space for people and scientific communities to explore questions,
-                perspectives, and evidence with care.
+              <p className="hs-lead hs-rise" style={css({ "--i": 2 })}>
+                Who can help you get there?
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button
-                  render={<a href="#network" />}
-                  nativeButton={false}
-                  size="lg"
-                  className="bg-card text-foreground hover:bg-card/90"
-                >
-                  Explore the network <ArrowRight aria-hidden="true" />
-                </Button>
-                <Button
-                  render={<a href="#journey" />}
-                  nativeButton={false}
-                  variant="outline"
-                  size="lg"
-                  className="border-hero-foreground/30 bg-transparent text-hero-foreground hover:bg-hero-foreground/10"
-                >
-                  How it works <ArrowDown aria-hidden="true" />
-                </Button>
+              <p className="hs-script hs-rise" style={css({ "--i": 3 })}>
+                Let’s realize it all together, here.
+              </p>
+              <p className="hs-body hs-rise" style={css({ "--i": 4 })}>
+                Healthspan Network connects people, communities and scientific discovery to help
+                you live longer, healthier and more fulfilling lives.
+              </p>
+              <div className="hs-actions hs-rise" style={css({ "--i": 5 })}>
+                <a href="/communities" className="hs-btn hs-btn--ocean hs-btn--lg">
+                  Join the Network <ArrowRight aria-hidden="true" />
+                </a>
+                <a href="#vision" className="hs-btn hs-btn--outline hs-btn--lg">
+                  Explore Our Vision <ArrowDown aria-hidden="true" />
+                </a>
               </div>
-              <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-hero-foreground/75">
-                <span className="inline-flex items-center gap-2">
-                  <ShieldCheck aria-hidden="true" className="size-4 text-success" />
-                  Privacy-aware
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <Microscope aria-hidden="true" className="size-4 text-hero-foreground/80" />
-                  Evidence-conscious
-                </span>
-              </div>
-            </Reveal>
+            </div>
 
-            <Reveal
-              delay={0.08}
-              className="relative mx-auto grid w-full max-w-[34rem] place-items-center"
-            >
-              <div className="hero-art relative grid aspect-square w-full place-items-center rounded-[2rem] border border-hero-foreground/15 bg-hero-foreground/[0.045] shadow-glow">
-                <div className="hero-ring hero-ring-one" aria-hidden="true" />
-                <div className="hero-ring hero-ring-two" aria-hidden="true" />
-                <div className="hero-ring hero-ring-three" aria-hidden="true" />
-                <div className="relative z-10 grid size-32 place-items-center rounded-[2rem] border border-hero-foreground/20 bg-hero-foreground/10 p-4 shadow-lg backdrop-blur sm:size-40">
+            <div className="hs-hero-art hs-rise" style={css({ "--i": 2 })}>
+              <div className="hs-layer" style={css({ "--depth": 16 })}>
+                <Helix className="hs-helix hs-float" />
+              </div>
+              <div className="hs-layer" style={css({ "--depth": -10 })}>
+                <div className="hs-hero-photo">
                   <Image
-                    src="/brand/mark.png"
-                    alt=""
-                    width={371}
-                    height={371}
+                    src="/landing/family.jpg"
+                    alt="Three generations of a family smiling and looking toward the sky"
+                    fill
                     priority
-                    className="size-full object-contain"
+                    sizes="(min-width: 1100px) 700px, 100vw"
                   />
                 </div>
-                {[
-                  { icon: UsersRound, label: "People", position: "art-node-one" },
-                  { icon: Microscope, label: "Research", position: "art-node-two" },
-                  { icon: Sparkles, label: "Ideas", position: "art-node-three" },
-                  { icon: HeartPulse, label: "Health", position: "art-node-four" },
-                ].map(({ icon: Icon, label, position }) => (
-                  <span key={label} className={`hero-node ${position}`} aria-label={label}>
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                ))}
-                <div className="hero-caption absolute right-3 bottom-4 left-3 mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-hero-foreground/15 bg-background/90 p-3 text-foreground shadow-md backdrop-blur sm:right-6 sm:bottom-6 sm:left-6">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
-                    <Dna aria-hidden="true" className="size-5" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold">People, ideas, evidence</span>
-                    <span className="block text-xs text-muted-foreground">
-                      Connected with context
-                    </span>
-                  </span>
-                </div>
               </div>
-            </Reveal>
-          </PageShell>
-          <div className="border-t border-hero-foreground/10">
-            <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-4 text-xs text-hero-foreground/70 sm:flex-row sm:items-center sm:px-6 lg:px-8">
-              <span>A network for curiosity, collaboration, and careful science.</span>
-              <span className="hidden h-px flex-1 bg-hero-foreground/15 sm:block" />
-              <a
-                href="#network"
-                className="inline-flex min-h-11 items-center gap-2 font-medium hover:text-hero-foreground"
-              >
-                Meet the network <ArrowDown aria-hidden="true" className="size-4" />
+              <div className="hs-layer hs-leaf-layer" style={css({ "--depth": 24 })}>
+                <Leaf className="hs-leaf hs-leaf--a hs-sway" />
+                <Leaf className="hs-leaf hs-leaf--b hs-sway" flip />
+              </div>
+              <div className="hs-layer" style={css({ "--depth": 30 })}>
+                <Bubble size={46} className="hs-bubble--h1" />
+                <Bubble size={26} className="hs-bubble--h2" delay={1.4} />
+                <Bubble size={16} className="hs-bubble--h3" delay={0.6} />
+              </div>
+            </div>
+          </ParallaxStage>
+        </section>
+
+        {/* Five promises */}
+        <section className="hs-wrap hs-pillars-wrap" aria-label="What the network is for">
+          <Reveal>
+            <ul className="hs-pillars hs-glass">
+              {pillars.map((pillar, index) => (
+                <li key={pillar.label} className="hs-pillar" data-tone={pillar.tone}>
+                  <span className="hs-pillar-icon" style={css({ "--i": index })}>
+                    <Image
+                      src={`/landing/${pillar.icon}.png`}
+                      alt=""
+                      width={94}
+                      height={94}
+                      sizes="64px"
+                    />
+                  </span>
+                  <span className="hs-pillar-label">{pillar.label}</span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </section>
+
+        {/* Vision */}
+        <section id="vision" className="hs-section hs-wrap" aria-labelledby="vision-title">
+          <div className="hs-vision hs-glass">
+            <Reveal className="hs-vision-copy">
+              <p className="hs-kicker">Our vision</p>
+              <h2 id="vision-title">A healthier, longer, more vibrant life for all.</h2>
+              <p className="hs-body">
+                Healthspan Network brings people, communities and science together, so you can
+                explore, learn, connect and contribute.
+              </p>
+              <a href="#knowledge" className="hs-btn hs-btn--green hs-btn--lg">
+                Explore the science <ArrowRight aria-hidden="true" />
               </a>
+            </Reveal>
+            <div className="hs-vision-art">
+              <Helix className="hs-helix hs-helix--small hs-float" />
+              <figure className="hs-blob hs-blob--runner">
+                <Image
+                  src="/landing/runner.jpg"
+                  alt="A runner on a mountain lake road"
+                  fill
+                  sizes="(min-width: 900px) 260px, 45vw"
+                />
+              </figure>
+              <figure className="hs-blob hs-blob--face">
+                <Image
+                  src="/landing/face.jpg"
+                  alt="A woman with glowing, healthy skin"
+                  fill
+                  sizes="(min-width: 900px) 300px, 55vw"
+                />
+              </figure>
+              <figure className="hs-blob hs-blob--lab">
+                <Image
+                  src="/landing/lab.jpg"
+                  alt="Researchers working in a bright laboratory"
+                  fill
+                  sizes="(min-width: 900px) 260px, 45vw"
+                />
+              </figure>
+              <Leaf className="hs-leaf hs-leaf--v hs-sway" />
             </div>
           </div>
         </section>
 
-        <section id="network" className="scroll-mt-24 py-section-sm sm:py-section">
-          <PageShell>
-            <Reveal>
-              <SectionHeading
-                eyebrow="A network with room for everyone"
-                title="Different perspectives. Shared curiosity."
-                description="Questions about healthspan cross disciplines. The network is designed to make it easier to find perspectives and collaborate without blurring the boundaries between community and research."
-              />
-            </Reveal>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {audiences.map((audience, index) => (
-                <Reveal key={audience.title} delay={index * 0.045}>
-                  <FeatureCard {...audience} />
+        {/* Knowledge */}
+        <section id="knowledge" className="hs-section hs-wrap" aria-labelledby="knowledge-title">
+          <Reveal className="hs-center">
+            <h2 id="knowledge-title">Explore Scientific Knowledge</h2>
+            <p className="hs-body">Discover breakthroughs across longevity, health, beauty and more.</p>
+          </Reveal>
+          <ul className="hs-topics">
+            {topics.map((topic, index) => (
+              <li key={topic.label}>
+                <Reveal delay={index * 0.05} className="hs-topic-reveal">
+                  <a href="/feed" className="hs-topic" aria-label={`${topic.label}: browse discussions`}>
+                    <span className="hs-topic-media">
+                      <Image
+                        src={`/landing/${topic.image}.jpg`}
+                        alt=""
+                        fill
+                        sizes="(min-width: 1100px) 180px, (min-width: 640px) 30vw, 46vw"
+                        style={{ objectPosition: topic.position }}
+                      />
+                      <span className="hs-topic-arrow">
+                        <ArrowUpRight aria-hidden="true" />
+                      </span>
+                    </span>
+                    <span className="hs-topic-label">{topic.label}</span>
+                  </a>
                 </Reveal>
-              ))}
-            </div>
-            <Card className="mt-7 border-primary/10 bg-surface-raised/60 shadow-none">
-              <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <p className="font-display text-lg">Explore topics that interest you</p>
-                <div className="flex flex-wrap gap-2">
-                  {focusAreas.map(({ label, icon: Icon }) => (
-                    <Badge key={label} variant="outline" className="gap-1.5 bg-card px-3 py-1.5">
-                      <Icon aria-hidden="true" />
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </PageShell>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        <section
-          id="journey"
-          className="border-y border-border/70 bg-surface-raised/65 py-section-sm sm:py-section"
-        >
-          <PageShell>
-            <Reveal>
-              <SectionHeading
-                eyebrow="How it works"
-                title="From a question to a clearer conversation."
-                description="A thoughtful research journey is iterative. Each step can surface new context, collaborators, and questions."
-                centered
-              />
-            </Reveal>
-            <ol className="journey-grid mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {journey.map(({ label, detail, icon: Icon }, index) => (
-                <Reveal key={label} delay={index * 0.06}>
-                  <li className="h-full">
-                    <Card className="h-full bg-card/80 shadow-xs">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <span className="font-display text-2xl text-primary">0{index + 1}</span>
-                          <span className="grid size-11 place-items-center rounded-xl bg-accent text-accent-foreground">
-                            <Icon aria-hidden="true" className="size-5" />
-                          </span>
-                        </div>
-                        <CardTitle className="font-display text-xl">{label}</CardTitle>
-                        <CardDescription className="leading-relaxed">{detail}</CardDescription>
-                      </CardHeader>
-                    </Card>
-                  </li>
-                </Reveal>
-              ))}
-            </ol>
-            <Reveal delay={0.1}>
-              <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/15 bg-card p-4 sm:mx-auto sm:max-w-2xl">
-                <Sparkles aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  AI may assist exploration in future workflows. Suggestions remain proposals and
-                  require evidence, human judgement, and appropriate permissions.
-                </p>
-              </div>
-            </Reveal>
-          </PageShell>
-        </section>
-
-        <section className="py-section-sm sm:py-section">
-          <PageShell>
-            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-              <Reveal>
-                <SectionHeading
-                  eyebrow="Evidence-aware by design"
-                  title="Evidence needs context, not a single score."
-                  description="A label describes a source class. It does not replace appraisal, provenance, or uncertainty."
-                />
-                <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-                  These labels come from the shared model and illustrate how different kinds of
-                  sources can be distinguished. They are not endorsements of any finding.
-                </p>
-              </Reveal>
-              <Reveal delay={0.08}>
-                <Card className="border-primary/10 bg-gradient-to-br from-card to-surface-raised shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="font-display text-xl">
-                      Evidence classes are visible
-                    </CardTitle>
-                    <CardDescription>
-                      Every class is named explicitly; color is reinforced with an icon and label.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    <EvidenceBadge evidenceClass="peer_reviewed" />
-                    <EvidenceBadge evidenceClass="clinical_trial" />
-                    <EvidenceBadge evidenceClass="human_observational" />
-                    <EvidenceBadge evidenceClass="preprint" />
-                    <EvidenceBadge evidenceClass="ai_generated_hypothesis" />
-                    <EvidenceBadge evidenceClass="speculation" />
-                  </CardContent>
-                </Card>
-              </Reveal>
-            </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <StatCard label="Evidence classes" value={11} detail="In the shared type model" />
-              <StatCard label="User portals" value={3} detail="Social, Personal, Researcher" />
-              <StatCard label="Guiding principles" value={4} detail="Shown below" />
-            </div>
-          </PageShell>
-        </section>
-
-        <section id="principles" className="bg-surface-raised/65 py-section-sm sm:py-section">
-          <PageShell>
-            <Reveal>
-              <SectionHeading
-                eyebrow="Built on trust"
-                title="Progress only matters when it is responsible."
-                description="Our foundations prioritize privacy, evidence, and transparent boundaries."
-              />
-            </Reveal>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {principles.map(({ title, description, icon: Icon }, index) => (
-                <Reveal key={title} delay={index * 0.05}>
-                  <FeatureCard
-                    title={title}
-                    description={description}
-                    icon={Icon}
-                    className="min-h-44"
-                  />
-                </Reveal>
-              ))}
-            </div>
-          </PageShell>
-        </section>
-
-        <section id="portals" className="py-section-sm sm:py-section">
-          <PageShell>
-            <Reveal>
-              <SectionHeading
-                eyebrow="Find your place"
-                title="One network, distinct spaces."
-                description="Each portal has a different purpose. A portal alone never grants access to restricted resources."
-              />
-            </Reveal>
-            <PortalSwitcher
-              className="mt-7"
-              portals={[
-                {
-                  title: "Social Portal",
-                  description: "Community and ideas",
-                  href: socialPortalUrl,
-                  icon: UsersRound,
-                },
-                {
-                  title: "Personal Portal",
-                  description: "Your private space",
-                  href: personalPortalUrl,
-                  icon: LockKeyhole,
-                },
-                {
-                  title: "Researcher Portal",
-                  description: "Research workspace",
-                  href: researcherPortalUrl,
-                  icon: Microscope,
-                },
-              ]}
-            />
-            <Reveal delay={0.08} className="mt-7">
-              <EmptyState
-                icon={Network}
-                title="Start with a shared account"
-                description="Browse public discussions, sign in to post, exchange text messages, or try the General Platform AI. Research access remains explicitly gated."
-              />
-            </Reveal>
-          </PageShell>
-        </section>
-
-        <section className="border-t border-border/70 bg-primary text-primary-foreground">
-          <PageShell className="grid items-center gap-7 py-12 sm:py-16 lg:grid-cols-[1fr_auto]">
-            <div>
-              <p className="mb-2 text-sm font-medium text-primary-foreground/75">
-                Better questions begin with many perspectives
+        {/* Community */}
+        <section id="community" className="hs-community" aria-labelledby="community-title">
+          <div className="hs-community-bg" aria-hidden="true">
+            <Image src="/landing/city.jpg" alt="" fill sizes="100vw" />
+          </div>
+          <div className="hs-wrap hs-community-grid">
+            <Reveal className="hs-community-copy">
+              <p className="hs-kicker">Find your community</p>
+              <h2 id="community-title">Connect with like‑minded people.</h2>
+              <p className="hs-body">
+                Share ideas, ask questions, and grow together in our global communities.
               </p>
-              <h2 className="max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
-                Explore the network at your own pace.
-              </h2>
+              <a href="/communities" className="hs-btn hs-btn--green hs-btn--lg">
+                Join a Community <ArrowRight aria-hidden="true" />
+              </a>
+            </Reveal>
+            <div className="hs-community-art">
+              <span className="hs-chip hs-chip--1" aria-hidden="true">
+                <UsersRound />
+              </span>
+              <span className="hs-chip hs-chip--2" aria-hidden="true">
+                <MessageCircle />
+              </span>
+              <span className="hs-chip hs-chip--3" aria-hidden="true">
+                <Globe />
+              </span>
+              <div className="hs-community-photo">
+                <Image
+                  src="/landing/friends.jpg"
+                  alt="Friends sitting together on the grass in a park, talking and laughing"
+                  fill
+                  sizes="(min-width: 900px) 640px, 100vw"
+                />
+              </div>
             </div>
-            <Button
-              render={<a href="#network" />}
-              nativeButton={false}
-              size="lg"
-              className="w-full bg-card text-foreground hover:bg-card/90 sm:w-auto"
-            >
-              Start exploring <ArrowUpRight aria-hidden="true" />
-            </Button>
-          </PageShell>
+          </div>
+        </section>
+
+        {/* AI */}
+        <section id="ai" className="hs-wrap hs-ai-wrap" aria-labelledby="ai-title">
+          <div className="hs-ai">
+            <div className="hs-ai-net" aria-hidden="true">
+              <Image src="/landing/network.jpg" alt="" fill sizes="100vw" />
+            </div>
+            <Reveal className="hs-ai-copy">
+              <h2 id="ai-title">
+                Human Curiosity. Scientific Intelligence. <span>Responsible AI.</span>
+              </h2>
+              <p className="hs-body">
+                Get trusted answers, explore complex topics, and discover new possibilities with
+                Healthspan AI.
+              </p>
+              <a href="/ai" className="hs-btn hs-btn--green hs-btn--lg">
+                Try Healthspan AI <ArrowRight aria-hidden="true" />
+              </a>
+              <ul className="hs-trust" aria-label="How Healthspan AI is built">
+                {trust.map(({ label, icon: Icon }) => (
+                  <li key={label}>
+                    <Icon aria-hidden="true" />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+              <p className="hs-fineprint">
+                AI responses may be incomplete. Suggestions are hypotheses, not validated findings.
+              </p>
+            </Reveal>
+            <div className="hs-ai-art" aria-hidden="true">
+              <Image src="/landing/hologram.jpg" alt="" fill sizes="(min-width: 900px) 560px, 100vw" />
+              <span className="hs-scan" />
+            </div>
+          </div>
+        </section>
+
+        {/* Impact */}
+        <section id="impact" className="hs-impact" aria-labelledby="impact-title">
+          <div className="hs-impact-bg" aria-hidden="true">
+            <Image src="/landing/lake.jpg" alt="" fill sizes="100vw" />
+          </div>
+          <div className="hs-wrap">
+            <Reveal className="hs-impact-panel hs-glass">
+              <h2 id="impact-title">Research, Collaboration &amp; Impact</h2>
+              <p className="hs-body">
+                Work together to advance human health and scientific discovery.
+              </p>
+              <ul className="hs-impact-list">
+                {impact.map(({ label, detail, icon: Icon }) => (
+                  <li key={label}>
+                    <span className="hs-impact-icon">
+                      <Icon aria-hidden="true" />
+                    </span>
+                    <strong>{label}</strong>
+                    <small>{detail}</small>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Final call */}
+        <section id="join" className="hs-join" aria-labelledby="join-title">
+          <div className="hs-join-bg" aria-hidden="true">
+            <Image src="/landing/trees.jpg" alt="" fill sizes="100vw" />
+          </div>
+          <Bubble size={90} className="hs-bubble--j1" />
+          <Bubble size={54} className="hs-bubble--j2" delay={1.2} />
+          <Bubble size={30} className="hs-bubble--j3" delay={2.1} />
+          <Reveal className="hs-wrap hs-join-inner">
+            <h2 id="join-title">
+              Together, We Advance <br className="hs-br" />
+              Human Health and Scientific Discovery.
+            </h2>
+            <p className="hs-body">
+              Be part of a global network that is building a healthier, longer and more capable
+              future for all.
+            </p>
+            <a href="/communities" className="hs-btn hs-btn--gold hs-btn--lg">
+              Join the Healthspan Network <ArrowRight aria-hidden="true" />
+            </a>
+          </Reveal>
         </section>
       </main>
-      <SiteFooter>
-        <span className="inline-flex items-center gap-2">
-          <ShieldCheck aria-hidden="true" className="size-4 text-success" />
-          Evidence-minded · Privacy-aware · Human-led
-        </span>
-      </SiteFooter>
+
+      <footer className="hs-footer">
+        <div className="hs-wrap hs-footer-grid">
+          <div className="hs-footer-brand">
+            <Image src="/brand/logo-symbol.png" alt="" width={274} height={338} className="hs-footer-mark" />
+            <div>
+              <p className="hs-footer-name">Healthspan Network</p>
+              <p className="hs-footer-tag">Better People. Better Science. A Healthier Future.</p>
+            </div>
+          </div>
+          <nav aria-label="Footer" className="hs-footer-nav">
+            <a href="#vision">About</a>
+            <a href="#knowledge">Explore</a>
+            <a href="/communities">Communities</a>
+            <a href="/ai">AI Ecosystem</a>
+            <a href="#impact">Resources</a>
+          </nav>
+          <nav aria-label="Portals" className="hs-footer-nav hs-footer-nav--portals">
+            <a href="/">Social portal</a>
+            <a href={personalPortalUrl}>Personal portal</a>
+            <a href={researcherPortalUrl}>Researcher portal</a>
+          </nav>
+        </div>
+        <div className="hs-wrap hs-footer-base">
+          <span>© {new Date().getFullYear()} Healthspan Network. All rights reserved.</span>
+          <span className="hs-footer-note">
+            <Sparkles aria-hidden="true" /> Evidence-minded · Privacy-aware · Human-led
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

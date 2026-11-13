@@ -2,6 +2,17 @@
 
 ## Completed
 
+- Rebuilt the Social Portal landing page (`apps/social-web/app/page.tsx`, `landing.css`,
+  `components/landing/`) from the approved portrait design: sky hero with family photo, five
+  promise icons, vision cluster, six science topic cards, community, Responsible AI banner,
+  impact panel, closing call and footer. Photos and icons are sliced from the supplied collage into
+  `apps/social-web/public/landing/`; `public/brand/logo-symbol.png` was added for the dark footer.
+  Header now has About/Explore/Communities/AI Ecosystem/Resources menus (keyboard accessible,
+  mobile menu) and keeps links to `/communities`, `/feed`, `/messages`, `/ai` and the Personal and
+  Researcher portals. Responsive down to phone width, reduced motion respected, dark theme styled.
+  Verified with a static render in Chromium at 1440, 820 and 390 px; `next build`, type-check and
+  Prettier were not run in this environment. Next step: run `npm run format`, `npm run typecheck`
+  and `npm run test:architecture`, then review in the browser with real fonts.
 - Started the M4 MVP launch work by tightening the AI gateway routing and OpenAI-compatible provider handling: provider and environment names are normalized before routing, required provider values are stripped and validated, and the request path remains server-only with a redacted authorization header.
 - Added an Ubuntu Docker Compose development stack for all four portals, the Python 3.14 API,
   PostgreSQL and Redis. Updated the setup guide and pinned the Node.js engine to major version 24.
