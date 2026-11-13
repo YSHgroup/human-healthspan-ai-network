@@ -102,6 +102,11 @@ Cross-cutting behavior already in place:
 - CORS allows only the origins in `API_CORS_ORIGINS`, with credentials (session cookies). The local default is ports 3000–3003 on `localhost`; no custom domain is needed.
 - Every response carries `X-Request-ID` and baseline security headers.
 - Browser write requests with an `Origin` header are checked against the trusted-origin list.
+- Registration and login use database-backed fixed-window limits keyed by an HMAC of the direct
+  client address; AI chat uses an authenticated-account HMAC bucket. Defaults are 10
+  registrations/hour, 30 login attempts/15 minutes, and 20 AI requests/minute; configure via
+  `AUTH_REGISTER_RATE_LIMIT`, `AUTH_LOGIN_RATE_LIMIT`, and `AI_CHAT_RATE_LIMIT`. A 429 response
+  includes `Retry-After`.
 - Social feed content is public. Posting and reporting require an authenticated session and a trusted `Origin`; reports are queued for later moderation review.
 - Community membership is scoped to each community. Open communities admit registered members directly; restricted communities require moderator approval. Restricted-community posts/comments/reactions are available only to active members.
 - Community moderation is enforced by active owner/moderator membership. Actions are recorded; posting suspensions are time-limited, and appeals can overturn actions and restore hidden content or posting access.
@@ -127,7 +132,7 @@ provided.
 
 ## Deliberate limitations
 
-- Account registration does not verify email; password recovery, MFA, refresh/rotation, rate limiting and a self-service administrative identity workflow are not implemented. Email verification in the M3 Admin is an operator-recorded state, not proof of an email challenge. A trusted operator must provision and verify platform admin accounts. Do not expose this development slice as a production identity service.
+- Account registration does not verify email; password recovery, MFA, session refresh/rotation and a self-service administrative identity workflow are not implemented. Registration/login limits are scoped to the direct peer address; deployments behind reverse proxies must ensure the ASGI server only trusts forwarding headers from known proxies, and should add edge-level abuse controls. AI limits are per authenticated account and are not a defense against account farms. Email verification in the M3 Admin is an operator-recorded state, not proof of an email challenge. A trusted operator must provision and verify platform admin accounts. Do not expose this development slice as a production identity service.
 - Organization website/identity verification is an administrator attestation to the submitted details; there is no automated domain ownership check or external verification provider.
 - Research document uploads support PDF, CSV, and UTF-8 text up to 10 MiB. The development stack stores opaque-keyed files on a private local volume outside public assets; production object storage, malware scanning, encryption/key management, document versioning, and production retention remain unimplemented.
 - Admin AI monitoring reports aggregate character/token usage, outcomes and latency. Optional cost estimates require exact-model rates in `AI_MODEL_PRICING_JSON` and a traceable `AI_PRICING_SOURCE`; unknown model rates or missing provider token usage are reported as unpriced. Estimates are not provider invoices.

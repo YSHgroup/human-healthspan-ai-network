@@ -588,7 +588,7 @@ From blueprint Section 15 and the architecture's governance rules.
 | M1 Foundation and inventory | In progress (route/model map, decisions, and M2/M3 estimates are recorded; CI setup and its guideline update are deferred until after M4) |
 | M2 Social and Personal portals | Planned |
 | M3 Researcher portal and Admin | Complete (researcher admission/profile, organization and entitlement foundation, project collaboration, events, bounded private development file uploads, and Admin authentication/workflow acceptance meet the exit gate; AI provider cost reporting is deferred to M4 by D8; production file scanning/storage and general security-event search are subsequent hardening) |
-| M4 MVP launch | Planned |
+| M4 MVP launch | In progress (AI governance/source transparency, token-cost monitoring and database-backed baseline API rate limits are implemented; production launch exit gate remains unmet) |
 | M5 Platform AI, health records, premium | Planned |
 | M6 Private AI Scientist foundation | Planned |
 | M7 Scientific knowledge layer | Planned |

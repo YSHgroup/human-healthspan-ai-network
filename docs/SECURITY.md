@@ -15,6 +15,7 @@ before public production launch.
 - Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
 - Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
 - Scientist environment access is checked in the API service before gateway dispatch, in addition to the route gate; the shared permission contract requires the feature flag, verified email and approved-researcher record.
+- Registration and login have database-backed fixed-window rate limits keyed by a secret HMAC of the direct peer address; AI chat is limited per authenticated account. Limits persist across API workers for supported PostgreSQL/SQLite databases. These are baseline controls, not a substitute for reverse-proxy-aware edge protections or account-farm controls.
 - Researcher applications are reviewed by platform admins; researcher profile discovery is opt-in. Project and organization access is checked on the API. Organization membership does not grant project membership, and public project visibility does not grant access to tasks, membership rosters, or project-shared documents.
 - Organization invitations are accepted only by the invited case-insensitive email address. Organization provisioning requires an admin-reviewed request and an active admin-granted pre-M5 entitlement.
 - Text and uploaded-file documents default to private access; shared documents require project membership. Uploads are limited to PDF, CSV, and UTF-8 text up to 10 MiB, use generated storage keys in a private local volume outside static assets, and download as attachments through an API authorization check. Project activities and M3 admin access, organization, entitlement, event, and platform moderation decisions are recorded in a limited audit trail.
@@ -24,13 +25,13 @@ before public production launch.
 
 ## Required before the MVP launch (M4)
 
-- Email verification, password recovery, MFA support, rate limiting and operational abuse controls.
+- Email verification, password recovery and MFA support, plus production edge-level and operational abuse controls beyond the baseline API rate limits.
 - RBAC and ABAC with least privilege at organization, project, resource and administrative level.
 - Shared identity across portals: token lifecycle and refresh, logout propagation,
   CSRF protection, cookie security, redirect validation. No long-lived tokens in browser storage.
 - Authorization on every API, object, file, dataset, AI retrieval and administrative action.
 - Audit logs for sensitive access, sharing, exports, AI retrieval, model actions and admin changes.
-- Rate limiting, secure file ingestion with malware scanning, backup and restore, monitoring.
+- Secure file ingestion with malware scanning, backup and restore, and monitoring/alerting.
 - Encryption in transit and at rest; managed secrets and keys.
 
 ## Security tests (grow with each milestone)

@@ -75,6 +75,11 @@
   exact-model USD rates supplied with a pricing-source label. Stored rate snapshots and estimates,
   exposed priced/unpriced usage to Admin, and added focused permission, privacy, pricing and API
   tests. These estimates are not provider invoices.
+- Added PostgreSQL/SQLite database-backed fixed-window rate limits for registration, login and AI
+  chat. Registration/login use secret-HMAC direct-peer buckets; AI uses authenticated-account
+  buckets. Limits are configurable, return `429` with `Retry-After`, and are covered by API tests.
+  These are baseline controls; production edge-level proxy-aware and account-farm abuse protection
+  is still required.
 
 ## Remaining M1 and product gaps
 
@@ -85,9 +90,10 @@
   and production hardening remain unimplemented.
 - Automated email verification remains unimplemented; Admin verification is an operator-recorded
   development status.
-- M4 remains incomplete: rate limiting/MFA/recovery, malware scanning and production file storage,
-  encryption/key management, tested production backup/restore, monitoring/alerting, incident
-  runbooks, legal/privacy review, and a production security assessment are not established.
+- M4 remains incomplete: email verification/MFA/recovery, production edge-level abuse controls,
+  malware scanning and production file storage, encryption/key management, tested production
+  backup/restore, monitoring/alerting, incident runbooks, legal/privacy review, and a production
+  security assessment are not established.
 - AI retrieval and verified citations are not connected. Cost estimates remain unavailable when
   token usage, exact-model rates, or the operator-supplied pricing source are missing.
 - Production deployment, launch-measure baselines, and operational dashboards beyond current Admin
@@ -144,11 +150,11 @@
   shown. By owner decision D8, AI provider cost reporting is deferred to M4. Production file
   scanning/storage and general security-event search are subsequent hardening per owner direction.
   All M3 exit-gate criteria pass; M3 is marked complete.
-- M4 incremental validation: all 73 architecture, API, AI, and migration tests passed. A fresh
-  SQLite database upgraded through `0007_ai_usage_costs`, passed `alembic check`, downgraded to
-  `0006_research_document_files`, and upgraded again with no metadata drift. Admin TypeScript
-  checking, focused Prettier, the production Vite bundle, and `git diff --check` passed. The Python
-  tests report one existing Starlette/httpx deprecation warning.
+- M4 validation: all 85 architecture, API, AI, and migration tests passed, including rate-limit
+  behavior. A fresh SQLite database upgraded through `0008_api_rate_limits`, passed `alembic
+  check`, downgraded to `0007_ai_usage_costs`, and upgraded again with no metadata drift. Admin
+  TypeScript checking, focused Prettier, the production Vite bundle, and `git diff --check` passed.
+  The Python tests report one existing Starlette/httpx deprecation warning.
 
 ## Next step
 
