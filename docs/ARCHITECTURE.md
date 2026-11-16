@@ -1,79 +1,56 @@
-# Technical Architecture
+# Architecture Overview
 
-## Architecture decisions
+Concise overview and key decisions. The complete specification is
+[SYSTEM_DEVELOPMENT_ARCHITECTURE.md](./SYSTEM_DEVELOPMENT_ARCHITECTURE.md).
 
-- Keep the repository as a monorepo so coordinated portal, API-contract, and shared-UI changes are easy to review.
-- Treat each user-facing portal as an independently buildable and deployable client.
-- Keep one versioned API as the only application boundary to domain data.
-- Start the backend as a modular monolith. Split a domain only when measured scale, resilience, or isolation needs justify the operational cost.
-- Run long-running and scheduled work in a separate worker process when required; initially it can reuse the API's domain code and database boundaries.
-- Do not add a service, package, or infrastructure technology before there is a consumer and a concrete requirement.
+> Status rule: a planned capability is never documented as implemented. The checkout now includes
+> a limited identity, messaging and AI prototype slice; see [Last_Change.md](./Last_Change.md)
+> and [API.md](./API.md) for exact scope and limitations.
 
-## Current repository structure
+## Source documents and precedence
 
-```text
-apps/
-  web/                 # Member-facing Next.js application
-  admin/               # Platform operations and moderation portal
-  api/                 # FastAPI modular monolith
-packages/
-  ui/                  # Shared React/shadcn primitives and brand tokens
-infra/
-  postgres/            # Local database initialization
-tests/
-  test_api_contract.py # API integration and authorization tests
-docs/
-docker-compose.yml
-package.json           # npm workspace root for frontend apps and packages
-```
+When documents disagree, apply this order:
 
-The API owns authentication, authorization, domain workflows, and persistence. The portals must never connect directly to PostgreSQL, Redis, or search infrastructure.
+1. **Idea Blueprint** (`references/`) - the product idea, principles and scope.
+2. **System Development Architecture** - how the system is organized.
+3. **Development Roadmap** - sequencing; it may be adapted to fit 1 and 2.
 
-## Target structure as the system grows
+The White Paper (`references/`) explains the same idea for external readers.
 
-```text
-apps/
-  web/                 # Member platform
-  admin/               # Platform-wide administration
-  api/                 # Shared, versioned domain API
-  worker/              # Ingestion and other asynchronous jobs, when needed
-  institution/         # Organization-scoped portal, after tenant controls exist
-packages/
-  ui/                  # Shared shadcn components and design tokens
-  api-client/          # Typed client generated from or verified against API schemas
-  types/               # Shared public contracts only where multiple clients need them
-  config/              # Shared frontend tooling configuration
-```
+**Naming.** The blueprint calls the default portal the *General portal*. The architecture and
+this repository call it the **Social Portal** (`apps/social-web`). They are the same portal.
 
-`worker`, `institution`, `api-client`, `types`, and `config` are planned extension points, not currently implemented applications/packages. Add each only when a real workflow needs it. Keep domain models authoritative in the API; shared frontend types must not become a second source of truth.
+## System map
 
-## Client and package boundaries
+| Area | Location | Technology | Status |
+|---|---|---|---|
+| Social Portal | `apps/social-web` | Next.js + TypeScript | Landing page, text messaging and General AI prototype |
+| Personal Portal | `apps/personal-web` | Next.js + TypeScript | Foundation page and shared text messaging |
+| Researcher Portal | `apps/researcher-web` | Next.js + TypeScript | Researcher applications/profiles, organizations, scoped projects/tasks/text and uploaded-file documents, and research events; Scientist prototype |
+| Admin Application | `apps/admin` | React + Vite + TypeScript | Community moderation plus researcher admission, organization verification/entitlements, event oversight, aggregate AI usage, and limited audit |
+| Backend API | `api/` | Python + FastAPI modular monolith | Shared identity, social/messaging, researcher/organization collaboration, admin workflows, and AI prototype endpoints |
+| AI platform | `ai/` | Python | OpenAI-compatible provider gateway and prompt-only General/Scientist workflows; provider disabled by default |
+| Shared packages | `packages/` | TypeScript | Skeletons; shared types and UI primitives |
+| Infrastructure | `docker-compose.yml`, `Dockerfile.api`, `infra/` | Docker Compose | Full local stack uses Node.js 24, Python 3.14, PostgreSQL and Redis; API defaults to SQLite outside Compose |
 
-- `web` serves members and researchers. `admin` serves platform operators and moderators. They may share UI primitives and API contracts, but have separate route trees, builds, and access policies.
-- An institution portal is distinct from the platform admin portal. Institution roles must be scoped to their tenant; platform administrator status must not silently grant access to private research content.
-- Every protected operation is authorized server-side. UI route guards and hidden controls are usability features, not security controls.
-- Shared packages should contain stable, reusable code with explicit exports. Do not share server secrets, database models, or application-specific page components.
-- The npm workspace is for JavaScript/TypeScript applications and packages. Python API dependencies and domain modules remain managed by the Python project.
+## Key decisions
 
-## Logical layers
+- **Independent portals over one platform.** Each portal builds and deploys on its own, but all
+  share one identity, one backend and one database. A portal never imports another portal.
+- **Modular monolith.** One FastAPI deployment with domain modules under `api/app/domains`.
+  Extract services only when operations justify it.
+- **Two API areas.** `/api/v1/user/{social,personal,researcher}` and `/api/v1/admin`.
+- **Backend authorization is authoritative.** Navigation, hidden controls and portal access never
+  grant resource access. Every sensitive operation, file, retrieval and AI tool call is checked.
+- **Three separated AI environments.** General Platform AI, Private AI Scientist and
+  Organization-Specialized AI have separate data boundaries and never import one another.
+- **Health data is private by default** and never becomes research or training data silently.
+- **Incremental delivery.** Existing current-checkout behavior is preserved and tested as new
+  features are added ([MIGRATION_PLAN.md](./MIGRATION_PLAN.md)). The owner retired the separate
+  legacy MVP as a migration source; no legacy API, schema, data, or behavior parity is promised.
 
-1. Client applications — Next.js/React/TypeScript portals.
-2. API/application — FastAPI endpoints, identity, authorization, and domain use cases.
-3. Domain modules — social, communities, research, evidence, search, AI, moderation, governance, and administration.
-4. System of record — PostgreSQL + pgvector.
-5. Supporting infrastructure — Redis for queues/cache, search, and object storage as workflows require them.
-6. External providers — identity, email, model APIs, literature/data sources.
-7. Operations — logs, metrics, traces, audit, backups, and recovery.
-8. Optional scientific projection — graph database only when relational/search approaches no longer meet validated needs.
+## Enforcement
 
-## Scaling and extraction strategy
-
-Scale the API and worker processes independently before splitting domain services. Keep modules behind explicit interfaces and test their contracts. Consider extracting a domain only after observing a clear trigger, such as sustained workload contention, independent availability requirements, strict data isolation, or an independently managed release cadence. Extraction requires defined APIs/events, ownership of data and migrations, observability, and failure handling.
-
-Portals can deploy independently while sharing the API. Production scalability still requires deployment automation, capacity/load testing, resource limits, monitoring, rate limiting, backup/restore drills, and resilience testing; a monorepo or Docker Compose alone does not provide those guarantees.
-
-## Future graph
-
-Relational scientific entities remain canonical source records. A graph projection can later materialize relationships such as:
-
-Researcher → ResearchQuestion → Hypothesis → Evidence → Paper → Gene → Protein → Pathway → Disease → Experiment → Result
+`tests/architecture` turns the mandatory rules into automated checks: structure, application
+independence, no direct database access from frontends, no browser-stored tokens, private portals
+not indexable, API-to-AI interface limits and AI environment separation. Run `npm run test:architecture`.

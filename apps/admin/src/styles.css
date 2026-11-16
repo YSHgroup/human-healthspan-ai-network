@@ -1,0 +1,52 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../../../packages/design-tokens/src/tokens.css";
+@source "../../../packages/ui/src";
+@source "../../../packages/ui/node_modules/streamdown/dist/*.js";
+
+:root {
+  --font-healthspan-sans: "DM Sans", sans-serif;
+  --font-healthspan-display: "DM Serif Display", Georgia, serif;
+  --healthspan-font-sans: var(--font-healthspan-sans);
+  --healthspan-font-display: var(--font-healthspan-display);
+}
+
+@custom-variant dark (&:is(.dark *));
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 92% 10%, var(--hero-glow), transparent 34rem), var(--background);
+  color: var(--foreground);
+  font-family: var(--healthspan-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,8 @@
+FROM python:3.14-slim
+
+WORKDIR /workspace
+
+COPY api/ api/
+COPY ai/ ai/
+
+RUN python -m pip install --no-cache-dir -e "api[dev]" -e ai

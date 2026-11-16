@@ -1,27 +1,53 @@
-# Security Foundation
+# Security
 
-## Implemented in the MVP backend
+**Status: development foundations.** Shared identity/session, API-origin checks and messaging
+authorization are implemented for local development. The requirements below remain necessary
+before public production launch.
 
-- Argon2id password hashing and password-length validation.
-- Signed, short-lived JWT access tokens backed by revocable database sessions.
-- Single-use, expiring email-verification and password-reset tokens stored as hashes.
-- Production guards against the development JWT and database password defaults.
-- Server-enforced role checks and project owner/team/public authorization.
-- Permission-scoped research retrieval before searching private literature/evidence.
-- Least-privilege separation for administrator, moderator, scientific reviewer, and read-only auditor APIs.
-- Reasoned, audited moderation and privileged account changes; last-admin/self-lockout safeguards.
-- Soft deletion for user posts/comments and restricted public profile fields.
-- HTTP(S)-only source URL validation for evidence/literature metadata.
+## In place
 
-## Required before public launch
+- Backend CORS restricted to trusted application origins (`API_CORS_ORIGINS`).
+- Production startup rejects missing/non-HTTPS CORS origins, non-PostgreSQL databases, an empty
+  administrator allowlist, and enabling the prompt-only Scientist prototype. Configured external
+  AI endpoints must use HTTPS and provide model/key configuration; the session lifetime is capped
+  at 30 days and the rate-limit HMAC key must be at least 32 characters. Production API responses
+  emit HSTS.
+- `X-Request-ID` and baseline security headers on API responses.
+- Security headers on the three Next.js portals; private portals and Admin are not indexable.
+- API client sends credentials for cookie sessions; tests forbid browser-stored tokens.
+- Registration hashes passwords with scrypt; session cookies are HttpOnly, SameSite=Lax, host-only, and Secure in production; only a session-token digest is stored.
+- Platform administration requires an authenticated, email-verified account in the explicit `PLATFORM_ADMIN_EMAILS` allowlist; state-changing admin requests also enforce trusted origins.
+- Sensitive conversation and message routes check authenticated conversation membership on every read/write; non-members receive not-found responses.
+- Researcher AI requires explicit verified-email and researcher-approval records; neither is granted by public registration.
+- Scientist environment access is checked at the shared AI gateway before provider dispatch, in addition to the route gate; the shared permission contract requires the feature flag, verified email and approved-researcher record.
+- Registration and login have database-backed fixed-window rate limits keyed by a secret HMAC of the direct peer address; AI chat is limited per authenticated account. Limits persist across API workers for supported PostgreSQL/SQLite databases. These are baseline controls, not a substitute for reverse-proxy-aware edge protections or account-farm controls.
+- Researcher applications are reviewed by platform admins; researcher profile discovery is opt-in. Project and organization access is checked on the API. Organization membership does not grant project membership, and public project visibility does not grant access to tasks, membership rosters, or project-shared documents.
+- Organization invitations are accepted only by the invited case-insensitive email address. Organization provisioning requires an admin-reviewed request and an active admin-granted pre-M5 entitlement.
+- Text and uploaded-file documents default to private access; shared documents require project membership. Uploads are limited to PDF, CSV, and UTF-8 text up to 10 MiB, use generated storage keys in a private local volume outside static assets, and download as attachments through an API authorization check. Project activities and M3 admin access, organization, entitlement, event, and platform moderation decisions are recorded in a limited audit trail.
+- Architecture tests enforce: no direct database access from frontends, no cross-application imports.
+- AI admin monitoring includes provider-reported token counts and only estimates cost when an exact-model rate card and its operator-supplied source are configured; absent usage or pricing remains unpriced.
+- `.env.example` holds placeholders only; secrets never enter the repository.
 
-- Rate limiting and abuse controls, including login, recovery, registration, and AI routes.
-- MFA enforcement for privileged accounts and a complete admin sign-in/access policy.
-- OIDC/OAuth integration if required; federation is not implemented.
-- Production SMTP configuration, delivery monitoring, and recovery operations.
-- Secure file uploads, malware scanning, document ingestion isolation, and retention/deletion workflows.
-- Approved AI provider, retrieval/citation evaluation, prompt-injection testing, and AI incident monitoring.
-- PostgreSQL backup/restore drills, production observability, secret-manager integration, and dependency/container scanning.
-- Threat modeling, SAST/DAST, incident response, and security review.
+## Required before the MVP launch (M4)
 
-Health and genomic data require explicit consent and stricter access policies. The current backend is not a clinical system and does not implement a genomic-data platform.
+- Email verification, password recovery and MFA support, plus production edge-level and operational abuse controls beyond the baseline API rate limits.
+- RBAC and ABAC with least privilege at organization, project, resource and administrative level.
+- Shared identity across portals: token lifecycle and refresh, logout propagation,
+  CSRF protection, cookie security, redirect validation. No long-lived tokens in browser storage.
+- Authorization on every API, object, file, dataset, AI retrieval and administrative action.
+- Audit logs for sensitive access, sharing, exports, AI retrieval, model actions and admin changes.
+- Secure file ingestion with malware scanning, backup and restore, and monitoring/alerting.
+- Encryption in transit and at rest; managed secrets and keys.
+
+## Security tests (grow with each milestone)
+
+Cross-user access, cross-organization access, unauthorized health-data access, share-link scope
+and expiry, AI retrieval isolation, administrative authorization, entitlement enforcement.
+Add tests before removing any existing functionality.
+
+The M3 tests cover researcher approval, organization invite matching and entitlement gating,
+organization/project isolation, private document visibility, file upload/download permissions,
+and event/admin workflows. AI permission tests cover environment, feature-flag, verification and
+researcher-approval checks. Email verification in Admin is an operator-recorded development state,
+not an email challenge. Malware scanning, production object storage and encryption/key management,
+comprehensive audit/security search, and production security review remain incomplete.

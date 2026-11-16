@@ -1,0 +1,162 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../../../packages/design-tokens/src/tokens.css";
+@source "../../../packages/ui/src";
+@source "../../../packages/ui/node_modules/streamdown/dist/*.js";
+
+@custom-variant dark (&:is(.dark *));
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--healthspan-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.hero-surface {
+  background:
+    radial-gradient(ellipse at 78% 15%, var(--hero-glow), transparent 34rem),
+    linear-gradient(128deg, var(--hero-start), var(--hero-end));
+}
+
+.hero-orb {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 12%, transparent);
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.hero-orb-one {
+  top: -25rem;
+  right: -12rem;
+  width: 52rem;
+  aspect-ratio: 1;
+  animation: drift 16s ease-in-out infinite alternate;
+}
+
+.hero-orb-two {
+  right: -7rem;
+  bottom: -34rem;
+  width: 48rem;
+  aspect-ratio: 1;
+  animation: drift 20s ease-in-out infinite alternate-reverse;
+}
+
+.hero-art {
+  animation: float 7s ease-in-out infinite;
+}
+
+.hero-ring {
+  position: absolute;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 18%, transparent);
+  border-radius: 9999px;
+}
+
+.hero-ring-one {
+  width: 54%;
+  animation: spin 48s linear infinite;
+}
+
+.hero-ring-two {
+  width: 76%;
+  border-style: dashed;
+  opacity: 0.7;
+  animation: spin 60s linear infinite reverse;
+}
+
+.hero-ring-three {
+  width: 94%;
+  opacity: 0.45;
+}
+
+.hero-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: clamp(2.75rem, 8vw, 3.5rem);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--hero-foreground) 20%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in oklch, var(--background) 78%, transparent);
+  color: var(--hero-foreground);
+  box-shadow: var(--healthspan-shadow-md);
+  backdrop-filter: blur(0.75rem);
+}
+
+.art-node-one {
+  top: 16%;
+  left: 19%;
+}
+
+.art-node-two {
+  top: 18%;
+  right: 18%;
+}
+
+.art-node-three {
+  right: 14%;
+  bottom: 29%;
+}
+
+.art-node-four {
+  bottom: 31%;
+  left: 14%;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.4rem);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-1.25rem, 1rem, 0) scale(1.025);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

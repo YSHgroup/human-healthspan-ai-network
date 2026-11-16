@@ -1,47 +1,62 @@
 # Data Model
 
-The Phase 1 relational schema is managed by Alembic under `apps/api/app/db/migrations/versions/`. PostgreSQL is the source of truth; SQLAlchemy UUIDs, foreign keys, unique constraints, timestamps, and indexes enforce the core invariants.
+**Status: incremental development schema.** Alembic revisions through
+`0006_research_document_files.py` create the shared identity, messaging, AI-consent, social,
+researcher, organization, collaboration, event, entitlement, and limited administrative-audit
+tables. The owner retired the separate legacy MVP as a migration source; no legacy schema or data
+migration is promised.
 
-## Implemented
+## Data domains
 
-### Identity and access
+| Domain | Examples | Principle |
+|---|---|---|
+| Identity and social | Users, profiles, connections, posts, comments, communities, events | Reliable transactional record in PostgreSQL |
+| Implemented identity | `users`, `user_sessions` | Unique normalized email; password hash only; opaque session token digest and expiry |
+| Implemented messaging | `conversations`, `conversation_participants`, `messages` | Conversation membership controls reads/writes; message body is text only |
+| Implemented AI learning | `ai_learning_consents`, `ai_interactions` | Consent is versioned/revocable; prompt/answer fields are nullable; training eligibility defaults false |
+| Implemented researcher access | `researcher_applications` | One application per account; explicit platform decision; profile discovery is opt-in |
+| Implemented organizations | `organizations`, `organization_creation_requests`, `organization_memberships`, `organization_invitations`, `entitlements` | Platform review verifies submitted identity/website; invite-based tenant membership; pre-M5 creation entitlement is admin-granted |
+| Implemented research workspace | `research_projects`, `research_project_members`, `research_tasks`, `research_documents`, `research_activities` | Organization and project authorization are checked separately; private text and file documents use private/project access; binary metadata references private filesystem objects |
+| Implemented research events | `research_events`, `research_event_registrations` | Published events, organization-scoped visibility, single registration per member |
+| Implemented M3 admin audit | `admin_audit_events` | Limited events for M3 access, organization, entitlement, event, and platform community/moderation decisions; not a general security-event system |
+| Research management | Projects, questions, hypotheses, tasks, experiments, results | Ownership, permissions, versioning, provenance |
+| Scientific knowledge | Papers, authors, citations, genes, proteins, pathways, biomarkers | Source traceability and entity resolution |
+| Files and datasets | Documents, images, structured datasets | Object storage with metadata and access controls |
+| Search and retrieval | Keyword indexes, embeddings | Permission-aware indexing and retrieval |
+| AI operations | Conversations, runs, sources, evaluations, model versions | Auditable behavior and provider boundaries |
+| Governance | Roles, consents, audit logs, retention records | Security, privacy, accountability |
 
-- `users`, `profiles` (display name, biography, location, time zone, interests, topics, expertise, researcher identifier, organization affiliation, and public/private visibility)
-- `auth_sessions` (revocable access/refresh session backing)
-- `auth_tokens` (hashed, expiring, single-use email-verification and password-reset tokens)
+## Candidate entities
 
-New users cannot authenticate until their email is verified. Public profile reads do not disclose email addresses. Administrative roles cannot be assigned at registration or through profile updates; use the operator bootstrap command.
+User, Profile, Organization, Role, Permission, Membership, Invitation, Connection, Follow, Post,
+Blog, Comment, Reaction, Message, Bookmark, Notification, Community, Group, Event,
+ResearchProject, Hypothesis, Task, Protocol, Experiment, Result, Paper, Author, Citation,
+Evidence, Gene, Protein, Pathway, Disease, Biomarker, Dataset, File, DataLicense, Consent,
+ProvenanceRecord, AIConversation, AIRun, ModelVersion, Evaluation, AuditLog, Policy, AccessGrant.
 
-### Social and communities
+## Shared enumerations (implemented in `@healthspan/shared-types`)
 
-- `communities`, `community_members`
-- `posts`, `comments`, `reactions`, `bookmarks`, `follows`
-- Content classification labels and soft-delete timestamps on user-generated posts/comments
+- **Visibility:** private, team, invited, community, public.
+- **Evidence class:** peer reviewed, clinical trial, human observational, animal, cellular or
+  in-vitro, computational, preprint, expert opinion, community experience, AI-generated
+  hypothesis, speculation.
+- **Organization role:** founder, owner, administrator, research leader, researcher, contributor, member.
+- **Verification state:** verified, unverified.
 
-Post ownership is derived from the authenticated user. Community membership is required to publish into a community. Starter communities are seeded on API startup.
+## Constraints every model must respect
 
-### Research and evidence
-
-- `research_projects`, `research_members`, `research_questions`, `hypotheses`
-- `literature`, `evidence`
-
-Projects support `private`, `team`, and `public` visibility. Owners and team members are permission-checked before project resources are read or changed. Team `member` roles can write; `reviewer` roles are read-only. Public search/retrieval is restricted to public projects.
-
-### Governance and administration
-
-- `reports`, `audit_events`
-
-Privileged account changes and moderation actions require reason text and emit audit events. Sensitive administrative actions do not implicitly authorize access to private research resources.
-
-## Key invariants
-
-1. Authenticated identity, not client-supplied author IDs, determines write ownership.
-2. Private/team research data is filtered by server-side project authorization.
-3. AI retrieval applies project access restrictions before searching literature/evidence.
-4. Personal experience, opinion, scientific evidence, hypotheses, AI-generated hypotheses, and speculation remain separately classified.
-5. Account recovery and verification credentials are stored as hashes, expire, and are single-use.
-6. User-generated posts/comments use soft deletion; research audit events preserve action history.
-
-## Not yet implemented
-
-Organizations/tenant membership, MFA enforcement, OIDC, messages, avatar/media uploads and scanning, paper-author normalization, claims/citations, datasets/experiments, notifications, AI conversations/runs/evaluations, embedding storage, and a graph projection remain future work. Organization affiliation is currently a user-entered profile field, not a verified organization membership. Redis/OpenSearch are provisioned in Compose but are not yet used by application services.
+- Every research artifact has an owner, version history, provenance, access policy and status.
+- Organization data is isolated per tenant; resource permissions are checked on every access.
+- Health records are private by default and separate from research data.
+- Work history is auditable; corrections use amendments, subject to legal deletion and retention rules.
+- Current models and migrations are extended with reviewed, tested migrations.
+- Project summary visibility does not grant access to project tasks, members, or documents. Protected
+  project resources require active project membership; private documents are visible only to
+  their uploader and the project owner.
+- Uploaded file bytes are stored outside public assets under opaque generated keys. Database rows
+  contain the original filename, validated media type, byte size, and SHA-256 digest; downloads
+  resolve through an authenticated, permission-checked API route.
+- AI metadata (environment, provider/model, character counts, latency and outcome) is recorded; content retention requires affirmative user consent. Revocation clears retained prompt/answer content. No training process consumes these records.
+- `researcher_approved_at` and `email_verified_at` are null on registration; only authorized platform
+  administrators can record verification or researcher approval. Automated email verification is
+  not implemented.

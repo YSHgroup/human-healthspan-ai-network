@@ -1,81 +1,114 @@
+x-node-app: &node-app
+  image: node:24-bookworm
+  working_dir: /workspace
+  init: true
+  volumes:
+    - .:/workspace
+    - pnpm-node-modules:/workspace/node_modules
+  depends_on:
+    frontend-deps:
+      condition: service_completed_successfully
+  environment:
+    NEXT_TELEMETRY_DISABLED: "1"
+    NEXT_PUBLIC_API_URL: http://localhost:8000
+
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-healthspan}
-      POSTGRES_USER: ${POSTGRES_USER:-healthspan}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthspan_dev}
-    ports:
-      - "5432:5432"
+  frontend-deps:
+    image: node:24-bookworm
+    working_dir: /workspace
+    command:
+      - sh
+      - -c
+      - corepack enable && pnpm install --frozen-lockfile
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infra/postgres/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-healthspan} -d ${POSTGRES_DB:-healthspan}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
+      - .:/workspace
+      - pnpm-node-modules:/workspace/node_modules
 
-  redis:
-    image: redis:7-alpine
+  social-web:
+    <<: *node-app
+    command: sh -c "corepack enable && pnpm run dev:social"
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "3000:3000"
 
-  opensearch:
-    image: opensearchproject/opensearch:2.19.0
-    environment:
-      - discovery.type=single-node
-      - DISABLE_SECURITY_PLUGIN=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+  personal-web:
+    <<: *node-app
+    command: sh -c "corepack enable && pnpm run dev:personal"
     ports:
-      - "9200:9200"
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
+      - "3001:3001"
+
+  researcher-web:
+    <<: *node-app
+    command: sh -c "corepack enable && pnpm run dev:researcher"
+    ports:
+      - "3002:3002"
+
+  admin:
+    <<: *node-app
+    command: sh -c "corepack enable && pnpm run dev:admin"
+    ports:
+      - "3003:3003"
+    environment:
+      VITE_API_URL: http://localhost:8000
 
   api:
     build:
-      context: ./apps/api
-    env_file: .env
+      context: .
+      dockerfile: Dockerfile.api
+    working_dir: /workspace
+    init: true
+    command:
+      - sh
+      - -c
+      - python -m alembic -c api/alembic.ini upgrade head && python -m uvicorn app.main:asgi_app --app-dir api --host 0.0.0.0 --reload --port 8000
+    env_file:
+      - .env
     environment:
-      POSTGRES_HOST: postgres
+      APP_ENV: development
+      API_CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-healthspan}:${POSTGRES_PASSWORD:-healthspan_dev}@postgres:5432/${POSTGRES_DB:-healthspan}
       REDIS_URL: redis://redis:6379/0
-      OPENSEARCH_URL: http://opensearch:9200
+      RESEARCH_FILE_STORAGE_PATH: /workspace/.data/research-files
+    volumes:
+      - .:/workspace
+      - healthspan-research-files:/workspace/.data/research-files
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-      opensearch:
-        condition: service_started
+        condition: service_healthy
 
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+  postgres:
+    image: postgres:16-alpine
     environment:
-      API_INTERNAL_URL: http://api:8000
+      POSTGRES_DB: ${POSTGRES_DB:-healthspan}
+      POSTGRES_USER: ${POSTGRES_USER:-healthspan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthspan_dev}
     ports:
-      - "3000:3000"
-    depends_on:
-      - api
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - healthspan-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  admin:
-    build:
-      context: .
-      dockerfile: apps/admin/Dockerfile
-    environment:
-      API_INTERNAL_URL: http://api:8000
-      NODE_ENV: production
+  redis:
+    image: redis:7-alpine
     ports:
-      - "3001:3001"
-    depends_on:
-      - api
+      - "6379:6379"
+    volumes:
+      - healthspan-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
-  postgres_data:
-  redis_data:
-  opensearch_data:
+  pnpm-node-modules:
+  healthspan-postgres:
+  healthspan-redis:
+  healthspan-research-files:

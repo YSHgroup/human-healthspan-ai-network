@@ -1,0 +1,11 @@
+node_modules
+.next
+.turbo
+dist
+coverage
+pnpm-lock.yaml
+references
+docs
+public/brand
+apps/*/public/brand
+**/.venv
