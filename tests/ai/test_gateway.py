@@ -55,7 +55,7 @@ def test_openai_compatible_provider_sends_server_side_credentials(monkeypatch) -
     assert completion.output_tokens == 4
     assert completion.sources == ("https://example.test/source/1",)
     assert completion.source_notice == "Source-backed answer."
-    assert seen["authorization"] == "******"
+    assert seen["authorization"] == "Bearer test-key"
     assert '"content":"Question"' in str(seen["body"])
 
 

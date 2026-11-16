@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 API_DIRECTORY = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = API_DIRECTORY.parent
+AI_DIRECTORY = REPOSITORY_ROOT / "ai"
 
 
 def main() -> None:
@@ -19,7 +20,7 @@ def main() -> None:
         host="127.0.0.1",
         port=8000,
         reload=True,
-        reload_dirs=[str(API_DIRECTORY)],
+        reload_dirs=[str(API_DIRECTORY), str(AI_DIRECTORY)],
     )
 
 
