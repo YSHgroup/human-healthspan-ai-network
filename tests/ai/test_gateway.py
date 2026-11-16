@@ -9,6 +9,7 @@ from healthspan_ai.gateway.providers.openai_compatible import (
     ProviderRequestError,
     complete,
 )
+from healthspan_ai.gateway.providers import claude, groq, ollama, openai
 from healthspan_ai.gateway.service import AccessDeniedError, complete_chat
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
@@ -84,6 +85,104 @@ def test_provider_http_errors_report_status_without_exposing_response_body(
         asyncio.run(complete(config, [ChatMessage(role="user", content="Question")]))
 
     assert "private provider detail" not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    ("provider", "adapter", "expected_url", "api_key", "expected_auth"),
+    [
+        ("openai", openai.complete, "https://api.openai.com/v1/chat/completions", "test-key", "Bearer test-key"),
+        ("groq", groq.complete, "https://api.groq.com/openai/v1/chat/completions", "test-key", "Bearer test-key"),
+        ("ollama", ollama.complete, "http://localhost:11434/v1/chat/completions", None, None),
+    ],
+)
+def test_openai_protocol_providers_use_their_default_endpoints(
+    monkeypatch,
+    provider: str,
+    adapter,
+    expected_url: str,
+    api_key: str | None,
+    expected_auth: str | None,
+) -> None:
+    seen: dict[str, str | None] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["authorization"] = request.headers.get("authorization")
+        return httpx.Response(
+            200,
+            json={
+                "model": "test-model",
+                "choices": [{"message": {"content": "Provider response"}}],
+            },
+        )
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "healthspan_ai.gateway.providers.openai_compatible.httpx.AsyncClient",
+        partial(original_client, transport=httpx.MockTransport(handler)),
+    )
+    config = GatewayConfig(
+        provider=provider,
+        model="test-model",
+        api_key=api_key,
+        base_url=None,
+        timeout_seconds=2,
+    )
+
+    completion = asyncio.run(adapter(config, [ChatMessage(role="user", content="Question")]))
+
+    assert completion.content == "Provider response"
+    assert seen == {"url": expected_url, "authorization": expected_auth}
+
+
+def test_claude_uses_messages_api_and_converts_system_prompt(monkeypatch) -> None:
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["api_key"] = request.headers.get("x-api-key")
+        seen["version"] = request.headers.get("anthropic-version")
+        seen["body"] = request.read().decode()
+        return httpx.Response(
+            200,
+            json={
+                "model": "claude-test",
+                "content": [{"type": "text", "text": "Claude response"}],
+                "usage": {"input_tokens": 11, "output_tokens": 7},
+            },
+        )
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "healthspan_ai.gateway.providers.claude.httpx.AsyncClient",
+        partial(original_client, transport=httpx.MockTransport(handler)),
+    )
+    config = GatewayConfig(
+        provider="claude",
+        model="claude-test",
+        api_key="test-key",
+        base_url=None,
+        timeout_seconds=2,
+    )
+
+    completion = asyncio.run(
+        claude.complete(
+            config,
+            [
+                ChatMessage(role="system", content="System instructions"),
+                ChatMessage(role="user", content="Question"),
+            ],
+        )
+    )
+
+    assert completion.content == "Claude response"
+    assert completion.input_tokens == 11
+    assert completion.output_tokens == 7
+    assert seen["url"] == "https://api.anthropic.com/v1/messages"
+    assert seen["api_key"] == "test-key"
+    assert seen["version"] == "2023-06-01"
+    assert '"system":"System instructions"' in str(seen["body"])
+    assert '"role":"user","content":"Question"' in str(seen["body"])
 
 
 def test_gateway_requires_a_configured_provider() -> None:

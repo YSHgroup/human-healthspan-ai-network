@@ -1,6 +1,6 @@
 """Provider-independent AI gateway entry point."""
 
-from healthspan_ai.gateway.providers.openai_compatible import (
+from healthspan_ai.gateway.providers.dispatch import (
     ProviderConfigurationError,
     ProviderRequestError,
 )
@@ -28,7 +28,7 @@ async def complete_chat(
     except ValueError as exc:
         raise ProviderConfigurationError(str(exc)) from exc
 
-    if provider in {"openai-compatible", "groq"}:
+    if provider in {"openai", "openai-compatible", "claude", "groq", "ollama"}:
         if environment_name == "general":
             from healthspan_ai.general.services.chat import answer
 

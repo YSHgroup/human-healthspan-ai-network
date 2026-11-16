@@ -1,6 +1,6 @@
 """General Platform AI workflow."""
 
-from healthspan_ai.gateway.providers.openai_compatible import complete as complete_provider
+from healthspan_ai.gateway.providers.dispatch import complete as complete_provider
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 GENERAL_SYSTEM_MESSAGE = (

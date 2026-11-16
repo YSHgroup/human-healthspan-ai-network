@@ -76,15 +76,37 @@ def _validate_production_configuration() -> None:
         )
 
     ai_provider = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
-    if ai_provider not in {"disabled", "openai-compatible", "groq"}:
-        raise ValueError("Production AI_PROVIDER must be disabled, openai-compatible or groq")
-    if ai_provider in {"openai-compatible", "groq"}:
-        base_url = os.environ.get("AI_BASE_URL", "").strip()
+    providers_requiring_api_key = {"openai-compatible", "openai", "claude", "groq"}
+    supported_ai_providers = providers_requiring_api_key | {"disabled", "ollama"}
+    if ai_provider not in supported_ai_providers:
+        raise ValueError(
+            "Production AI_PROVIDER must be disabled, openai, openai-compatible, claude, groq or ollama"
+        )
+    if ai_provider != "disabled":
+        default_base_urls = {
+            "openai-compatible": "https://api.openai.com/v1",
+            "openai": "https://api.openai.com/v1",
+            "claude": "https://api.anthropic.com/v1",
+            "groq": "https://api.groq.com/openai/v1",
+            "ollama": "http://localhost:11434/v1",
+        }
+        base_url = os.environ.get("AI_BASE_URL", "").strip() or default_base_urls[ai_provider]
         parsed_base_url = urlsplit(base_url)
         if parsed_base_url.scheme != "https" or not parsed_base_url.netloc:
             raise ValueError("AI_BASE_URL must use HTTPS in production")
-        if not os.environ.get("AI_API_KEY", "").strip() or not os.environ.get("AI_MODEL", "").strip():
-            raise ValueError("AI_API_KEY and AI_MODEL are required when production AI is enabled")
+        missing_configuration = []
+        if ai_provider in providers_requiring_api_key and not os.environ.get(
+            "AI_API_KEY", ""
+        ).strip():
+            missing_configuration.append("AI_API_KEY")
+        if not os.environ.get("AI_MODEL", "").strip():
+            missing_configuration.append("AI_MODEL")
+        if missing_configuration:
+            required = " and ".join(missing_configuration)
+            verb = "is" if len(missing_configuration) == 1 else "are"
+            raise ValueError(
+                f"{required} {verb} required when production AI is enabled"
+            )
         if parsed_base_url.username or parsed_base_url.password or parsed_base_url.fragment:
             raise ValueError("AI_BASE_URL cannot contain credentials or a fragment")
 

@@ -4,17 +4,13 @@ from urllib.parse import urljoin
 
 import httpx
 
+from healthspan_ai.gateway.providers.errors import (
+    ProviderConfigurationError,
+    ProviderRequestError,
+)
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 MAX_RECORDED_TOKEN_COUNT = 2_147_483_647
-
-
-class ProviderConfigurationError(Exception):
-    """The selected provider is missing required configuration."""
-
-
-class ProviderRequestError(Exception):
-    """The provider rejected or failed to complete a request."""
 
 
 def _optional_token_count(usage: object, key: str) -> int | None:
@@ -30,13 +26,24 @@ async def complete(
     config: GatewayConfig,
     messages: list[ChatMessage],
 ) -> Completion:
+    return await complete_compatible(config, messages)
+
+
+async def complete_compatible(
+    config: GatewayConfig,
+    messages: list[ChatMessage],
+    *,
+    default_base_url: str | None = None,
+    require_api_key: bool = True,
+) -> Completion:
     api_key = (config.api_key or "").strip()
     model = (config.model or "").strip()
-    base_url = (config.base_url or "").strip()
+    base_url = (config.base_url or default_base_url or "").strip()
 
-    if not api_key or not model or not base_url:
+    if (require_api_key and not api_key) or not model or not base_url:
         raise ProviderConfigurationError(
-            "AI_PROVIDER=openai-compatible requires AI_API_KEY, AI_MODEL and AI_BASE_URL"
+            "The selected AI provider requires an AI_MODEL and endpoint"
+            + (" and AI_API_KEY" if require_api_key else "")
         )
 
     url = urljoin(base_url.rstrip("/") + "/", "chat/completions")
@@ -46,9 +53,10 @@ async def complete(
     }
     try:
         async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
             response = await client.post(
                 url,
-                headers={"Authorization": f"Bearer {api_key}"},
+                headers=headers,
                 json=payload,
             )
         response.raise_for_status()

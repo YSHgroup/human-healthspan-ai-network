@@ -1,6 +1,6 @@
 """Restricted Private AI Scientist prototype workflow."""
 
-from healthspan_ai.gateway.providers.openai_compatible import complete as complete_provider
+from healthspan_ai.gateway.providers.dispatch import complete as complete_provider
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
 SCIENTIST_SYSTEM_MESSAGE = (

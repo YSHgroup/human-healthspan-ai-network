@@ -68,7 +68,7 @@ def test_production_configuration_accepts_explicit_secure_origins_and_database(m
         ("DATABASE_URL", "sqlite:///./healthspan.db", "PostgreSQL"),
         ("PLATFORM_ADMIN_EMAILS", "", "production administrator"),
         ("SCIENTIST_ENABLED", "true", "cannot be true in production"),
-        ("AI_PROVIDER", "unknown", "must be disabled, openai-compatible or groq"),
+        ("AI_PROVIDER", "unknown", "must be disabled, openai, openai-compatible, claude, groq or ollama"),
     ],
 )
 def test_production_configuration_rejects_unsafe_values(
@@ -110,6 +110,16 @@ def test_production_groq_provider_requires_https_key_and_model(monkeypatch) -> N
     monkeypatch.setenv("AI_BASE_URL", "https://api.groq.com/openai/v1")
     monkeypatch.setenv("AI_API_KEY", "test-key")
     monkeypatch.setenv("AI_MODEL", "openai/gpt-oss-20b")
+
+    _validate_production_configuration()
+
+
+def test_production_ollama_provider_needs_https_endpoint_but_not_api_key(monkeypatch) -> None:
+    _set_valid_production_environment(monkeypatch)
+    monkeypatch.setenv("AI_PROVIDER", "ollama")
+    monkeypatch.setenv("AI_BASE_URL", "https://ollama.example.test/v1")
+    monkeypatch.setenv("AI_MODEL", "local-model")
+    monkeypatch.delenv("AI_API_KEY", raising=False)
 
     _validate_production_configuration()
 
