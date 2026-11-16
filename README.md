@@ -73,7 +73,6 @@ PowerShell terminal:
 ```powershell
 py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e "api[dev]" -e ai
-$env:PATH = "$PWD\.venv\Scripts;$env:PATH"
 npm.cmd run db:migrate
 ```
 
@@ -82,7 +81,7 @@ Before starting the API for the first time, set `PLATFORM_ADMIN_EMAILS`,
 Then provision the initial admin account once:
 
 ```powershell
-python -m app.bootstrap_admin
+.\.venv\Scripts\python.exe -m app.bootstrap_admin
 ```
 
 The command creates or verifies an existing unverified account and sets its password. It will not
@@ -92,6 +91,9 @@ never commit it. Then start the API:
 ```powershell
 npm.cmd run dev:api
 ```
+
+The npm API and Python test scripts automatically use `.venv` when it exists. Set `PYTHON` to
+override the interpreter.
 
 ### Ubuntu (Docker only)
 

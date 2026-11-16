@@ -18,10 +18,10 @@ The default database is local SQLite; PostgreSQL and Redis are optional local se
 compose up -d postgres redis`) or can be supplied separately. Redis is not used by the current
 API slice.
 
-In PowerShell, prepare the Python environment and run database/API commands in their own terminal:
+Run database/API commands in their own terminal. The npm scripts automatically use `.venv` when it
+exists; set `PYTHON` to override the interpreter:
 
 ```powershell
-$env:PATH = "$PWD\.venv\Scripts;$env:PATH"
 npm.cmd run db:migrate
 npm.cmd run dev:api
 ```
@@ -40,8 +40,8 @@ if external AI is enabled, its endpoint must use HTTPS and both `AI_API_KEY` and
 be set. These checks do not provision TLS, secrets, storage, monitoring, backups, or other
 production infrastructure.
 
-On macOS/Linux use `python3 -m venv .venv` and `.venv/bin/python -m pip install -e "api[dev]" -e ai`,
-then activate the venv before running the npm API scripts.
+On macOS/Linux use `python3 -m venv .venv` and `.venv/bin/python -m pip install -e "api[dev]" -e ai`.
+The npm API scripts automatically use `.venv` when it exists.
 
 ## Principles (from the architecture)
 
