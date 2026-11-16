@@ -41,7 +41,9 @@ REST, versioned under `/api/v1/`. The FastAPI application lives in `api/app`.
 | POST | `/api/v1/user/social/messages/conversations/{conversation_id}/messages` | Send a text-only message; attachments are rejected. |
 | WebSocket | `/api/v1/user/social/messages/conversations/{conversation_id}/ws` | Receive new messages for an authenticated conversation participant in real time. |
 | POST | `/api/v1/user/social/ai/chat` | General Platform AI chat via the configured provider gateway. |
+| POST | `/api/v1/user/social/ai/chat/stream` | Stream General Platform AI response deltas as server-sent events. |
 | POST | `/api/v1/user/researcher/ai/chat` | Restricted Scientist prompt-only prototype; requires verified and approved researcher records and `SCIENTIST_ENABLED=true`. |
+| POST | `/api/v1/user/researcher/ai/chat/stream` | Stream restricted Scientist response deltas as server-sent events. |
 | GET | `/api/v1/admin/communities/requests` | List pending community requests for a verified, allowlisted platform administrator. |
 | POST | `/api/v1/admin/communities/requests/{request_id}/decision` | Approve and provision a community with its requester as active owner, or reject the request. |
 | GET | `/api/v1/admin/moderation/reports` | List pending reports on global content and escalated community reports. |

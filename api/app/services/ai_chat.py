@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 from decimal import Decimal
 from time import perf_counter
@@ -17,6 +18,7 @@ from healthspan_ai.gateway.service import (
     ProviderConfigurationError,
     ProviderRequestError,
     complete_chat,
+    stream_chat as stream_provider_chat,
 )
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
@@ -32,6 +34,68 @@ def gateway_config() -> GatewayConfig:
         api_key=settings.ai_api_key,
         base_url=settings.ai_base_url,
         timeout_seconds=settings.ai_timeout_seconds,
+    )
+
+
+async def stream_chat(
+    db: Session,
+    user: User,
+    environment: str,
+    messages: list[ChatMessage],
+) -> AsyncIterator[str]:
+    started = perf_counter()
+    answer_parts: list[str] = []
+    try:
+        async for part in stream_provider_chat(
+            gateway_config(),
+            environment,
+            messages,
+            scientist_enabled=settings.scientist_enabled,
+            email_verified=user.email_verified_at is not None,
+            researcher_approved=user.researcher_approved_at is not None,
+        ):
+            answer_parts.append(part)
+            yield part
+    except AccessDeniedError:
+        record_interaction(
+            db,
+            user=user,
+            environment=environment,
+            messages=messages,
+            provider=settings.ai_provider,
+            model=settings.ai_model,
+            answer=None,
+            latency_ms=int((perf_counter() - started) * 1000),
+            succeeded=False,
+            error_code="AccessDeniedError",
+        )
+        raise
+    except (ProviderConfigurationError, ProviderRequestError) as exc:
+        record_interaction(
+            db,
+            user=user,
+            environment=environment,
+            messages=messages,
+            provider=settings.ai_provider,
+            model=settings.ai_model,
+            answer=None,
+            latency_ms=int((perf_counter() - started) * 1000),
+            succeeded=False,
+            error_code=type(exc).__name__,
+        )
+        raise
+
+    completion_text = "".join(answer_parts)
+    record_interaction(
+        db,
+        user=user,
+        environment=environment,
+        messages=messages,
+        provider=settings.ai_provider,
+        model=settings.ai_model,
+        answer=completion_text,
+        latency_ms=int((perf_counter() - started) * 1000),
+        succeeded=True,
     )
 
 

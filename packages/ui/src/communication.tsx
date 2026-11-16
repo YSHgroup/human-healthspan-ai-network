@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import { Alert, AlertDescription } from "./alert";
 import { Badge } from "./badge";
@@ -13,6 +21,284 @@ import { cn } from "./utils";
 
 interface ApiProblem {
   message?: string;
+  detail?: string;
+}
+
+function renderInlineMarkdown(content: string): ReactNode[] {
+  const pattern =
+    /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|~~([^~]+)~~|\*([^*\n]+)\*|_([^_\n]+)_)/g;
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(content)) !== null) {
+    if (match.index > cursor) nodes.push(content.slice(cursor, match.index));
+    const key = `${match.index}-${match[0]}`;
+    if (match[2] && match[3]) {
+      nodes.push(
+        <a
+          key={key}
+          href={match[3]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-link underline underline-offset-4"
+        >
+          {match[2]}
+        </a>,
+      );
+    } else if (match[4]) {
+      nodes.push(
+        <code key={key} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">
+          {match[4]}
+        </code>,
+      );
+    } else if (match[5] || match[6]) {
+      nodes.push(<strong key={key}>{match[5] ?? match[6]}</strong>);
+    } else if (match[7]) {
+      nodes.push(<del key={key}>{match[7]}</del>);
+    } else if (match[8] || match[9]) {
+      nodes.push(<em key={key}>{match[8] ?? match[9]}</em>);
+    }
+    cursor = pattern.lastIndex;
+  }
+  if (cursor < content.length) nodes.push(content.slice(cursor));
+  return nodes;
+}
+
+function markdownTableCells(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function MarkdownContent({ content }: { content: string }) {
+  const lines = content.split(/\r?\n/);
+  const blocks: ReactNode[] = [];
+  let index = 0;
+  let key = 0;
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+    if (line.startsWith("```") || line.startsWith("~~~")) {
+      const marker = line.slice(0, 3);
+      const codeLines: string[] = [];
+      index += 1;
+      while (index < lines.length && !lines[index].startsWith(marker)) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push(
+        <pre
+          key={key++}
+          className="my-2 overflow-x-auto rounded-lg bg-background/70 p-3 font-mono text-xs leading-relaxed"
+        >
+          <code>{codeLines.join("\n")}</code>
+        </pre>,
+      );
+      continue;
+    }
+    const heading = /^(#{1,6})\s+(.+)$/.exec(line);
+    if (heading) {
+      const level = heading[1].length;
+      const HeadingTag = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+      blocks.push(
+        <HeadingTag
+          key={key++}
+          className={cn(
+            "mt-3 font-semibold leading-snug first:mt-0",
+            level <= 2 ? "text-base" : "text-sm",
+          )}
+        >
+          {renderInlineMarkdown(heading[2])}
+        </HeadingTag>,
+      );
+      index += 1;
+      continue;
+    }
+    if (
+      index + 1 < lines.length &&
+      line.includes("|") &&
+      lines[index + 1].includes("|") &&
+      markdownTableCells(lines[index + 1]).every((cell) => /^:?-{3,}:?$/.test(cell))
+    ) {
+      const headers = markdownTableCells(line);
+      const alignments = markdownTableCells(lines[index + 1]).map((cell) =>
+        cell.startsWith(":") && cell.endsWith(":")
+          ? "center"
+          : cell.endsWith(":")
+            ? "right"
+            : "left",
+      );
+      index += 2;
+      const rows: string[][] = [];
+      while (index < lines.length && lines[index].includes("|")) {
+        rows.push(markdownTableCells(lines[index]));
+        index += 1;
+      }
+      blocks.push(
+        <div key={key++} className="my-3 overflow-x-auto">
+          <table className="w-full border-collapse text-left text-xs">
+            <thead>
+              <tr>
+                {headers.map((header, cellIndex) => (
+                  <th
+                    key={cellIndex}
+                    className="border-b border-current/20 px-2 py-1.5 font-semibold"
+                    style={{ textAlign: alignments[cellIndex] }}
+                  >
+                    {renderInlineMarkdown(header)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {headers.map((_, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className="border-b border-current/10 px-2 py-1.5 align-top"
+                      style={{ textAlign: alignments[cellIndex] }}
+                    >
+                      {renderInlineMarkdown(row[cellIndex] ?? "")}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      continue;
+    }
+    if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) {
+      blocks.push(<hr key={key++} className="my-3 border-border" />);
+      index += 1;
+      continue;
+    }
+    if (/^\s*[-*+]\s+/.test(line)) {
+      const items: ReactNode[] = [];
+      while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) {
+        items.push(
+          <li key={items.length}>
+            {renderInlineMarkdown(lines[index].replace(/^\s*[-*+]\s+/, ""))}
+          </li>,
+        );
+        index += 1;
+      }
+      blocks.push(
+        <ul key={key++} className="my-2 list-disc space-y-1 pl-5">
+          {items}
+        </ul>,
+      );
+      continue;
+    }
+    if (/^\s*\d+[.)]\s+/.test(line)) {
+      const items: ReactNode[] = [];
+      while (index < lines.length && /^\s*\d+[.)]\s+/.test(lines[index])) {
+        items.push(
+          <li key={items.length}>
+            {renderInlineMarkdown(lines[index].replace(/^\s*\d+[.)]\s+/, ""))}
+          </li>,
+        );
+        index += 1;
+      }
+      blocks.push(
+        <ol key={key++} className="my-2 list-decimal space-y-1 pl-5">
+          {items}
+        </ol>,
+      );
+      continue;
+    }
+    if (/^\s*>\s?/.test(line)) {
+      const quote: string[] = [];
+      while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+        quote.push(lines[index].replace(/^\s*>\s?/, ""));
+        index += 1;
+      }
+      blocks.push(
+        <blockquote
+          key={key++}
+          className="my-2 border-l-2 border-border pl-3 text-muted-foreground"
+        >
+          {quote.map((text, quoteIndex) => (
+            <p key={quoteIndex}>{renderInlineMarkdown(text)}</p>
+          ))}
+        </blockquote>,
+      );
+      continue;
+    }
+    const paragraph: string[] = [];
+    while (
+      index < lines.length &&
+      lines[index].trim() &&
+      !/^(#{1,6}\s|```|~~~|\s*[-*+]\s+|\s*\d+[.)]\s+|\s*>\s?)/.test(lines[index])
+    ) {
+      paragraph.push(lines[index]);
+      index += 1;
+    }
+    if (!paragraph.length) {
+      paragraph.push(lines[index]);
+      index += 1;
+    }
+    blocks.push(
+      <p key={key++} className="my-2 whitespace-pre-wrap first:mt-0 last:mb-0">
+        {renderInlineMarkdown(paragraph.join(" "))}
+      </p>,
+    );
+  }
+  return <div className="min-w-0 break-words [&_a]:break-all">{blocks}</div>;
+}
+
+async function consumeChatStream(
+  response: Response,
+  onEvent: (event: ChatStreamEvent) => void,
+): Promise<void> {
+  if (!response.ok) {
+    const problem = (await response.json().catch(() => ({}))) as ApiProblem;
+    throw new Error(problem.message ?? problem.detail ?? `Request failed (${response.status})`);
+  }
+  if (!response.body) throw new Error("The API did not return a readable response stream.");
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let receivedDone = false;
+  const processFrame = (frame: string) => {
+    const data = frame
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trimStart())
+      .join("\n");
+    if (!data) return;
+    const event = JSON.parse(data) as ChatStreamEvent;
+    if (event.type === "error") throw new Error(event.message ?? "The AI request failed.");
+    if (event.type === "done") receivedDone = true;
+    onEvent(event);
+  };
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      let frameEnd = buffer.indexOf("\n\n");
+      while (frameEnd !== -1) {
+        processFrame(buffer.slice(0, frameEnd));
+        buffer = buffer.slice(frameEnd + 2);
+        frameEnd = buffer.indexOf("\n\n");
+      }
+      if (done) break;
+    }
+    if (buffer.trim()) processFrame(buffer);
+  } finally {
+    reader.releaseLock();
+  }
+  if (!receivedDone) throw new Error("The AI stream ended before the response was complete.");
 }
 
 class ApiRequestError extends Error {
@@ -79,21 +365,17 @@ function isMessage(value: unknown): value is Message {
 interface ChatTurn {
   role: "user" | "assistant";
   content: string;
+  source_notice?: string;
 }
 
-interface ChatResult {
-  answer: string;
-  provider: string;
-  model: string | null;
-  sources: string[];
-  source_notice: string;
+interface ChatStreamEvent {
+  type: "delta" | "done" | "error";
+  content?: string;
+  message?: string;
+  source_notice?: string;
 }
 
-async function apiRequest<T>(
-  apiBaseUrl: string,
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+async function apiRequest<T>(apiBaseUrl: string, path: string, init: RequestInit = {}): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}${path}`, {
@@ -110,7 +392,10 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as ApiProblem;
-    throw new ApiRequestError(problem.message ?? `Request failed (${response.status})`, response.status);
+    throw new ApiRequestError(
+      problem.message ?? `Request failed (${response.status})`,
+      response.status,
+    );
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
@@ -165,11 +450,10 @@ export function AuthPanel({
       ...(mode === "register" ? { display_name: String(form.get("display_name") ?? "") } : {}),
     };
     try {
-      const nextUser = await apiRequest<PortalUser>(
-        apiBaseUrl,
-        `/api/v1/user/auth/${mode}`,
-        { method: "POST", body: JSON.stringify(body) },
-      );
+      const nextUser = await apiRequest<PortalUser>(apiBaseUrl, `/api/v1/user/auth/${mode}`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
       acceptUser(nextUser);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to authenticate");
@@ -207,7 +491,11 @@ export function AuthPanel({
     <Card>
       <CardHeader>
         <CardTitle className="font-display text-xl">
-          {loading ? "Checking your session" : user ? `Welcome, ${user.display_name}` : "Your account"}
+          {loading
+            ? "Checking your session"
+            : user
+              ? `Welcome, ${user.display_name}`
+              : "Your account"}
         </CardTitle>
         <CardDescription>
           Shared sign-in works across the localhost portals using an HttpOnly session cookie.
@@ -220,12 +508,16 @@ export function AuthPanel({
           </Alert>
         )}
         {loading ? (
-          <p role="status" className="text-sm text-muted-foreground">Checking session…</p>
+          <p role="status" className="text-sm text-muted-foreground">
+            Checking session…
+          </p>
         ) : user ? (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="min-w-0 break-all text-sm text-muted-foreground">{user.email}</p>
-              <Button type="button" variant="outline" onClick={signOut}>Sign out</Button>
+              <Button type="button" variant="outline" onClick={signOut}>
+                Sign out
+              </Button>
             </div>
             {showLearningConsent && (
               <div className="grid gap-2 rounded-lg border border-border bg-surface-raised p-4">
@@ -237,8 +529,8 @@ export function AuthPanel({
                     onChange={(event) => void updateLearningConsent(event.target.checked)}
                   />
                   <span>
-                    Allow my AI prompts and responses to be retained for review to improve AI.
-                    This consent is optional and can be withdrawn.
+                    Allow my AI prompts and responses to be retained for review to improve AI. This
+                    consent is optional and can be withdrawn.
                   </span>
                 </Label>
                 <p className="text-xs leading-relaxed text-muted-foreground">
@@ -501,10 +793,15 @@ export function MessagingPanel({ apiBaseUrl }: { apiBaseUrl: string }) {
                   required
                 />
               </div>
-              <Button type="submit" className="self-end" isLoading={busy}>New conversation</Button>
+              <Button type="submit" className="self-end" isLoading={busy}>
+                New conversation
+              </Button>
             </form>
             <div className="grid min-h-[26rem] overflow-hidden rounded-xl border border-border md:grid-cols-[14rem_minmax(0,1fr)]">
-              <nav aria-label="Conversations" className="grid content-start gap-1 border-b border-border p-2 md:border-r md:border-b-0">
+              <nav
+                aria-label="Conversations"
+                className="grid content-start gap-1 border-b border-border p-2 md:border-r md:border-b-0"
+              >
                 {conversations.map((conversation) => (
                   <button
                     key={conversation.id}
@@ -555,7 +852,9 @@ export function MessagingPanel({ apiBaseUrl }: { apiBaseUrl: string }) {
                   )}
                 </div>
                 <form onSubmit={sendMessage} className="flex gap-2 border-t border-border p-3">
-                  <Label className="sr-only" htmlFor="message-draft">Message</Label>
+                  <Label className="sr-only" htmlFor="message-draft">
+                    Message
+                  </Label>
                   <Input
                     id="message-draft"
                     value={draft}
@@ -589,41 +888,101 @@ export function AIChatPanel({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const streamControllerRef = useRef<AbortController | null>(null);
   const endpoint =
     environment === "general"
-      ? "/api/v1/user/social/ai/chat"
-      : "/api/v1/user/researcher/ai/chat";
+      ? "/api/v1/user/social/ai/chat/stream"
+      : "/api/v1/user/researcher/ai/chat/stream";
   const acceptUser = useCallback((nextUser: PortalUser | null) => {
+    streamControllerRef.current?.abort();
+    streamControllerRef.current = null;
     setUser(nextUser);
     setMessages([]);
     setError("");
+    setBusy(false);
   }, []);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [messages, busy]);
+
+  useEffect(
+    () => () => {
+      streamControllerRef.current?.abort();
+    },
+    [],
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const content = draft.trim();
     if (!content || busy) return;
-    const nextMessages = [...messages, { role: "user" as const, content }];
+    const nextMessages: ChatTurn[] = [
+      ...messages,
+      { role: "user", content },
+      { role: "assistant", content: "" },
+    ];
     setMessages(nextMessages);
     setDraft("");
     setBusy(true);
     setError("");
+    const controller = new AbortController();
+    streamControllerRef.current = controller;
     try {
-      const result = await apiRequest<ChatResult>(apiBaseUrl, endpoint, {
-        method: "POST",
-        body: JSON.stringify({ messages: nextMessages }),
+      let response: Response;
+      try {
+        response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}${endpoint}`, {
+          method: "POST",
+          credentials: "include",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: nextMessages.slice(0, -1).map(({ role, content }) => ({ role, content })),
+          }),
+        });
+      } catch {
+        throw new Error(
+          "The API is unavailable. Check that the backend is running on localhost:8000.",
+        );
+      }
+      await consumeChatStream(response, (streamEvent) => {
+        if (streamEvent.type === "delta" && streamEvent.content) {
+          setMessages((current) => {
+            const updated = [...current];
+            const lastMessage = updated[updated.length - 1];
+            if (lastMessage?.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...lastMessage,
+                content: lastMessage.content + streamEvent.content,
+              };
+            }
+            return updated;
+          });
+        } else if (streamEvent.type === "done") {
+          setMessages((current) => {
+            const updated = [...current];
+            const lastMessage = updated[updated.length - 1];
+            if (lastMessage?.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...lastMessage,
+                source_notice: streamEvent.source_notice,
+              };
+            }
+            return updated;
+          });
+        }
       });
-      setMessages([
-        ...nextMessages,
-        {
-          role: "assistant",
-          content: `${result.answer}\n\n${result.source_notice}`,
-        },
-      ]);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "The AI request failed");
+      if (!controller.signal.aborted) {
+        setError(reason instanceof Error ? reason.message : "The AI request failed");
+      }
     } finally {
-      setBusy(false);
+      if (streamControllerRef.current === controller) {
+        streamControllerRef.current = null;
+        setBusy(false);
+      }
     }
   }
 
@@ -664,6 +1023,7 @@ export function AIChatPanel({
               </Alert>
             )}
             <div
+              ref={messagesContainerRef}
               role="log"
               aria-live="polite"
               className="grid min-h-72 max-h-[32rem] content-start gap-3 overflow-y-auto rounded-xl border border-border bg-surface-sunken p-4"
@@ -678,7 +1038,7 @@ export function AIChatPanel({
                 <div
                   key={`${index}-${message.role}`}
                   className={cn(
-                    "max-w-[90%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    "max-w-[90%] break-words rounded-2xl px-4 py-3 text-sm leading-relaxed",
                     message.role === "user"
                       ? "ml-auto bg-chat-user-message text-chat-user-foreground"
                       : "bg-chat-assistant-message text-chat-assistant-foreground",
@@ -687,7 +1047,16 @@ export function AIChatPanel({
                   <p className="mb-1 text-xs font-semibold">
                     {message.role === "user" ? user.display_name : "AI assistant"}
                   </p>
-                  {message.content}
+                  {message.role === "user" ? (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  ) : (
+                    <MarkdownContent content={message.content} />
+                  )}
+                  {message.source_notice && (
+                    <p className="mt-3 border-t border-current/15 pt-2 text-xs opacity-80">
+                      {message.source_notice}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -700,9 +1069,15 @@ export function AIChatPanel({
                 maxLength={4000}
                 rows={3}
                 placeholder="Ask a science or healthspan question"
+                onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
               />
               <div className="flex justify-end">
-                <Button type="submit" isLoading={busy} disabled={!draft.trim()}>
+                <Button type="submit" isLoading={busy} disabled={!draft.trim() || busy}>
                   Send question
                 </Button>
               </div>

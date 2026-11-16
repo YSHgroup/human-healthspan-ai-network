@@ -8,8 +8,9 @@ from healthspan_ai.gateway.providers.openai_compatible import (
     ProviderConfigurationError,
     ProviderRequestError,
     complete,
+    stream_compatible,
 )
-from healthspan_ai.gateway.providers import claude, groq, ollama, openai
+from healthspan_ai.gateway.providers import claude, dispatch, groq, ollama, openai
 from healthspan_ai.gateway.service import AccessDeniedError, complete_chat
 from healthspan_ai.shared.contracts.chat import ChatMessage, Completion, GatewayConfig
 
@@ -133,6 +134,93 @@ def test_openai_protocol_providers_use_their_default_endpoints(
 
     assert completion.content == "Provider response"
     assert seen == {"url": expected_url, "authorization": expected_auth}
+
+
+def test_openai_compatible_provider_streams_text_deltas(monkeypatch) -> None:
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["authorization"] = request.headers.get("authorization")
+        seen["body"] = request.read().decode()
+        return httpx.Response(
+            200,
+            text=(
+                'data: {"choices":[{"delta":{"content":"Hello "}}]}\n\n'
+                'data: {"choices":[{"delta":{"content":"world."}}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+        )
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "healthspan_ai.gateway.providers.openai_compatible.httpx.AsyncClient",
+        partial(original_client, transport=httpx.MockTransport(handler)),
+    )
+    config = GatewayConfig(
+        provider="groq",
+        model="test-model",
+        api_key="test-key",
+        base_url="https://provider.example/v1",
+        timeout_seconds=2,
+    )
+
+    async def collect() -> list[str]:
+        return [
+            part
+            async for part in await dispatch.stream(
+                config,
+                [ChatMessage(role="user", content="Question")],
+            )
+        ]
+
+    assert asyncio.run(collect()) == ["Hello ", "world."]
+    assert seen["authorization"] == "Bearer test-key"
+    assert '"stream":true' in str(seen["body"])
+
+
+def test_claude_provider_streams_content_block_deltas(monkeypatch) -> None:
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["api_key"] = request.headers.get("x-api-key")
+        seen["body"] = request.read().decode()
+        return httpx.Response(
+            200,
+            text=(
+                'event: content_block_delta\n'
+                'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"Hello "}}\n\n'
+                'event: content_block_delta\n'
+                'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"Claude."}}\n\n'
+                'event: message_stop\n'
+                'data: {"type":"message_stop"}\n\n'
+            ),
+        )
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "healthspan_ai.gateway.providers.claude.httpx.AsyncClient",
+        partial(original_client, transport=httpx.MockTransport(handler)),
+    )
+    config = GatewayConfig(
+        provider="claude",
+        model="claude-test",
+        api_key="test-key",
+        base_url=None,
+        timeout_seconds=2,
+    )
+
+    async def collect() -> list[str]:
+        return [
+            part
+            async for part in await dispatch.stream(
+                config,
+                [ChatMessage(role="user", content="Question")],
+            )
+        ]
+
+    assert asyncio.run(collect()) == ["Hello ", "Claude."]
+    assert seen["api_key"] == "test-key"
+    assert '"stream":true' in str(seen["body"])
 
 
 def test_claude_uses_messages_api_and_converts_system_prompt(monkeypatch) -> None:

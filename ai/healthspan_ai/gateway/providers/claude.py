@@ -1,5 +1,7 @@
 """Anthropic Claude Messages API provider."""
 
+import json
+from collections.abc import AsyncIterator
 from urllib.parse import urljoin
 
 import httpx
@@ -93,4 +95,74 @@ async def complete(config: GatewayConfig, messages: list[ChatMessage]) -> Comple
     except httpx.NetworkError as exc:
         raise ProviderRequestError("Could not connect to AI provider") from exc
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
+        raise ProviderRequestError("AI provider request failed") from exc
+
+
+async def stream(config: GatewayConfig, messages: list[ChatMessage]) -> AsyncIterator[str]:
+    return _stream(config, messages)
+
+
+async def _stream(config: GatewayConfig, messages: list[ChatMessage]) -> AsyncIterator[str]:
+    api_key = (config.api_key or "").strip()
+    model = (config.model or "").strip()
+    base_url = (config.base_url or DEFAULT_BASE_URL).strip()
+    if not api_key or not model:
+        raise ProviderConfigurationError("AI_PROVIDER=claude requires AI_API_KEY and AI_MODEL")
+
+    system_messages = [message.content for message in messages if message.role == "system"]
+    conversation = [
+        {"role": message.role, "content": message.content}
+        for message in messages
+        if message.role in {"user", "assistant"}
+    ]
+    payload: dict[str, object] = {
+        "model": model,
+        "max_tokens": MAX_OUTPUT_TOKENS,
+        "messages": conversation,
+        "stream": True,
+    }
+    if system_messages:
+        payload["system"] = "\n\n".join(system_messages)
+
+    try:
+        async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
+            async with client.stream(
+                "POST",
+                urljoin(base_url.rstrip("/") + "/", "messages"),
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                },
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data = line[5:].strip()
+                    if not data:
+                        continue
+                    try:
+                        event = json.loads(data)
+                    except json.JSONDecodeError as exc:
+                        raise ProviderRequestError("Claude returned an invalid stream") from exc
+                    if event.get("type") != "content_block_delta":
+                        continue
+                    delta = event.get("delta")
+                    content = delta.get("text") if isinstance(delta, dict) else None
+                    if isinstance(content, str) and content:
+                        yield content
+    except ProviderConfigurationError:
+        raise
+    except ProviderRequestError:
+        raise
+    except httpx.HTTPStatusError as exc:
+        raise ProviderRequestError(
+            f"AI provider returned HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.TimeoutException as exc:
+        raise ProviderRequestError("AI provider request timed out") from exc
+    except httpx.NetworkError as exc:
+        raise ProviderRequestError("Could not connect to AI provider") from exc
+    except httpx.HTTPError as exc:
         raise ProviderRequestError("AI provider request failed") from exc
