@@ -26,7 +26,7 @@ provenance) - `training` - `evaluation` - `governance` - `monitoring` - `shared`
 ## Implemented slice and boundaries
 
 - The API calls AI only through `healthspan_ai.gateway` and `healthspan_ai.shared`.
-- `AI_PROVIDER=openai-compatible` sends chat-completions requests to `AI_BASE_URL` using server-only `AI_API_KEY` and `AI_MODEL`. `AI_PROVIDER=disabled` is the default and returns an explicit error.
+- `AI_PROVIDER=openai-compatible` or `groq` sends chat-completions requests to `AI_BASE_URL` using server-only `AI_API_KEY` and `AI_MODEL`. For Groq, configure `AI_BASE_URL=https://api.groq.com/openai/v1` and an available Groq model ID. `AI_PROVIDER=disabled` is the default and returns an explicit error.
 - General Platform AI receives a public/general-knowledge system instruction and the current chat history only. No private platform data is retrieved.
 - The Scientist route requires `SCIENTIST_ENABLED=true`, an authenticated user, a verified email and an explicit researcher-approval timestamp. Registration grants neither state. No corpus, project file, retrieval tool or AI admin grant workflow is connected.
 - Chat history is held in the browser for the current page and sent with each request; it is not persisted as a conversation by default.

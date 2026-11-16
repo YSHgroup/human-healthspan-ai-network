@@ -68,7 +68,7 @@ def test_production_configuration_accepts_explicit_secure_origins_and_database(m
         ("DATABASE_URL", "sqlite:///./healthspan.db", "PostgreSQL"),
         ("PLATFORM_ADMIN_EMAILS", "", "production administrator"),
         ("SCIENTIST_ENABLED", "true", "cannot be true in production"),
-        ("AI_PROVIDER", "unknown", "must be disabled or openai-compatible"),
+        ("AI_PROVIDER", "unknown", "must be disabled, openai-compatible or groq"),
     ],
 )
 def test_production_configuration_rejects_unsafe_values(
@@ -102,6 +102,16 @@ def test_production_ai_provider_requires_key_and_model(monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="AI_API_KEY and AI_MODEL"):
         _validate_production_configuration()
+
+
+def test_production_groq_provider_requires_https_key_and_model(monkeypatch) -> None:
+    _set_valid_production_environment(monkeypatch)
+    monkeypatch.setenv("AI_PROVIDER", "groq")
+    monkeypatch.setenv("AI_BASE_URL", "https://api.groq.com/openai/v1")
+    monkeypatch.setenv("AI_API_KEY", "test-key")
+    monkeypatch.setenv("AI_MODEL", "openai/gpt-oss-20b")
+
+    _validate_production_configuration()
 
 
 def test_production_session_lifetime_is_bounded(monkeypatch) -> None:

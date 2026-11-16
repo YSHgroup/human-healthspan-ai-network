@@ -42,7 +42,7 @@ async def respond(
     except ProviderRequestError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="The configured AI provider could not complete the request",
+            detail=str(exc),
         ) from exc
     source_notice = completion.source_notice
     if completion.sources or completion.source_notice:

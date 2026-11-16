@@ -83,5 +83,13 @@ async def complete(
         raise
     except ProviderRequestError:
         raise
+    except httpx.HTTPStatusError as exc:
+        raise ProviderRequestError(
+            f"AI provider returned HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.TimeoutException as exc:
+        raise ProviderRequestError("AI provider request timed out") from exc
+    except httpx.NetworkError as exc:
+        raise ProviderRequestError("Could not connect to AI provider") from exc
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise ProviderRequestError("AI provider request failed") from exc

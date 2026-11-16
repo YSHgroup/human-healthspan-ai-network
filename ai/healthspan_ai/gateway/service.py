@@ -28,7 +28,7 @@ async def complete_chat(
     except ValueError as exc:
         raise ProviderConfigurationError(str(exc)) from exc
 
-    if provider == "openai-compatible":
+    if provider in {"openai-compatible", "groq"}:
         if environment_name == "general":
             from healthspan_ai.general.services.chat import answer
 

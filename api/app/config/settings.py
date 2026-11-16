@@ -76,9 +76,9 @@ def _validate_production_configuration() -> None:
         )
 
     ai_provider = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
-    if ai_provider not in {"disabled", "openai-compatible"}:
-        raise ValueError("Production AI_PROVIDER must be disabled or openai-compatible")
-    if ai_provider == "openai-compatible":
+    if ai_provider not in {"disabled", "openai-compatible", "groq"}:
+        raise ValueError("Production AI_PROVIDER must be disabled, openai-compatible or groq")
+    if ai_provider in {"openai-compatible", "groq"}:
         base_url = os.environ.get("AI_BASE_URL", "").strip()
         parsed_base_url = urlsplit(base_url)
         if parsed_base_url.scheme != "https" or not parsed_base_url.netloc:
