@@ -7,8 +7,8 @@ import {
   useState,
   type FormEvent,
   type KeyboardEvent,
-  type ReactNode,
 } from "react";
+import { Streamdown } from "streamdown";
 
 import { Alert, AlertDescription } from "./alert";
 import { Badge } from "./badge";
@@ -24,237 +24,7 @@ interface ApiProblem {
   detail?: string;
 }
 
-function renderInlineMarkdown(content: string): ReactNode[] {
-  const pattern =
-    /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|~~([^~]+)~~|\*([^*\n]+)\*|_([^_\n]+)_)/g;
-  const nodes: ReactNode[] = [];
-  let cursor = 0;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(content)) !== null) {
-    if (match.index > cursor) nodes.push(content.slice(cursor, match.index));
-    const key = `${match.index}-${match[0]}`;
-    if (match[2] && match[3]) {
-      nodes.push(
-        <a
-          key={key}
-          href={match[3]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-link underline underline-offset-4"
-        >
-          {match[2]}
-        </a>,
-      );
-    } else if (match[4]) {
-      nodes.push(
-        <code key={key} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">
-          {match[4]}
-        </code>,
-      );
-    } else if (match[5] || match[6]) {
-      nodes.push(<strong key={key}>{match[5] ?? match[6]}</strong>);
-    } else if (match[7]) {
-      nodes.push(<del key={key}>{match[7]}</del>);
-    } else if (match[8] || match[9]) {
-      nodes.push(<em key={key}>{match[8] ?? match[9]}</em>);
-    }
-    cursor = pattern.lastIndex;
-  }
-  if (cursor < content.length) nodes.push(content.slice(cursor));
-  return nodes;
-}
-
-function markdownTableCells(line: string): string[] {
-  return line
-    .trim()
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split("|")
-    .map((cell) => cell.trim());
-}
-
-function MarkdownContent({ content }: { content: string }) {
-  const lines = content.split(/\r?\n/);
-  const blocks: ReactNode[] = [];
-  let index = 0;
-  let key = 0;
-  while (index < lines.length) {
-    const line = lines[index];
-    if (!line.trim()) {
-      index += 1;
-      continue;
-    }
-    if (line.startsWith("```") || line.startsWith("~~~")) {
-      const marker = line.slice(0, 3);
-      const codeLines: string[] = [];
-      index += 1;
-      while (index < lines.length && !lines[index].startsWith(marker)) {
-        codeLines.push(lines[index]);
-        index += 1;
-      }
-      if (index < lines.length) index += 1;
-      blocks.push(
-        <pre
-          key={key++}
-          className="my-2 overflow-x-auto rounded-lg bg-background/70 p-3 font-mono text-xs leading-relaxed"
-        >
-          <code>{codeLines.join("\n")}</code>
-        </pre>,
-      );
-      continue;
-    }
-    const heading = /^(#{1,6})\s+(.+)$/.exec(line);
-    if (heading) {
-      const level = heading[1].length;
-      const HeadingTag = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-      blocks.push(
-        <HeadingTag
-          key={key++}
-          className={cn(
-            "mt-3 font-semibold leading-snug first:mt-0",
-            level <= 2 ? "text-base" : "text-sm",
-          )}
-        >
-          {renderInlineMarkdown(heading[2])}
-        </HeadingTag>,
-      );
-      index += 1;
-      continue;
-    }
-    if (
-      index + 1 < lines.length &&
-      line.includes("|") &&
-      lines[index + 1].includes("|") &&
-      markdownTableCells(lines[index + 1]).every((cell) => /^:?-{3,}:?$/.test(cell))
-    ) {
-      const headers = markdownTableCells(line);
-      const alignments = markdownTableCells(lines[index + 1]).map((cell) =>
-        cell.startsWith(":") && cell.endsWith(":")
-          ? "center"
-          : cell.endsWith(":")
-            ? "right"
-            : "left",
-      );
-      index += 2;
-      const rows: string[][] = [];
-      while (index < lines.length && lines[index].includes("|")) {
-        rows.push(markdownTableCells(lines[index]));
-        index += 1;
-      }
-      blocks.push(
-        <div key={key++} className="my-3 overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
-            <thead>
-              <tr>
-                {headers.map((header, cellIndex) => (
-                  <th
-                    key={cellIndex}
-                    className="border-b border-current/20 px-2 py-1.5 font-semibold"
-                    style={{ textAlign: alignments[cellIndex] }}
-                  >
-                    {renderInlineMarkdown(header)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {headers.map((_, cellIndex) => (
-                    <td
-                      key={cellIndex}
-                      className="border-b border-current/10 px-2 py-1.5 align-top"
-                      style={{ textAlign: alignments[cellIndex] }}
-                    >
-                      {renderInlineMarkdown(row[cellIndex] ?? "")}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>,
-      );
-      continue;
-    }
-    if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) {
-      blocks.push(<hr key={key++} className="my-3 border-border" />);
-      index += 1;
-      continue;
-    }
-    if (/^\s*[-*+]\s+/.test(line)) {
-      const items: ReactNode[] = [];
-      while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) {
-        items.push(
-          <li key={items.length}>
-            {renderInlineMarkdown(lines[index].replace(/^\s*[-*+]\s+/, ""))}
-          </li>,
-        );
-        index += 1;
-      }
-      blocks.push(
-        <ul key={key++} className="my-2 list-disc space-y-1 pl-5">
-          {items}
-        </ul>,
-      );
-      continue;
-    }
-    if (/^\s*\d+[.)]\s+/.test(line)) {
-      const items: ReactNode[] = [];
-      while (index < lines.length && /^\s*\d+[.)]\s+/.test(lines[index])) {
-        items.push(
-          <li key={items.length}>
-            {renderInlineMarkdown(lines[index].replace(/^\s*\d+[.)]\s+/, ""))}
-          </li>,
-        );
-        index += 1;
-      }
-      blocks.push(
-        <ol key={key++} className="my-2 list-decimal space-y-1 pl-5">
-          {items}
-        </ol>,
-      );
-      continue;
-    }
-    if (/^\s*>\s?/.test(line)) {
-      const quote: string[] = [];
-      while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
-        quote.push(lines[index].replace(/^\s*>\s?/, ""));
-        index += 1;
-      }
-      blocks.push(
-        <blockquote
-          key={key++}
-          className="my-2 border-l-2 border-border pl-3 text-muted-foreground"
-        >
-          {quote.map((text, quoteIndex) => (
-            <p key={quoteIndex}>{renderInlineMarkdown(text)}</p>
-          ))}
-        </blockquote>,
-      );
-      continue;
-    }
-    const paragraph: string[] = [];
-    while (
-      index < lines.length &&
-      lines[index].trim() &&
-      !/^(#{1,6}\s|```|~~~|\s*[-*+]\s+|\s*\d+[.)]\s+|\s*>\s?)/.test(lines[index])
-    ) {
-      paragraph.push(lines[index]);
-      index += 1;
-    }
-    if (!paragraph.length) {
-      paragraph.push(lines[index]);
-      index += 1;
-    }
-    blocks.push(
-      <p key={key++} className="my-2 whitespace-pre-wrap first:mt-0 last:mb-0">
-        {renderInlineMarkdown(paragraph.join(" "))}
-      </p>,
-    );
-  }
-  return <div className="min-w-0 break-words [&_a]:break-all">{blocks}</div>;
-}
+const markdownComponents = { img: () => null };
 
 async function consumeChatStream(
   response: Response,
@@ -1050,7 +820,13 @@ export function AIChatPanel({
                   {message.role === "user" ? (
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   ) : (
-                    <MarkdownContent content={message.content} />
+                    <Streamdown
+                      className="min-w-0 break-words [&_a]:break-all"
+                      isAnimating={busy && index === messages.length - 1}
+                      components={markdownComponents}
+                    >
+                      {message.content}
+                    </Streamdown>
                   )}
                   {message.source_notice && (
                     <p className="mt-3 border-t border-current/15 pt-2 text-xs opacity-80">
