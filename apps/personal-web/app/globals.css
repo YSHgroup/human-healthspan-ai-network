@@ -19,7 +19,10 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(ellipse at 92% 10%, var(--hero-glow), transparent 34rem), var(--background);
+    radial-gradient(ellipse at 8% 0%, var(--hero-glow), transparent 36rem),
+    radial-gradient(ellipse at 96% 18%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 32rem),
+    linear-gradient(180deg, var(--background), var(--surface-raised));
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--healthspan-font-sans);
   -webkit-font-smoothing: antialiased;
@@ -40,4 +43,40 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Rounded glass cards, shared by the portal shell and every page. */
+.glass {
+  background: color-mix(in oklch, var(--card) 82%, transparent);
+  border: 1px solid color-mix(in oklch, var(--card) 70%, var(--border));
+  box-shadow: var(--healthspan-shadow-sm);
+  backdrop-filter: blur(14px);
+}
+
+.glass-strong {
+  background: color-mix(in oklch, var(--card) 92%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: var(--healthspan-shadow-md);
+  backdrop-filter: blur(18px);
+}
+
+/* Both sidebars scroll on their own without showing a heavy scrollbar. */
+.portal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent) transparent;
+}
+
+@keyframes soft-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.soft-pop {
+  animation: soft-pop 0.35s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }

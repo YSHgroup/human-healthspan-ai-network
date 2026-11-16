@@ -2,6 +2,22 @@
 
 ## Completed
 
+- Rebuilt the Personal Portal UI (`apps/personal-web`) from `Personal_Portal_Design_Specification.md`
+  and the supplied mockups. One shell (`components/portal/`) wraps every page: top bar with
+  Social/Personal/Researcher menus, search, theme toggle, inbox bell and account menu; a left
+  sidebar with profile card and the five-group page list (unlaunched pages carry a "Soon" tag);
+  a right sidebar with plan and VIP status, referral link, monthly activity and daily rewards;
+  a quick chat dock; and a bottom tab bar plus drawers on small screens. Existing features are
+  kept and now live on their own routes: `/` Overview (welcome, summary, "For me", quick actions,
+  privacy summary), `/profile` (editable profile), `/favorites` (saved knowledge), `/privacy`
+  (five consent toggles and review) and `/messages` (unchanged messaging panel). Profile, consent
+  and saved-item state moved into a layout-level provider so edits survive navigation. Personal
+  tokens in `packages/design-tokens` now use the sky and green palette, and tier and promise
+  color tokens were added. Rewards, VIP card, referral and ranking cards have no backend yet, so
+  they read `lib/preview-data.ts`, show empty values and carry a "Preview" tag. Dependencies were
+  not installed in this environment: `next build`, type-check, Prettier and the architecture
+  tests were not run. Next step: run `npm run format`, `npm run typecheck` and
+  `npm run test:architecture`, then review at 1440, 1024 and 390 px with real fonts.
 - Rebuilt the Social Portal landing page (`apps/social-web/app/page.tsx`, `landing.css`,
   `components/landing/`) from the approved portrait design: sky hero with family photo, five
   promise icons, vision cluster, six science topic cards, community, Responsible AI banner,

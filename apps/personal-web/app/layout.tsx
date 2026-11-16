@@ -5,6 +5,8 @@ import "./globals.css";
 import { ThemeProvider } from "@healthspan/ui/theme-provider";
 import { Toaster } from "@healthspan/ui/sonner";
 
+import { PortalShell } from "../components/portal/portal-shell";
+
 const sans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-healthspan-sans",
@@ -31,11 +33,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Sibling portal addresses are read on the server so the client shell can link to them.
+  const urls = {
+    social: process.env.PUBLIC_APP_URL ?? "http://localhost:3000",
+    researcher: process.env.RESEARCHER_APP_URL ?? "http://localhost:3002",
+  };
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
   return (
     <html lang="en" data-portal="personal" suppressHydrationWarning>
       <body className={`${sans.variable} ${display.variable}`}>
         <ThemeProvider>
-          {children}
+          <PortalShell urls={urls} apiBaseUrl={apiBaseUrl}>
+            {children}
+          </PortalShell>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -40,6 +40,22 @@
   --hero-foreground: oklch(0.98 0.008 220);
   --hero-glow: oklch(0.75 0.12 175 / 30%);
 
+  /* Membership tiers. Always paired with a text label, never color alone. */
+  --tier-free: oklch(0.55 0.02 240);
+  --tier-free-muted: oklch(0.95 0.01 240);
+  --tier-silver: oklch(0.62 0.02 250);
+  --tier-silver-muted: oklch(0.94 0.008 250);
+  --tier-gold: oklch(0.62 0.13 82);
+  --tier-gold-muted: oklch(0.95 0.06 90);
+  --tier-gold-foreground: oklch(0.3 0.07 75);
+
+  /* The five promise colors, used sparingly and only for meaning. */
+  --promise-health: oklch(0.55 0.14 152);
+  --promise-beauty: oklch(0.6 0.2 5);
+  --promise-life: oklch(0.65 0.14 82);
+  --promise-power: oklch(0.55 0.15 250);
+  --promise-potential: oklch(0.55 0.17 295);
+
   --radius: 0.9rem;
   --healthspan-radius-xs: 0.35rem;
   --healthspan-radius-sm: 0.55rem;
@@ -95,6 +111,19 @@
   --hero-foreground: oklch(0.98 0.008 220);
   --hero-glow: oklch(0.68 0.12 180 / 22%);
 
+  --tier-free: oklch(0.75 0.02 240);
+  --tier-free-muted: oklch(0.3 0.02 240);
+  --tier-silver: oklch(0.8 0.015 250);
+  --tier-silver-muted: oklch(0.32 0.015 250);
+  --tier-gold: oklch(0.82 0.13 85);
+  --tier-gold-muted: oklch(0.34 0.06 85);
+  --tier-gold-foreground: oklch(0.95 0.05 90);
+  --promise-health: oklch(0.77 0.13 155);
+  --promise-beauty: oklch(0.74 0.15 5);
+  --promise-life: oklch(0.82 0.13 85);
+  --promise-power: oklch(0.73 0.12 250);
+  --promise-potential: oklch(0.74 0.13 295);
+
   --healthspan-shadow-xs: 0 1px 2px oklch(0.05 0.02 245 / 16%);
   --healthspan-shadow-sm: 0 2px 8px oklch(0.05 0.02 245 / 20%);
   --healthspan-shadow-md: 0 8px 24px oklch(0.05 0.02 245 / 24%);
@@ -103,28 +132,32 @@
 }
 
 :root[data-portal="personal"] {
-  --primary: oklch(0.49 0.12 35);
-  --primary-foreground: oklch(0.99 0.01 75);
-  --secondary: oklch(0.95 0.035 65);
-  --secondary-foreground: oklch(0.36 0.075 40);
-  --accent: oklch(0.93 0.055 80);
-  --accent-foreground: oklch(0.34 0.075 45);
-  --ring: oklch(0.65 0.13 45);
-  --hero-start: oklch(0.34 0.09 35);
-  --hero-end: oklch(0.48 0.11 65);
-  --hero-glow: oklch(0.8 0.1 95 / 30%);
+  --background: oklch(0.975 0.016 228);
+  --primary: oklch(0.5 0.13 152);
+  --primary-foreground: oklch(0.99 0.008 150);
+  --secondary: oklch(0.94 0.03 225);
+  --secondary-foreground: oklch(0.3 0.07 240);
+  --accent: oklch(0.93 0.05 172);
+  --accent-foreground: oklch(0.28 0.07 190);
+  --ring: oklch(0.6 0.12 190);
+  --surface-raised: oklch(0.98 0.012 215);
+  --hero-start: oklch(0.34 0.09 235);
+  --hero-end: oklch(0.5 0.11 200);
+  --hero-glow: oklch(0.82 0.1 190 / 32%);
 }
 
 .dark:root[data-portal="personal"] {
-  --primary: oklch(0.76 0.12 60);
-  --primary-foreground: oklch(0.22 0.045 40);
-  --secondary: oklch(0.31 0.045 50);
-  --secondary-foreground: oklch(0.93 0.025 75);
-  --accent: oklch(0.34 0.065 65);
-  --accent-foreground: oklch(0.93 0.04 80);
-  --ring: oklch(0.73 0.12 65);
-  --hero-start: oklch(0.24 0.055 35);
-  --hero-end: oklch(0.32 0.08 60);
+  --background: oklch(0.2 0.03 245);
+  --primary: oklch(0.76 0.13 155);
+  --primary-foreground: oklch(0.2 0.04 155);
+  --secondary: oklch(0.3 0.04 235);
+  --secondary-foreground: oklch(0.92 0.02 220);
+  --accent: oklch(0.33 0.06 185);
+  --accent-foreground: oklch(0.92 0.04 180);
+  --ring: oklch(0.72 0.11 190);
+  --surface-raised: oklch(0.26 0.03 240);
+  --hero-start: oklch(0.22 0.05 245);
+  --hero-end: oklch(0.3 0.08 210);
 }
 
 :root[data-portal="researcher"] {
@@ -212,6 +245,18 @@
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
   --color-hero-foreground: var(--hero-foreground);
+  --color-tier-free: var(--tier-free);
+  --color-tier-free-muted: var(--tier-free-muted);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-silver-muted: var(--tier-silver-muted);
+  --color-tier-gold: var(--tier-gold);
+  --color-tier-gold-muted: var(--tier-gold-muted);
+  --color-tier-gold-foreground: var(--tier-gold-foreground);
+  --color-promise-health: var(--promise-health);
+  --color-promise-beauty: var(--promise-beauty);
+  --color-promise-life: var(--promise-life);
+  --color-promise-power: var(--promise-power);
+  --color-promise-potential: var(--promise-potential);
   --font-sans: var(--healthspan-font-sans);
   --font-display: var(--healthspan-font-display);
   --font-serif: var(--healthspan-font-display);
